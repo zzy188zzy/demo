@@ -31,4 +31,4 @@ def make_data_loader(dataset, is_training, generator, batch_size, num_workers):
         generator=generator,
         persistent_workers=True
     )
-    return 
+    return loader
