@@ -32,7 +32,7 @@ def main(args):
         cfg = load_config(args.config)
     else:
         raise ValueError("Config file does not exist.")
-    pprint(cfg)
+    # pprint(cfg)
 
     # prep for output folder (based on time stamp)
     if not os.path.exists(cfg['output_folder']):
@@ -61,6 +61,9 @@ def main(args):
     train_dataset = make_dataset(
         cfg['dataset_name'], True, cfg['train_split'], **cfg['dataset']
     )
+    
+    print(train_dataset)
+    
     # update cfg based on dataset attributes (fix to epic-kitchens)
     train_db_vars = train_dataset.get_attributes()
     cfg['model']['train_cfg']['head_empty_cls'] = train_db_vars['empty_label_ids']
