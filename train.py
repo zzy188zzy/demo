@@ -66,8 +66,6 @@ def main(args):
     cfg['model']['train_cfg']['head_empty_cls'] = train_db_vars['empty_label_ids']
 
     # data loaders
-    print(train_dataset)
-    print(rng_generator)
     train_loader = make_data_loader(
         train_dataset, True, rng_generator, **cfg['loader'])
 
