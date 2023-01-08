@@ -190,5 +190,5 @@ def score_loss(
     print(scores.shape)
     loss = torch.min(scores, dim=0).values.sum() / 2304
     print(loss)
-    exit()
+    # exit()
     return loss
