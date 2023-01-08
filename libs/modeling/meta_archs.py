@@ -662,15 +662,20 @@ class PtTransformer(nn.Module):
         scores_all = []
         cls_idxs_all = []
 
+        tmp = torch.ones(out_cls_logits[0].shape)
+        print(tmp.shape)
+        for cls_i in out_cls_logits:
+            tmp *= cls_i
+        print(tmp.shape)
+        loss = tmp.sum()
+        print(loss)
+        exit()
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
                 out_cls_logits, out_offsets, points, fpn_masks
             ):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
-            print((cls_i.sigmoid() * mask_i.unsqueeze(-1)).shape)
-            print((cls_i.sigmoid() * mask_i.unsqueeze(-1)))
-            exit()
 
             # Apply filtering to make NMS faster following detectron2
             # 1. Keep seg with confidence score > a threshold
