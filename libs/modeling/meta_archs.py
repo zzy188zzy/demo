@@ -672,6 +672,7 @@ class PtTransformer(nn.Module):
             print(cls_i[:2])
 
             tmp *= cls_i
+            t *= 2
             print(cls_i.shape)
         print(tmp.shape)
         loss = tmp.sum()
