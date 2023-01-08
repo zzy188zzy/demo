@@ -564,13 +564,13 @@ class PtTransformer(nn.Module):
 
         # optinal label smoothing
         gt_target *= 1 - self.train_label_smoothing
-        gt_target += self.train_label_smoothing / (self.num_classes + 1)
+        gt_target += self.train_label_smoothing / (self.num_classes + 1)  # [5053, 20]
 
         # focal loss
 
-        # print(out_cls_logits.shape)
-        print(gt_target.shape)
-        print(gt_target)
+        print(torch.cat(out_cls_logits, dim=1)[valid_mask].shape)
+        print(gt_target[0])
+        print(torch.cat(out_cls_logits, dim=1)[valid_mask][0])
         exit()
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
