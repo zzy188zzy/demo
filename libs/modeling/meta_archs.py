@@ -668,8 +668,8 @@ class PtTransformer(nn.Module):
             ):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
-            print(pred_prob.shape)
-            print(pred_prob)
+            print((cls_i.sigmoid() * mask_i.unsqueeze(-1)).shape)
+            print((cls_i.sigmoid() * mask_i.unsqueeze(-1)))
             exit()
 
             # Apply filtering to make NMS faster following detectron2
