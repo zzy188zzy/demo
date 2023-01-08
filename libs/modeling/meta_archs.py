@@ -664,7 +664,9 @@ class PtTransformer(nn.Module):
 
         tmp = torch.ones(out_cls_logits[0].shape, device=out_cls_logits[0].device)
         for cls_i in out_cls_logits:
+            print(cls_i.shape)
             tmp *= cls_i
+            print(tmp.shape)
         print(tmp.shape)
         loss = tmp.sum()
         print(loss)
