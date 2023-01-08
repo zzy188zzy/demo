@@ -50,7 +50,6 @@ def sigmoid_focal_loss(
 
     return loss
 
-
 @torch.jit.script
 def ctr_giou_loss_1d(
     input_offsets: torch.Tensor,
@@ -165,4 +164,31 @@ def ctr_diou_loss_1d(
     elif reduction == "sum":
         loss = loss.sum()
 
+    return loss
+
+@torch.jit.script
+def score_loss(
+    out_cls_logits: torch.Tensor,
+) -> torch.Tensor:
+    """
+    
+    """
+    # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
+    scores = []
+    t = 1
+    for cls_i in enumerate(out_cls_logits):
+        cls_i = torch.max(torch.softmax(cls_i[1], dim=1), dim=1).values
+        print(cls_i.shape)
+        cls_i = cls_i.unsqueeze(1).expand(cls_i.shape[0], t).resize(2304)
+        print(cls_i.shape)
+        print(cls_i[:2])
+
+        scores.append(cls_i)
+        t *= 2
+        # print(cls_i.shape)
+    scores = torch.stack(scores)
+    print(scores.shape)
+    loss = torch.min(scores, dim=0).values.sum() / 2304
+    print(loss)
+    exit()
     return loss

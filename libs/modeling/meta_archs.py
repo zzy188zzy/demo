@@ -6,7 +6,7 @@ from torch.nn import functional as F
 
 from .models import register_meta_arch, make_backbone, make_neck, make_generator
 from .blocks import MaskedConv1D, Scale, LayerNorm
-from .losses import ctr_diou_loss_1d, sigmoid_focal_loss
+from .losses import ctr_diou_loss_1d, sigmoid_focal_loss, score_loss
 
 from ..utils import batched_nms
 
@@ -378,11 +378,11 @@ class PtTransformer(nn.Module):
             )
 
             # refinement(noisy_boxes, )
-            results = self.inference(
-                video_list, points, fpn_masks,
-                out_cls_logits, out_offsets
-            )
-            exit()
+            # results = self.inference(
+            #     video_list, points, fpn_masks,
+            #     out_cls_logits, out_offsets
+            # )
+            # exit()
             return losses
 
         else:
@@ -543,6 +543,8 @@ class PtTransformer(nn.Module):
         out_cls_logits, out_offsets,
         gt_cls_labels, gt_offsets
     ):
+
+        print(out_cls_logits)
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
         # fpn_masks -> (B, FT)
@@ -571,7 +573,6 @@ class PtTransformer(nn.Module):
         gt_target += self.train_label_smoothing / (self.num_classes + 1)  # [5053, 20]
 
         # focal loss
-
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
             gt_target,
@@ -590,6 +591,12 @@ class PtTransformer(nn.Module):
                 reduction='sum'
             )
             reg_loss /= self.loss_normalizer
+
+        # 3. score loss
+        print(torch.cat(out_cls_logits, dim=1))
+        
+        exit()
+        # sco_loss = score_loss(torch.cat(out_cls_logits, dim=1)[valid_mask])
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
@@ -647,27 +654,6 @@ class PtTransformer(nn.Module):
         results = self.postprocessing(results)
 
         return results
-
-    def score_norm(self, out_cls_logits):
-        # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
-        scores = []
-        t = 1
-        for cls_i in enumerate(out_cls_logits):
-            cls_i = torch.max(torch.softmax(cls_i[1], dim=1), dim=1).values
-            print(cls_i.shape)
-            cls_i = cls_i.unsqueeze(1).expand(cls_i.shape[0], t).resize(2304)
-            print(cls_i.shape)
-            print(cls_i[:2])
-
-            scores.append(cls_i)
-            t *= 2
-            # print(cls_i.shape)
-        scores = torch.stack(scores)
-        print(scores.shape)
-        loss = torch.min(scores, dim=0).values.sum()
-        print(loss)
-        exit()
-        return loss
 
     @torch.no_grad()
     def inference_single_video(
