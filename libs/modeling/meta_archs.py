@@ -568,7 +568,7 @@ class PtTransformer(nn.Module):
 
         # focal loss
 
-        print(out_cls_logits.shape)
+        # print(out_cls_logits.shape)
         print(gt_target.shape)
         print(gt_target)
         exit()
