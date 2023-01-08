@@ -376,6 +376,9 @@ class PtTransformer(nn.Module):
                 out_cls_logits, out_offsets,
                 gt_cls_labels, gt_offsets
             )
+
+            # refinement(noisy_boxes, )
+
             return losses
 
         else:
@@ -564,6 +567,11 @@ class PtTransformer(nn.Module):
         gt_target += self.train_label_smoothing / (self.num_classes + 1)
 
         # focal loss
+
+        print(out_cls_logits.shape)
+        print(gt_target.shape)
+        print(gt_target)
+        exit()
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
             gt_target,
