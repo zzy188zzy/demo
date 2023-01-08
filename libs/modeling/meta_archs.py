@@ -654,7 +654,7 @@ class PtTransformer(nn.Module):
         for cls_i in enumerate(out_cls_logits):
             cls_i = torch.min(torch.softmax(cls_i[1], dim=1), dim=1).values
             print(cls_i.shape)
-            cls_i = cls_i.expand(cls_i.shape[0], t).resize(2304, 1)
+            cls_i = cls_i.unsqueeze(1).expand(cls_i.shape[0], t).resize(2304, 1)
             print(cls_i.shape)
             print(cls_i[:2])
 
