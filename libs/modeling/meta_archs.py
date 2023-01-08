@@ -649,20 +649,22 @@ class PtTransformer(nn.Module):
         return results
 
     def score_norm(self, out_cls_logits):
-        tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
+        # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
+        scores = []
         t = 1
         for cls_i in enumerate(out_cls_logits):
-            cls_i = torch.min(torch.softmax(cls_i[1], dim=1), dim=1).values
+            cls_i = torch.max(torch.softmax(cls_i[1], dim=1), dim=1).values
             print(cls_i.shape)
-            cls_i = cls_i.unsqueeze(1).expand(cls_i.shape[0], t).resize(2304, 1)
+            cls_i = cls_i.unsqueeze(1).expand(cls_i.shape[0], t).resize(2304)
             print(cls_i.shape)
             print(cls_i[:2])
 
-            tmp *= cls_i
+            scores.append(cls_i)
             t *= 2
             # print(cls_i.shape)
-        print(tmp.shape)
-        loss = tmp.sum()
+        scores = torch.stack(scores)
+        print(scores.shape)
+        loss = torch.min(scores, dim=0).values.sum()
         print(loss)
         exit()
         return loss
