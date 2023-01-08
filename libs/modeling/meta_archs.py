@@ -648,6 +648,25 @@ class PtTransformer(nn.Module):
 
         return results
 
+    def score_norm(self, out_cls_logits):
+        tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
+        t = 1
+        for cls_i in enumerate(out_cls_logits):
+            cls_i = torch.min(torch.softmax(cls_i[1], dim=1), dim=1)
+            print(cls_i.shape)
+            cls_i = cls_i.expand(cls_i.shape[0], t).resize(2304, 1)
+            print(cls_i.shape)
+            print(cls_i[:2])
+
+            tmp *= cls_i
+            t *= 2
+            # print(cls_i.shape)
+        print(tmp.shape)
+        loss = tmp.sum()
+        print(loss)
+        exit()
+        return loss
+
     @torch.no_grad()
     def inference_single_video(
         self,
@@ -662,22 +681,8 @@ class PtTransformer(nn.Module):
         scores_all = []
         cls_idxs_all = []
 
-        tmp = torch.ones(out_cls_logits[0].shape, device=out_cls_logits[0].device)
-        t = 1
-        for cls_i in enumerate(out_cls_logits):
-            cls_i = cls_i[1].unsqueeze(1)
-            print(cls_i.shape)
-            cls_i = cls_i.expand(cls_i.shape[0], t, 20).resize(2304, 20)
-            print(cls_i.shape)
-            print(cls_i[:2])
+        loss = self.score_norm(out_cls_logits)
 
-            tmp *= cls_i
-            t *= 2
-            print(cls_i.shape)
-        print(tmp.shape)
-        loss = tmp.sum()
-        print(loss)
-        exit()
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
                 out_cls_logits, out_offsets, points, fpn_masks
