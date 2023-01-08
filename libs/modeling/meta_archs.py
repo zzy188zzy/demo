@@ -664,6 +664,7 @@ class PtTransformer(nn.Module):
 
         tmp = torch.ones(out_cls_logits[0].shape, device=out_cls_logits[0].device)
         for cls_i in enumerate(out_cls_logits):
+            cls_i = cls_i[1]
             print(cls_i[:2])
             cls_i.expand(tmp.shape[0], 20)
             print(cls_i[:2])
