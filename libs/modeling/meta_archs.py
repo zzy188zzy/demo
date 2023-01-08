@@ -662,8 +662,7 @@ class PtTransformer(nn.Module):
         scores_all = []
         cls_idxs_all = []
 
-        tmp = torch.ones(out_cls_logits[0].shape)
-        print(tmp.shape)
+        tmp = torch.ones(out_cls_logits[0].shape, device=out_cls_logits[0].device)
         for cls_i in out_cls_logits:
             tmp *= cls_i
         print(tmp.shape)
