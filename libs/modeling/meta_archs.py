@@ -378,7 +378,11 @@ class PtTransformer(nn.Module):
             )
 
             # refinement(noisy_boxes, )
-
+            results = self.inference(
+                video_list, points, fpn_masks,
+                out_cls_logits, out_offsets
+            )
+            exit()
             return losses
 
         else:
@@ -568,10 +572,6 @@ class PtTransformer(nn.Module):
 
         # focal loss
 
-        print(torch.cat(out_cls_logits, dim=1)[valid_mask].shape)
-        print(gt_target[0])
-        print(torch.cat(out_cls_logits, dim=1)[valid_mask][0])
-        exit()
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
             gt_target,
@@ -668,6 +668,9 @@ class PtTransformer(nn.Module):
             ):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
+            print(pred_prob.shape)
+            print(pred_prob)
+            exit()
 
             # Apply filtering to make NMS faster following detectron2
             # 1. Keep seg with confidence score > a threshold
