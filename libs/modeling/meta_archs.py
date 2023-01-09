@@ -544,7 +544,7 @@ class PtTransformer(nn.Module):
         gt_cls_labels, gt_offsets
     ):
 
-        print(out_cls_logits)
+        # print(out_cls_logits)
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
         # fpn_masks -> (B, FT)
@@ -567,6 +567,9 @@ class PtTransformer(nn.Module):
 
         # gt_cls is already one hot encoded now, simply masking out
         gt_target = gt_cls[valid_mask]
+        print(gt_cls.shape)
+        print(gt_target.shape)
+        print(torch.cat(out_cls_logits, dim=1).shape)
 
         # optinal label smoothing
         gt_target *= 1 - self.train_label_smoothing
@@ -593,8 +596,8 @@ class PtTransformer(nn.Module):
             reg_loss /= self.loss_normalizer
 
         # 3. score loss
-        print(torch.cat(out_cls_logits, dim=1))
-        
+        # print(torch.cat(out_cls_logits, dim=1))
+
         exit()
         # sco_loss = score_loss(torch.cat(out_cls_logits, dim=1)[valid_mask])
 
