@@ -544,7 +544,11 @@ class PtTransformer(nn.Module):
         gt_cls_labels, gt_offsets
     ):
 
-        # print(out_cls_logits)
+        print(out_cls_logits[0].shape)
+        print(out_cls_logits[1].shape)
+        print(gt_cls_labels[0].shape)
+        print(gt_cls_labels[1].shape)
+
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
         # fpn_masks -> (B, FT)
@@ -553,6 +557,7 @@ class PtTransformer(nn.Module):
         # 1. classification loss
         # stack the list -> (B, FT) -> (# Valid, )
         gt_cls = torch.stack(gt_cls_labels)
+        print(gt_cls.shape)
         pos_mask = torch.logical_and((gt_cls.sum(-1) > 0), valid_mask)
 
         # cat the predicted offsets -> (B, FT, 2 (xC)) -> # (#Pos, 2 (xC))
