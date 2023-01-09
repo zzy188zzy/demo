@@ -543,21 +543,16 @@ class PtTransformer(nn.Module):
         out_cls_logits, out_offsets,
         gt_cls_labels, gt_offsets
     ):
-
-        print(out_cls_logits[0].shape)
-        print(out_cls_logits[1].shape)
-        print(gt_cls_labels[0].shape)
-        print(gt_cls_labels[1].shape)
-
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
         # fpn_masks -> (B, FT)
         valid_mask = torch.cat(fpn_masks, dim=1)
+        print(valid_mask.shape)
+        print(valid_mask)
 
         # 1. classification loss
         # stack the list -> (B, FT) -> (# Valid, )
-        gt_cls = torch.stack(gt_cls_labels)
-        print(gt_cls.shape)
+        gt_cls = torch.stack(gt_cls_labels)                                         # [2, 4536, 20]
         pos_mask = torch.logical_and((gt_cls.sum(-1) > 0), valid_mask)
 
         # cat the predicted offsets -> (B, FT, 2 (xC)) -> # (#Pos, 2 (xC))
@@ -578,12 +573,12 @@ class PtTransformer(nn.Module):
 
         # optinal label smoothing
         gt_target *= 1 - self.train_label_smoothing
-        gt_target += self.train_label_smoothing / (self.num_classes + 1)  # [5053, 20]
+        gt_target += self.train_label_smoothing / (self.num_classes + 1)  
 
         # focal loss
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
-            gt_target,
+            gt_target,                                          # [5053, 20]
             reduction='sum'
         )
         cls_loss /= self.loss_normalizer
