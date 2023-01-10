@@ -181,8 +181,8 @@ def score_loss(
     #     print(fpn_masks[i].shape)
 
     # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
-    print(out_cls_logits.type)
-    print(fpn_masks.type)
+    # print(out_cls_logits.type)
+    # print(fpn_masks.type)
     scores = []
     t = 1
     print('==========================')

@@ -596,7 +596,7 @@ class PtTransformer(nn.Module):
 
         # 3. score loss
         print('==========================')
-        print(out_cls_logits.type)
+        # print(out_cls_logits.type)
         print(fpn_masks.type)
         scores = []
         masks = []
