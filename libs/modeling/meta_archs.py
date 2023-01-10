@@ -611,13 +611,10 @@ class PtTransformer(nn.Module):
             scores.append(cls_i)
             masks.append(mask)
             t *= 2
-        # print(scores[0])
-        scores = torch.stack(scores,dim=1)
-        # print(scores[0][1])
+        
+        scores = torch.stack(scores,dim=1)  # [2, 6, 2304]
         masks = torch.stack(masks,dim=1)
 
-        print(scores.shape)
-        print(masks.shape)
         # print(masks[0])
         idx = torch.sum(masks, dim=1) < 6
         scores = torch.min(scores, dim=1).values
