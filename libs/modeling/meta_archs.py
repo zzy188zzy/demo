@@ -699,8 +699,6 @@ class PtTransformer(nn.Module):
         scores_all = []
         cls_idxs_all = []
 
-        loss = self.score_norm(out_cls_logits)
-
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
                 out_cls_logits, out_offsets, points, fpn_masks
