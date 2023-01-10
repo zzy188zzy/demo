@@ -566,8 +566,6 @@ class PtTransformer(nn.Module):
         # gt_cls is already one hot encoded now, simply masking out
         gt_target = gt_cls[valid_mask]
         # print(torch.cat(out_cls_logits, dim=1).shape)
-        print(valid_mask.shape)
-        print(valid_mask)
 
         # for i in range(len(out_cls_logits)):
         #     print(out_cls_logits[i].shape)
@@ -577,6 +575,8 @@ class PtTransformer(nn.Module):
         gt_target *= 1 - self.train_label_smoothing
         gt_target += self.train_label_smoothing / (self.num_classes + 1)  
 
+        print(torch.cat(out_cls_logits, dim=1)[valid_mask].shape)
+        print(gt_target.shape)
         # focal loss
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
