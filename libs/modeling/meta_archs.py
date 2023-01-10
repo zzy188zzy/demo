@@ -630,10 +630,10 @@ class PtTransformer(nn.Module):
         # idx = idx < 6
         # scores = torch.min(scores, dim=1).values
 
-        print(scores[0, :, 0])
+        # print(scores[0, :, 0])
         scores = torch.sort(scores, dim=1).values
-        print(scores[0, :, 0])
-        exit()
+        # print(scores[0, :, 0])
+        # exit()
 
         # scores = scores[idx]
 
