@@ -647,7 +647,7 @@ class PtTransformer(nn.Module):
         
         sco_loss = scores.sum()
         sco_loss /= idx.sum()
-        sco_loss *= 10
+        sco_loss *= 100
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
