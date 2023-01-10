@@ -179,12 +179,12 @@ def score_loss(
 
     # for i in range(len(fpn_masks)):
     #     print(fpn_masks[i].shape)
-    
+
     # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
     scores = []
     t = 1
     print('==========================')
-    for (cls_i, mask) in zip(out_cls_logits, fpn_masks):
+    for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
         print(cls_i.shape)
         cls_i = torch.softmax(cls_i, dim=2)
         print(cls_i.shape)
