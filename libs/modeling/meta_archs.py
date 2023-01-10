@@ -596,8 +596,7 @@ class PtTransformer(nn.Module):
         scores = []
         masks = []
         t = 1
-        b = out_cls_logits.clone()
-        for i, (cls_i, mask) in enumerate(zip(b, fpn_masks)):
+        for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
             mask = mask==False
             # print(cls_i)
             cls_i = torch.softmax(cls_i, dim=2)
@@ -649,7 +648,7 @@ class PtTransformer(nn.Module):
         sco_loss = scores.sum()
         sco_loss /= idx.sum()
         # sco_loss /= self.loss_normalizer
-        # sco_loss /= 1
+        sco_loss *= 2
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
