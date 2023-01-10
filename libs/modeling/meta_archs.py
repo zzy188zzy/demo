@@ -640,7 +640,7 @@ class PtTransformer(nn.Module):
         scores -= torch.ones(scores.shape, device=scores.device)*0.05  # 0.05
 
         level = 2
-        scores = scores[:, :4, :]
+        scores = scores[:, :level, :]
 
         sco_loss = scores.sum() / (level*2304)
         
