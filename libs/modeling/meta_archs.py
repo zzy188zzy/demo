@@ -592,7 +592,7 @@ class PtTransformer(nn.Module):
             reg_loss /= self.loss_normalizer
 
         # 3. score loss
-        print('==========================')
+        # print('==========================')
         scores = []
         masks = []
         t = 1
@@ -621,23 +621,11 @@ class PtTransformer(nn.Module):
         idx = torch.sum(masks, dim=1) < 6
         scores = torch.min(scores, dim=1).values
 
-        # idx = torch.resize(idx)
-        # scores = torch.stack(scores)
-        # print(idx.shape)
-        print(scores)
         scores = scores[idx]
-        print(scores.shape)
-        print(scores)
-        print(torch.sum(scores == 1))
+        assert torch.sum(scores == 1) == 0
         sco_loss = scores.sum()
-        print(sco_loss)
-        print(sco_loss/idx.sum())
-        print(sco_loss/self.loss_normalizer)
-
-
-
         
-        exit()
+        sco_loss /= idx.sum()
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
@@ -645,9 +633,10 @@ class PtTransformer(nn.Module):
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight
+        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
+                'sco_loss'   : sco_loss,
                 'final_loss' : final_loss}
 
     @torch.no_grad()
