@@ -642,7 +642,7 @@ class PtTransformer(nn.Module):
         level = 1
         scores = scores[:, :level, :]
 
-        sco_loss = scores.sum() / (level*2304)
+        sco_loss = scores.sum() / (level*2304*scores.shape[0])
         
         # sco_loss /= idx.sum()
 
