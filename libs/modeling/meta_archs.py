@@ -567,8 +567,11 @@ class PtTransformer(nn.Module):
         gt_target = gt_cls[valid_mask]
         # print(torch.cat(out_cls_logits, dim=1).shape)
 
-        # for i in range(len(out_cls_logits)):
-        #     print(out_cls_logits[i].shape)
+        for i in range(len(out_cls_logits)):
+            print(out_cls_logits[i].shape)
+            
+        for i in range(len(fpn_masks)):
+            print(fpn_masks[i].shape)
 
 
         # optinal label smoothing
