@@ -168,17 +168,18 @@ def ctr_diou_loss_1d(
 
 @torch.jit.script
 def score_loss(
-    out_cls_logits: torch.Tensor,
-    fpn_masks: torch.Tensor,
+    out_cls_logits: list,
+    fpn_masks: list,
 ) -> torch.Tensor:
     """
     
     """
-    for i in range(len(out_cls_logits)):
-        print(out_cls_logits[i].shape)
+    # for i in range(len(out_cls_logits)):
+    #     print(out_cls_logits[i].shape)
 
-    for i in range(len(fpn_masks)):
-        print(fpn_masks[i].shape)
+    # for i in range(len(fpn_masks)):
+    #     print(fpn_masks[i].shape)
+    
     # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
     scores = []
     t = 1
