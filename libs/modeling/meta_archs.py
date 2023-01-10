@@ -611,22 +611,26 @@ class PtTransformer(nn.Module):
             scores.append(cls_i)
             masks.append(mask)
             t *= 2
-        print(scores[0])
+        # print(scores[0])
         scores = torch.stack(scores,dim=1)
-        print(scores[0][1])
+        # print(scores[0][1])
         masks = torch.stack(masks,dim=1)
 
         print(scores.shape)
         print(masks.shape)
-        print(masks[0])
+        # print(masks[0])
         idx = torch.sum(masks, dim=1) < 6
         scores = torch.min(scores, dim=1).values
-        print(masks.shape)
-        print(masks[0])
+        print(idx.shape)
+        print(idx[0])
 
         scores = scores[idx]
+        print(torch.sum(scores == 1))
         sco_loss = scores.sum()
         print(sco_loss)
+        print(sco_loss/idx.sum())
+        print(sco_loss/self.loss_normalizer)
+
 
 
         
