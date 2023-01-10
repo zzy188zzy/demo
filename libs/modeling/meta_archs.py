@@ -567,9 +567,6 @@ class PtTransformer(nn.Module):
         gt_target = gt_cls[valid_mask]
         # print(torch.cat(out_cls_logits, dim=1).shape)
 
-       
-
-
         # optinal label smoothing
         gt_target *= 1 - self.train_label_smoothing
         gt_target += self.train_label_smoothing / (self.num_classes + 1)  
@@ -600,19 +597,29 @@ class PtTransformer(nn.Module):
         masks = []
         t = 1
         for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
-            print(cls_i.shape)
+            # print(cls_i.shape)
             cls_i = torch.softmax(cls_i, dim=2)
-            print(cls_i.shape)
+            # print(cls_i.shape)
             cls_i = torch.max(cls_i, dim=2).values
-            print(cls_i.shape)
+            # print(cls_i.shape)
             cls_i[mask] = 1
-            print(cls_i.shape)
+            # print(cls_i.shape)
             cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
-            print(cls_i.shape)
-            print(mask.shape)
+            mask = mask.unsqueeze(2).expand(mask.shape[0], mask.shape[1], t).resize(mask.shape[0], 2304)
+            # print(cls_i.shape)
+            # print(mask.shape)
             scores.append(cls_i)
+            masks.append(mask)
             t *= 2
+        scores = torch.stack(scores)
+        masks = torch.stack(masks)
 
+        print(scores.shape)
+        print(masks.shape)
+        print(masks[0])
+        masks = torch.sum(masks, dim=0)
+        print(masks.shape)
+        print(masks[0])
         
         # sco_loss = score_loss(out_cls_logits, fpn_masks)
         # print(sco_loss)
