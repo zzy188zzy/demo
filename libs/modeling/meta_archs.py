@@ -603,7 +603,7 @@ class PtTransformer(nn.Module):
             # print(cls_i)
             cls_i = torch.max(cls_i, dim=2).values
             # print(cls_i)
-            cls_i[mask] = 1
+            cls_i[mask] = 0.05
             # print(cls_i)
             cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
             mask = mask.unsqueeze(2).expand(mask.shape[0], mask.shape[1], t).resize(mask.shape[0], 2304)
@@ -616,28 +616,36 @@ class PtTransformer(nn.Module):
         
         scores = torch.stack(scores,dim=1)  # [2, 6, 2304]
         # print(scores)
-        masks = torch.stack(masks,dim=1)
+        # masks = torch.stack(masks,dim=1)
 
-        idx = torch.sum(masks, dim=1)
-        print(torch.sum(idx==0))
-        print(torch.sum(idx==1))
-        print(torch.sum(idx==2))
-        print(torch.sum(idx==3))
-        print(torch.sum(idx==4))
-        print(torch.sum(idx==5))
-        print(torch.sum(idx==6))
+        # idx = torch.sum(masks, dim=1)
+        # print(torch.sum(idx==0))
+        # print(torch.sum(idx==1))
+        # print(torch.sum(idx==2))
+        # print(torch.sum(idx==3))
+        # print(torch.sum(idx==4))
+        # print(torch.sum(idx==5))
+        # print(torch.sum(idx==6))
+        # exit()
+        # idx = idx < 6
+        # scores = torch.min(scores, dim=1).values
+
+        print(scores[0, :, 0])
+        scores = torch.sort(scores, dim=1).values
+        print(scores[0, :, 0])
         exit()
-        idx = idx < 6
-        scores = torch.min(scores, dim=1).values
 
-        scores = scores[idx]
-        assert torch.sum(scores == 1) == 0
+        # scores = scores[idx]
 
         scores -= torch.ones(scores.shape, device=scores.device)*0.05  # 0.05
 
-        sco_loss = scores.sum()
+        level = 4
+        scores = scores[:, :4, :]
+
+        sco_loss = scores.sum() / (level*2304)
         
-        sco_loss /= idx.sum()
+        # sco_loss /= idx.sum()
+
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
