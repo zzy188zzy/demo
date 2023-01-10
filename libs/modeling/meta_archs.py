@@ -565,10 +565,12 @@ class PtTransformer(nn.Module):
 
         # gt_cls is already one hot encoded now, simply masking out
         gt_target = gt_cls[valid_mask]
-        print(torch.cat(out_cls_logits, dim=1).shape)
+        # print(torch.cat(out_cls_logits, dim=1).shape)
+        print(valid_mask.shape)
+        print(valid_mask)
 
-        for i in range(len(out_cls_logits)):
-            print(out_cls_logits[i].shape)
+        # for i in range(len(out_cls_logits)):
+        #     print(out_cls_logits[i].shape)
 
 
         # optinal label smoothing
