@@ -653,7 +653,7 @@ class PtTransformer(nn.Module):
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
+        final_loss = cls_loss + reg_loss * loss_weight + sco_loss * 10
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
                 'sco_loss'   : sco_loss,
