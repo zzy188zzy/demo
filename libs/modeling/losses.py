@@ -168,8 +168,8 @@ def ctr_diou_loss_1d(
 
 @torch.jit.script
 def score_loss(
-    out_cls_logits: list,
-    fpn_masks: list,
+    out_cls_logits: torch.Tensor,
+    fpn_masks: torch.Tensor,
 ) -> torch.Tensor:
     """
     
