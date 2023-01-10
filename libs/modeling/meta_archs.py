@@ -601,7 +601,7 @@ class PtTransformer(nn.Module):
         scores = []
         masks = []
         t = 1
-        for (cls_i, mask) in zip(out_cls_logits, fpn_masks):
+        for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
             print(cls_i.shape)
             cls_i = torch.softmax(cls_i, dim=2)
             print(cls_i.shape)

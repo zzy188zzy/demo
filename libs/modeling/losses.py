@@ -186,9 +186,9 @@ def score_loss(
     scores = []
     t = 1
     print('==========================')
-    for cls_i in out_cls_logits:
-        print(cls_i.shape)
-        cls_i = torch.softmax(cls_i, dim=2)
+    for cls_i in enumerate(out_cls_logits):
+        print(cls_i[1].shape)
+        cls_i = torch.softmax(cls_i[1], dim=2)
         print(cls_i.shape)
         cls_i = torch.max(cls_i, dim=2).values
         print(cls_i.shape)
