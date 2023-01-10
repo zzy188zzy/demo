@@ -618,14 +618,23 @@ class PtTransformer(nn.Module):
         # print(scores)
         masks = torch.stack(masks,dim=1)
 
-        idx = torch.sum(masks, dim=1) < 6
+        idx = torch.sum(masks, dim=1)
+        print(torch.sum(idx==0))
+        print(torch.sum(idx==1))
+        print(torch.sum(idx==2))
+        print(torch.sum(idx==3))
+        print(torch.sum(idx==4))
+        print(torch.sum(idx==5))
+        print(torch.sum(idx==6))
+        exit()
+        idx = idx < 6
         scores = torch.min(scores, dim=1).values
 
         scores = scores[idx]
         assert torch.sum(scores == 1) == 0
 
         scores -= torch.ones(scores.shape, device=scores.device)*0.05  # 0.05
-        
+
         sco_loss = scores.sum()
         
         sco_loss /= idx.sum()
