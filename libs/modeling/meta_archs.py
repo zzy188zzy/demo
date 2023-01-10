@@ -611,13 +611,15 @@ class PtTransformer(nn.Module):
             scores.append(cls_i)
             masks.append(mask)
             t *= 2
-        scores = torch.stack(scores)
-        masks = torch.stack(masks)
+        print(scores[0])
+        scores = torch.stack(scores,dim=1)
+        print(scores[0][1])
+        masks = torch.stack(masks,dim=1)
 
         print(scores.shape)
         print(masks.shape)
         print(masks[0])
-        masks = torch.sum(masks, dim=0)
+        masks = torch.sum(masks, dim=1)
         print(masks.shape)
         print(masks[0])
         
