@@ -185,23 +185,23 @@ def score_loss(
     # print(fpn_masks.type)
     scores = []
     t = 1
-    print('==========================')
-    for i in range(len(out_cls_logits)):
-        cls_i = out_cls_logits(i)
-        mask = fpn_masks[i]
-        print(cls_i.shape)
-        cls_i = torch.softmax(cls_i[1], dim=2)
-        print(cls_i.shape)
-        cls_i = torch.max(cls_i, dim=2).values
-        print(cls_i.shape)
-        # cls_i[mask] = 1
-        print(cls_i.shape)
-        cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
-        print(cls_i.shape)
-        print(cls_i[:2])
+    # print('==========================')
+    # for i in range(len(out_cls_logits)):
+    #     cls_i = out_cls_logits(i)
+    #     mask = fpn_masks[i]
+    #     print(cls_i.shape)
+    #     cls_i = torch.softmax(cls_i[1], dim=2)
+    #     print(cls_i.shape)
+    #     cls_i = torch.max(cls_i, dim=2).values
+    #     print(cls_i.shape)
+    #     # cls_i[mask] = 1
+    #     print(cls_i.shape)
+    #     cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
+    #     print(cls_i.shape)
+    #     print(cls_i[:2])
 
-        scores.append(cls_i)
-        t *= 2
+    #     scores.append(cls_i)
+    #     t *= 2
         # print(cls_i.shape)
     scores = torch.stack(scores)
     print(scores.shape)
