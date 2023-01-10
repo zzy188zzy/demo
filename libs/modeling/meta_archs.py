@@ -624,7 +624,10 @@ class PtTransformer(nn.Module):
         print(idx.shape)
         print(idx[0])
 
+        print(scores.shape)
         scores = scores[idx]
+        print(scores.shape)
+        print(scores)
         print(torch.sum(scores == 1))
         sco_loss = scores.sum()
         print(sco_loss)
@@ -634,10 +637,6 @@ class PtTransformer(nn.Module):
 
 
         
-        # sco_loss = score_loss(out_cls_logits, fpn_masks)
-        # print(sco_loss)
-        # sco_loss /= self.loss_normalizer
-        # print(sco_loss)
         exit()
 
         if self.train_loss_weight > 0:
