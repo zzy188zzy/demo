@@ -547,8 +547,6 @@ class PtTransformer(nn.Module):
         # gt_* : B (list) [F T, C]
         # fpn_masks -> (B, FT)
         valid_mask = torch.cat(fpn_masks, dim=1)
-        print(valid_mask.shape)
-        print(valid_mask)
 
         # 1. classification loss
         # stack the list -> (B, FT) -> (# Valid, )
@@ -567,9 +565,11 @@ class PtTransformer(nn.Module):
 
         # gt_cls is already one hot encoded now, simply masking out
         gt_target = gt_cls[valid_mask]
-        print(gt_cls.shape)
-        print(gt_target.shape)
         print(torch.cat(out_cls_logits, dim=1).shape)
+
+        for i in range(len(out_cls_logits)):
+            print(out_cls_logits[i].shape)
+
 
         # optinal label smoothing
         gt_target *= 1 - self.train_label_smoothing
