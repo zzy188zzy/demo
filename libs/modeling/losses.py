@@ -187,7 +187,7 @@ def score_loss(
     t = 1
     print('==========================')
     for i in range(len(out_cls_logits)):
-        cls_i = out_cls_logits[i]
+        cls_i = out_cls_logits(i)
         mask = fpn_masks[i]
         print(cls_i.shape)
         cls_i = torch.softmax(cls_i[1], dim=2)
