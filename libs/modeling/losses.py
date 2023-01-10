@@ -168,8 +168,8 @@ def ctr_diou_loss_1d(
 
 @torch.jit.script
 def score_loss(
-    out_cls_logits: torch.Tensor,
-    fpn_masks: torch.Tensor,
+    out_cls_logits: list,
+    fpn_masks: list,
 ) -> torch.Tensor:
     """
     
@@ -186,8 +186,10 @@ def score_loss(
     scores = []
     t = 1
     print('==========================')
-    for cls_i in enumerate(out_cls_logits):
-        print(cls_i[1].shape)
+    for i in range(len(out_cls_logits)):
+        cls_i = out_cls_logits[i]
+        mask = fpn_masks[i]
+        print(cls_i.shape)
         cls_i = torch.softmax(cls_i[1], dim=2)
         print(cls_i.shape)
         cls_i = torch.max(cls_i, dim=2).values
