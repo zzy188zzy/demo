@@ -567,19 +567,13 @@ class PtTransformer(nn.Module):
         gt_target = gt_cls[valid_mask]
         # print(torch.cat(out_cls_logits, dim=1).shape)
 
-        for i in range(len(out_cls_logits)):
-            print(out_cls_logits[i].shape)
-            
-        for i in range(len(fpn_masks)):
-            print(fpn_masks[i].shape)
+       
 
 
         # optinal label smoothing
         gt_target *= 1 - self.train_label_smoothing
         gt_target += self.train_label_smoothing / (self.num_classes + 1)  
 
-        print(torch.cat(out_cls_logits, dim=1)[valid_mask].shape)
-        print(gt_target.shape)
         # focal loss
         cls_loss = sigmoid_focal_loss(
             torch.cat(out_cls_logits, dim=1)[valid_mask],
@@ -601,10 +595,12 @@ class PtTransformer(nn.Module):
             reg_loss /= self.loss_normalizer
 
         # 3. score loss
-        # print(torch.cat(out_cls_logits, dim=1))
-
+        
+        sco_loss = score_loss(out_cls_logits, fpn_masks)
+        print(sco_loss)
+        sco_loss /= self.loss_normalizer
+        print(sco_loss)
         exit()
-        # sco_loss = score_loss(torch.cat(out_cls_logits, dim=1)[valid_mask])
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
