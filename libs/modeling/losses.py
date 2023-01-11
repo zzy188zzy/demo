@@ -174,37 +174,50 @@ def score_loss(
     """
     
     """
-    # for i in range(len(out_cls_logits)):
-    #     print(out_cls_logits[i].shape)
-
-    # for i in range(len(fpn_masks)):
-    #     print(fpn_masks[i].shape)
-
-    # tmp = torch.ones((2304, 1), device=out_cls_logits[0].device)
-    # print(out_cls_logits.type)
-    # print(fpn_masks.type)
     scores = []
+    masks = []
     t = 1
-    # print('==========================')
-    # for i in range(len(out_cls_logits)):
-    #     cls_i = out_cls_logits(i)
-    #     mask = fpn_masks[i]
-    #     print(cls_i.shape)
-    #     cls_i = torch.softmax(cls_i[1], dim=2)
-    #     print(cls_i.shape)
-    #     cls_i = torch.max(cls_i, dim=2).values
-    #     print(cls_i.shape)
-    #     # cls_i[mask] = 1
-    #     print(cls_i.shape)
-    #     cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
-    #     print(cls_i.shape)
-    #     print(cls_i[:2])
-
-    #     scores.append(cls_i)
-    #     t *= 2
+    for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
+        mask = mask==False
+        # print(cls_i)
+        cls_i = torch.softmax(cls_i, dim=2)
+        # print(cls_i)
+        cls_i = torch.max(cls_i, dim=2).values
+        # print(cls_i)
+        cls_i[mask] = 1
+        # print(cls_i)
+        cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
+        mask = mask.unsqueeze(2).expand(mask.shape[0], mask.shape[1], t).resize(mask.shape[0], 2304)
         # print(cls_i.shape)
-    scores = torch.stack(scores)
-    print(scores.shape)
-    loss = torch.min(scores, dim=0).values.sum() / 2304
+        # print(mask.shape)
+        scores.append(cls_i)
+        masks.append(mask)
+        t *= 2
+        # print('---------------------------------------------------------------')
+    
+    scores = torch.stack(scores,dim=1)  # [2, 6, 2304]
+    # print(scores)
+    masks = torch.stack(masks,dim=1)
+
+    idx = torch.sum(masks, dim=1)
+    idx = idx < 6
+    scores = torch.min(scores, dim=1).values
+
+    # print(scores[0, :, 0])
+    # scores = torch.sort(scores, dim=1).values
+    # print(scores[0, :, 0])
     # exit()
-    return loss
+
+    scores = scores[idx]
+
+    scores -= torch.ones(scores.shape, device=scores.device)*0.05  # 0.05
+
+    # level = 3
+    # scores = scores[:, :level, :]
+
+    # sco_loss = scores.sum() / (level*2304*scores.shape[0])
+    
+    sco_loss = scores.sum()
+    sco_loss /= idx.sum()
+    # sco_loss /= self.loss_normalizer
+    return sco_loss

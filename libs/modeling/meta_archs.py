@@ -592,6 +592,8 @@ class PtTransformer(nn.Module):
             reg_loss /= self.loss_normalizer
 
         # 3. score loss
+        sco_loss = score_loss(out_cls_logits, fpn_masks)
+        exit()
         # print('==========================')
         scores = []
         masks = []
@@ -619,14 +621,6 @@ class PtTransformer(nn.Module):
         masks = torch.stack(masks,dim=1)
 
         idx = torch.sum(masks, dim=1)
-        # print(torch.sum(idx==0))
-        # print(torch.sum(idx==1))
-        # print(torch.sum(idx==2))
-        # print(torch.sum(idx==3))
-        # print(torch.sum(idx==4))
-        # print(torch.sum(idx==5))
-        # print(torch.sum(idx==6))
-        # exit()
         idx = idx < 6
         scores = torch.min(scores, dim=1).values
 
@@ -643,12 +637,10 @@ class PtTransformer(nn.Module):
         # scores = scores[:, :level, :]
 
         # sco_loss = scores.sum() / (level*2304*scores.shape[0])
-
         
         sco_loss = scores.sum()
         sco_loss /= idx.sum()
         # sco_loss /= self.loss_normalizer
-        sco_loss *= 0.5
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
