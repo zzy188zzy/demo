@@ -367,8 +367,11 @@ class PtTransformer(nn.Module):
 
             # compute the gt labels for cls & reg
             # list of prediction targets
+            
+            print(gt_offsets)
             gt_cls_labels, gt_offsets = self.label_points(
                 points, gt_segments, gt_labels)
+            exit()
 
             # compute the loss and return
             losses = self.losses(
@@ -455,7 +458,6 @@ class PtTransformer(nn.Module):
             label = torch.cat((base_label, gt_label), dim=0)
 
         return segment, label
-
 
     @torch.no_grad()
     def label_points(self, points, gt_segments, gt_labels):
