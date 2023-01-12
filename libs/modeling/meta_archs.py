@@ -435,8 +435,8 @@ class PtTransformer(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.5
-        p_len = 0.5
+        p_ctr = 0.3
+        p_len = 0.3
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
@@ -451,7 +451,7 @@ class PtTransformer(nn.Module):
 
         if mode == 'cat':
             segment = torch.cat((base_segment, segment), dim=1)
-            label = torch.cat((base_label, label), dim=1)
+            label = torch.cat((base_label, gt_label), dim=1)
 
         return segment, label
 
