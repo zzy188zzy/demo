@@ -10,157 +10,8 @@ from .losses import ctr_diou_loss_1d, sigmoid_focal_loss
 
 from ..utils import batched_nms
 
-class PtTransformerClsHead(nn.Module):
-    """
-    1D Conv heads for classification
-    """
-    def __init__(
-        self,
-        input_dim,
-        feat_dim,
-        num_classes,
-        prior_prob=0.01,
-        num_layers=3,
-        kernel_size=3,
-        act_layer=nn.ReLU,
-        with_ln=False,
-        empty_cls = []
-    ):
-        super().__init__()
-        self.act = act_layer()
 
-        # build the head
-        self.head = nn.ModuleList()
-        self.norm = nn.ModuleList()
-        for idx in range(num_layers-1):
-            if idx == 0:
-                in_dim = input_dim
-                out_dim = feat_dim
-            else:
-                in_dim = feat_dim
-                out_dim = feat_dim
-            self.head.append(
-                MaskedConv1D(
-                    in_dim, out_dim, kernel_size,
-                    stride=1,
-                    padding=kernel_size//2,
-                    bias=(not with_ln)
-                )
-            )
-            if with_ln:
-                self.norm.append(LayerNorm(out_dim))
-            else:
-                self.norm.append(nn.Identity())
-
-        # classifier
-        self.cls_head = MaskedConv1D(
-                feat_dim, num_classes, kernel_size,
-                stride=1, padding=kernel_size//2
-            )
-
-        # use prior in model initialization to improve stability
-        # this will overwrite other weight init
-        if prior_prob > 0:
-            bias_value = -(math.log((1 - prior_prob) / prior_prob))
-            torch.nn.init.constant_(self.cls_head.conv.bias, bias_value)
-
-        # a quick fix to empty categories:
-        # the weights assocaited with these categories will remain unchanged
-        # we set their bias to a large negative value to prevent their outputs
-        if len(empty_cls) > 0:
-            bias_value = -(math.log((1 - 1e-6) / 1e-6))
-            for idx in empty_cls:
-                torch.nn.init.constant_(self.cls_head.conv.bias[idx], bias_value)
-
-    def forward(self, fpn_feats, fpn_masks):
-        assert len(fpn_feats) == len(fpn_masks)
-
-        # apply the classifier for each pyramid level
-        out_logits = tuple()
-        for _, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-            cur_out = cur_feat
-            for idx in range(len(self.head)):
-                cur_out, _ = self.head[idx](cur_out, cur_mask)
-                cur_out = self.act(self.norm[idx](cur_out))
-            cur_logits, _ = self.cls_head(cur_out, cur_mask)
-            out_logits += (cur_logits, )
-
-        # fpn_masks remains the same
-        return out_logits
-
-
-class PtTransformerRegHead(nn.Module):
-    """
-    Shared 1D Conv heads for regression
-    Simlar logic as PtTransformerClsHead with separated implementation for clarity
-    """
-    def __init__(
-        self,
-        input_dim,
-        feat_dim,
-        fpn_levels,
-        num_layers=3,
-        kernel_size=3,
-        act_layer=nn.ReLU,
-        with_ln=False
-    ):
-        super().__init__()
-        self.fpn_levels = fpn_levels
-        self.act = act_layer()
-
-        # build the conv head
-        self.head = nn.ModuleList()
-        self.norm = nn.ModuleList()
-        for idx in range(num_layers-1):
-            if idx == 0:
-                in_dim = input_dim
-                out_dim = feat_dim
-            else:
-                in_dim = feat_dim
-                out_dim = feat_dim
-            self.head.append(
-                MaskedConv1D(
-                    in_dim, out_dim, kernel_size,
-                    stride=1,
-                    padding=kernel_size//2,
-                    bias=(not with_ln)
-                )
-            )
-            if with_ln:
-                self.norm.append(LayerNorm(out_dim))
-            else:
-                self.norm.append(nn.Identity())
-
-        self.scale = nn.ModuleList()
-        for idx in range(fpn_levels):
-            self.scale.append(Scale())
-
-        # segment regression
-        self.offset_head = MaskedConv1D(
-                feat_dim, 2, kernel_size,
-                stride=1, padding=kernel_size//2
-            )
-
-    def forward(self, fpn_feats, fpn_masks):
-        assert len(fpn_feats) == len(fpn_masks)
-        assert len(fpn_feats) == self.fpn_levels
-
-        # apply the classifier for each pyramid level
-        out_offsets = tuple()
-        for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-            cur_out = cur_feat
-            for idx in range(len(self.head)):
-                cur_out, _ = self.head[idx](cur_out, cur_mask)
-                cur_out = self.act(self.norm[idx](cur_out))
-            cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            out_offsets += (F.relu(self.scale[l](cur_offsets)), )
-
-        # fpn_masks remains the same
-        return out_offsets
-
-
-@register_meta_arch("LocPointTransformer")
-class PtTransformer(nn.Module):
+class RefineHead(nn.Module):
     """
         Transformer based model for single stage action localization
     """
@@ -428,35 +279,6 @@ class PtTransformer(nn.Module):
         return batched_inputs, batched_masks
 
     @torch.no_grad()
-    def coarse_gt_single_video(self, gt_segment, gt_label, time=1, step=1, mode='none'):
-        base_segment = gt_segment
-        base_label = gt_label
-
-        gt_segment = gt_segment.repeat(time, 1)
-        gt_label = gt_label.repeat(time, 1)
-
-        p_ctr = 0.5
-        p_len = 0.5
-
-        len = gt_segment[:, 1] - gt_segment[:, 0]
-        ctr = 0.5 * (gt_segment[:, 0] + gt_segment[:, 1])
-
-        d_ctr = (torch.rand(ctr.shape) * 2 - 1) * (p_ctr * len / 2)
-        d_len = (torch.rand(len.shape) * 2 - 1) * (p_len * len)
-
-        len += d_len
-        ctr += d_ctr
-
-        segment = torch.cat((len-ctr, len+ctr), dim=1)
-
-        if mode == 'cat':
-            segment = torch.cat((base_segment, segment), dim=1)
-            label = torch.cat((base_label, label), dim=1)
-
-        return segment, label
-
-
-    @torch.no_grad()
     def label_points(self, points, gt_segments, gt_labels):
         # concat points on all fpn levels List[T x 4] -> F T x 4
         # This is shared for all samples in the mini-batch
@@ -466,12 +288,8 @@ class PtTransformer(nn.Module):
 
         # loop over each video sample
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
-            print(gt_segment.shape)
-            coarse_segment, coarse_label = self.coarse_gt_single_video(gt_segment, gt_label, mode='cat')
-            print(coarse_segment)
-            exit()
             cls_targets, reg_targets = self.label_points_single_video(
-                concat_points, coarse_segment, coarse_label
+                concat_points, gt_segment, gt_label
             )
             # append to list (len = # images, each of size FT x C)
             gt_cls.append(cls_targets)
@@ -486,9 +304,6 @@ class PtTransformer(nn.Module):
         # gt_label : N (#Events) x 1
         num_pts = concat_points.shape[0]
         num_gts = gt_segment.shape[0]
-
-        print(concat_points.shape)
-        print(gt_segment.shape)
 
         # corner case where current sample does not have actions
         if num_gts == 0:
