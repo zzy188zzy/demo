@@ -433,14 +433,8 @@ class PtTransformer(nn.Module):
         base_segment = gt_segment
         base_label = gt_label
 
-        # print(gt_segment.shape)
-        print(gt_label.shape)
-
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
-
-        # print(gt_segment.shape)
-        print(gt_label.shape)
 
         p_ctr = 0.4
         p_len = 0.4
@@ -478,7 +472,7 @@ class PtTransformer(nn.Module):
             # print(coarse_segment)
             # exit()
             cls_targets, reg_targets = self.label_points_single_video(
-                concat_points, coarse_segment, coarse_label
+                concat_points, coarse_segment, coarse_label.squeeze()
             )
             # append to list (len = # images, each of size FT x C)
             gt_cls.append(cls_targets)
