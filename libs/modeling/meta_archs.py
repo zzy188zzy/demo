@@ -371,7 +371,7 @@ class PtTransformer(nn.Module):
             
             gt_cls_labels, gt_offsets = self.label_points(
                 points, gt_segments, gt_labels)
-            print(gt_offsets)
+            print(gt_offsets.shape)
             exit()
 
             # compute the loss and return
