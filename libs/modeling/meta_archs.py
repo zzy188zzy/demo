@@ -372,7 +372,9 @@ class PtTransformer(nn.Module):
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
             
-            losses = []
+            cls_loss = []
+            reg_loss = []
+            final_loss = []
             for idx in range(time):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
                 gt_offsets = [b[i][idx] for i in range(len(b))]
@@ -383,9 +385,16 @@ class PtTransformer(nn.Module):
                     out_cls_logits, out_offsets,
                     gt_cls_labels, gt_offsets
                 )
-                losses.append(loss)
+                cls_loss.append(loss['cls_loss'])
+                reg_loss.append(loss['reg_loss'])
+                final_loss.append(loss['final_loss'])
+
+
             losses = torch.stack(losses)
-            return losses.mean()
+            return {'cls_loss'   : torch.stack(cls_loss).mean(),
+                    'reg_loss'   : torch.stack(reg_loss).mean(),
+                    # 'sco_loss'   : torch.stack(sco_loss).mean(),
+                    'final_loss' : torch.stack(final_loss).mean()}
 
         else:
             # decode the actions (sigmoid / stride, etc)
