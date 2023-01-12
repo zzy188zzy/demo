@@ -43,7 +43,7 @@ def main(args):
 
     if args.topk > 0:
         cfg['model']['test_cfg']['max_seg_num'] = args.topk
-    pprint(cfg)
+    # pprint(cfg)
 
     """1. fix all randomness"""
     # fix the random seeds (this will fix everything)
