@@ -442,8 +442,8 @@ class PtTransformer(nn.Module):
         # print(gt_segment.shape)
         print(gt_label.shape)
 
-        p_ctr = 0.3
-        p_len = 0.3
+        p_ctr = 0.4
+        p_len = 0.4
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
@@ -473,10 +473,10 @@ class PtTransformer(nn.Module):
 
         # loop over each video sample
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
-            print(gt_segment.shape)
+            # print(gt_segment.shape)
             coarse_segment, coarse_label = self.coarse_gt_single_video(gt_segment, gt_label, mode='cat')
-            print(coarse_segment)
-            exit()
+            # print(coarse_segment)
+            # exit()
             cls_targets, reg_targets = self.label_points_single_video(
                 concat_points, coarse_segment, coarse_label
             )
