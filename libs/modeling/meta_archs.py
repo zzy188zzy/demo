@@ -441,8 +441,8 @@ class PtTransformer(nn.Module):
         len = gt_segment[:, 1] - gt_segment[:, 0]
         ctr = 0.5 * (gt_segment[:, 0] + gt_segment[:, 1])
 
-        d_ctr = (torch.rand(ctr.shape) * 2 - 1) * (p_ctr * len / 2)
-        d_len = (torch.rand(len.shape) * 2 - 1) * (p_len * len)
+        d_ctr = (torch.rand(ctr.shape).to(ctr.device) * 2 - 1) * (p_ctr * len / 2)
+        d_len = (torch.rand(len.shape).to(len.device) * 2 - 1) * (p_len * len)
 
         len += d_len
         ctr += d_ctr
