@@ -467,12 +467,12 @@ class PtTransformer(nn.Module):
 
         if mode == 'cat':
             segment = torch.cat((base_segment, segment), dim=0)
-            label = torch.cat((base_label, gt_label), dim=0).squeeze()
+            label = torch.cat((base_label, gt_label), dim=0).squeeze(1)
         elif mode == 'list':
             segment = segment.reshape(time, -1, 2)
             label = gt_label.reshape(time, -1)
             seg = [base_segment]
-            lab = [base_label.squeeze()]
+            lab = [base_label.squeeze(1)]
             for idx in range(time):
                 seg.append(segment[idx])
                 lab.append(label[idx])
