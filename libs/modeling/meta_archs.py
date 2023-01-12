@@ -374,8 +374,8 @@ class PtTransformer(nn.Module):
             
             losses = []
             for idx in range(time):
-                gt_cls_labels = [a[i, idx] for i in range(len(a))]
-                gt_offsets = [b[i, idx] for i in range(len(b))]
+                gt_cls_labels = [a[i][idx] for i in range(len(a))]
+                gt_offsets = [b[i][idx] for i in range(len(b))]
 
                 # compute the loss and return
                 loss = self.losses(
