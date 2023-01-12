@@ -454,11 +454,11 @@ class PtTransformer(nn.Module):
         len += d_len
         ctr += d_ctr
 
-        segment = torch.cat((len-ctr, len+ctr), dim=1)
+        segment = torch.cat(((ctr-len).round(), (ctr+len).round), dim=1)
 
         if mode == 'cat':
-            segment = torch.cat((base_segment, segment), dim=1)
-            label = torch.cat((base_label, gt_label), dim=1)
+            segment = torch.cat((base_segment, segment), dim=0)
+            label = torch.cat((base_label, gt_label), dim=0)
 
         return segment, label
 
