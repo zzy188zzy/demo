@@ -432,8 +432,14 @@ class PtTransformer(nn.Module):
         base_segment = gt_segment
         base_label = gt_label
 
+        print(gt_segment.shape)
+        print(gt_label.shape)
+
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
+
+        print(gt_segment.shape)
+        print(gt_label.shape)
 
         p_ctr = 0.3
         p_len = 0.3
