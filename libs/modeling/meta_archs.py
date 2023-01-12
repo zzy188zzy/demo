@@ -368,20 +368,24 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
+            time=10
+            a, b = self.label_points(
+                points, gt_segments, gt_labels, time)
             
-            gt_cls_labels, gt_offsets = self.label_points(
-                points, gt_segments, gt_labels)
-            print(gt_offsets.shape)
-            exit()
+            losses = []
+            for idx in range(time):
+                gt_cls_labels = a[:, idx]
+                gt_offsets = b[:, idx]
 
-            # compute the loss and return
-            losses = self.losses(
-                fpn_masks,
-                out_cls_logits, out_offsets,
-                gt_cls_labels, gt_offsets
-            )
+                # compute the loss and return
+                loss = self.losses(
+                    fpn_masks,
+                    out_cls_logits, out_offsets,
+                    gt_cls_labels, gt_offsets
+                )
+                losses.append(loss)
 
-            return losses
+            return losses.mean()
 
         else:
             # decode the actions (sigmoid / stride, etc)
@@ -456,12 +460,21 @@ class PtTransformer(nn.Module):
 
         if mode == 'cat':
             segment = torch.cat((base_segment, segment), dim=0)
-            label = torch.cat((base_label, gt_label), dim=0)
+            label = torch.cat((base_label, gt_label), dim=0).squeeze()
+        elif mode == 'list':
+            segment = segment.resize(time, -1, 2)
+            label = label.resize(time, -1)
+            seg = [base_segment]
+            lab = [base_label.squeeze()]
+            for idx in range(time):
+                seg.append(segment[idx])
+                lab.append(label[idx])
+            return seg, lab
 
         return segment, label
 
     @torch.no_grad()
-    def label_points(self, points, gt_segments, gt_labels):
+    def label_points(self, points, gt_segments, gt_labels, time):
         # concat points on all fpn levels List[T x 4] -> F T x 4
         # This is shared for all samples in the mini-batch
         num_levels = len(points)
@@ -471,15 +484,20 @@ class PtTransformer(nn.Module):
         # loop over each video sample
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
             # print(gt_segment.shape)
-            coarse_segment, coarse_label = self.coarse_gt_single_video(gt_segment, gt_label, time=9, mode='cat')
+            coarse_segment, coarse_label = self.coarse_gt_single_video(gt_segment, gt_label, time=time-1, mode='list')
             # print(coarse_segment)
             # exit()
-            cls_targets, reg_targets = self.label_points_single_video(
-                concat_points, coarse_segment, coarse_label.squeeze()
-            )
-            # append to list (len = # images, each of size FT x C)
-            gt_cls.append(cls_targets)
-            gt_offset.append(reg_targets)
+            aa = []
+            bb = []
+            for i, (a, b) in enumerate(zip(coarse_segment, coarse_label)):
+                cls_targets, reg_targets = self.label_points_single_video(
+                    concat_points, a, b
+                )
+                # append to list (len = # images, each of size FT x C)
+                aa.append(cls_targets)
+                bb.append(reg_targets)
+            gt_cls.append(aa)
+            gt_offset.append(bb)
 
         return gt_cls, gt_offset
 
