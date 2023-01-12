@@ -384,7 +384,7 @@ class PtTransformer(nn.Module):
                     gt_cls_labels, gt_offsets
                 )
                 losses.append(loss)
-
+            losses = torch.stack(losses)
             return losses.mean()
 
         else:
