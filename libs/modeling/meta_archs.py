@@ -497,8 +497,8 @@ class PtTransformer(nn.Module):
             aa = []
             bb = []
             for i, (a, b) in enumerate(zip(coarse_segment, coarse_label)):
-                print(a.shape)
-                print(b.shape)
+                # print(a.shape)
+                # print(b.shape)
                 cls_targets, reg_targets = self.label_points_single_video(
                     concat_points, a, b
                 )
