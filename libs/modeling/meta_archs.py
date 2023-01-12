@@ -368,9 +368,10 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            print(gt_offsets)
+            
             gt_cls_labels, gt_offsets = self.label_points(
                 points, gt_segments, gt_labels)
+            print(gt_offsets)
             exit()
 
             # compute the loss and return
