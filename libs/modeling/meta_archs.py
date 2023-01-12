@@ -488,9 +488,6 @@ class PtTransformer(nn.Module):
         num_pts = concat_points.shape[0]
         num_gts = gt_segment.shape[0]
 
-        print(concat_points.shape)
-        print(gt_segment.shape)
-
         # corner case where current sample does not have actions
         if num_gts == 0:
             cls_targets = gt_segment.new_full((num_pts, self.num_classes), 0)
@@ -679,10 +676,10 @@ class PtTransformer(nn.Module):
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
+        final_loss = cls_loss + reg_loss * loss_weight
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
-                'sco_loss'   : sco_loss,
+                # 'sco_loss'   : sco_loss,
                 'final_loss' : final_loss}
 
     @torch.no_grad()
