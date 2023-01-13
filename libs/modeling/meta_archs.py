@@ -368,7 +368,8 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=10
+            time=100
+
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
             
