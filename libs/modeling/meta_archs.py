@@ -389,11 +389,15 @@ class PtTransformer(nn.Module):
                 reg_loss.append(loss['reg_loss'])
                 final_loss.append(loss['final_loss'])
 
-            return {'cls_loss'   : torch.stack(cls_loss).mean(),
-                    'reg_loss'   : torch.stack(reg_loss).mean(),
-                    # 'sco_loss'   : torch.stack(sco_loss).mean(),
-                    'final_loss' : torch.stack(final_loss).mean()}
+            # return {'cls_loss'   : torch.stack(cls_loss).mean(),
+            #         'reg_loss'   : torch.stack(reg_loss).mean(),
+            #         # 'sco_loss'   : torch.stack(sco_loss).mean(),
+            #         'final_loss' : torch.stack(final_loss).mean()}
 
+            return {'cls_loss'   : torch.min(torch.stack(cls_loss)).values,
+                    'reg_loss'   : torch.min(torch.stack(reg_loss)).values,
+                    # 'sco_loss'   : torch.min(torch.stack(sco_loss)).values,
+                    'final_loss' : torch.min(torch.stack(final_loss)).values}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
