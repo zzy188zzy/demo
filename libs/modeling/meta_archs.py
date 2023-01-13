@@ -368,7 +368,7 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=100
+            time=10
 
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
@@ -396,10 +396,10 @@ class PtTransformer(nn.Module):
             #         'final_loss' : torch.stack(final_loss).mean()}
 
 
-            return {'cls_loss'   : torch.min(torch.stack(cls_loss)),
+            return {'cls_loss'   : torch.stack(cls_loss).mean(),
                     'reg_loss'   : torch.min(torch.stack(reg_loss)),
                     # 'sco_loss'   : torch.min(torch.stack(sco_loss)),
-                    'final_loss' : torch.min(torch.stack(final_loss))}
+                    'final_loss' : torch.stack(cls_loss).mean() + torch.min(torch.stack(reg_loss))}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
