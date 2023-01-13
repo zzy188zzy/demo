@@ -397,9 +397,9 @@ class PtTransformer(nn.Module):
 
 
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
-                    'reg_loss'   : torch.min(torch.stack(reg_loss)),
+                    'reg_loss'   : torch.stack(reg_loss).mean(),
                     # 'sco_loss'   : torch.min(torch.stack(sco_loss)),
-                    'final_loss' : torch.stack(cls_loss).mean() + torch.min(torch.stack(reg_loss))}
+                    'final_loss' : torch.min(torch.stack(final_loss))}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -457,8 +457,8 @@ class PtTransformer(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.4
-        p_len = 0.4
+        p_ctr = 0.3
+        p_len = 0.3
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
