@@ -394,6 +394,10 @@ class PtTransformer(nn.Module):
             #         # 'sco_loss'   : torch.stack(sco_loss).mean(),
             #         'final_loss' : torch.stack(final_loss).mean()}
 
+            print(torch.min(torch.stack(cls_loss)).values)
+            print(torch.stack(cls_loss).mean())
+            exit()
+
             return {'cls_loss'   : torch.min(torch.stack(cls_loss)).values,
                     'reg_loss'   : torch.min(torch.stack(reg_loss)).values,
                     # 'sco_loss'   : torch.min(torch.stack(sco_loss)).values,
