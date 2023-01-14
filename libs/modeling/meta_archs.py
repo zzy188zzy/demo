@@ -361,7 +361,7 @@ class PtTransformer(nn.Module):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
-        batched_feats = self.decouple(batched_inputs)
+        batched_feats = self.decouple(batched_inputs[batched_masks])
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(self.relu(batched_feats), batched_masks)
@@ -398,7 +398,7 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=2
+            time=1
 
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
@@ -429,7 +429,7 @@ class PtTransformer(nn.Module):
                     'reg_loss'   : torch.stack(reg_loss).mean(),
                     'sco_loss'   : torch.stack(sco_loss).mean(),
                     'dcp_loss'   : dcp_loss,
-                    'final_loss' : torch.min(torch.stack(final_loss))}
+                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -479,16 +479,21 @@ class PtTransformer(nn.Module):
         return batched_inputs, batched_masks
 
     @torch.no_grad()
-    def coarse_gt_single_video(self, gt_segment, gt_label, time=1, step=1, mode='none'):
+    def coarse_gt_single_video(self, gt_segment, gt_label, time=0, step=1, mode='none'):
         gt_label = gt_label.unsqueeze(1)
         base_segment = gt_segment
         base_label = gt_label
 
+        if time == 0:
+            seg = [base_segment]
+            lab = [base_label.squeeze(1)]
+            return seg, lab
+
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0
-        p_len = 0
+        p_ctr = 0.2
+        p_len = 0.2
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
@@ -649,24 +654,24 @@ class PtTransformer(nn.Module):
 
         cos_D1 = F.cosine_similarity(rgb_diff,rgb_same)
         cos_D2 = F.cosine_similarity(flow_diff,flow_same)
-        cos_D3 = F.cosine_similarity(rgb_diff,flow_same)
-        cos_D4 = F.cosine_similarity(flow_diff,rgb_same)
+        # cos_D3 = F.cosine_similarity(rgb_diff,flow_same)
+        # cos_D4 = F.cosine_similarity(flow_diff,rgb_same)
 
         cos_S1 = F.cosine_similarity(rgb_same,flow_same)
 
         loss_S = torch.mean((torch.ones(cos_S1.shape).to(cos_S1.device)-cos_S1)) 
         loss_D = torch.mean(torch.max(torch.zeros(cos_D1.shape).to(cos_S1.device),cos_D1)) \
-                    +torch.mean(torch.max(torch.zeros(cos_D2.shape).to(cos_S1.device),cos_D2)) \
-                    +torch.mean(torch.max(torch.zeros(cos_D3.shape).to(cos_S1.device),cos_D3)) \
-                    +torch.mean(torch.max(torch.zeros(cos_D4.shape).to(cos_S1.device),cos_D4))
+                    +torch.mean(torch.max(torch.zeros(cos_D2.shape).to(cos_S1.device),cos_D2)) 
+                    # +torch.mean(torch.max(torch.zeros(cos_D3.shape).to(cos_S1.device),cos_D3)) \
+                    # +torch.mean(torch.max(torch.zeros(cos_D4.shape).to(cos_S1.device),cos_D4))
 
         ft_C = torch.cat((flow_diff, rgb_diff), dim=0)
         mean_C = torch.mean(ft_C, axis=0)
         var_C = torch.var(ft_C, axis=0)
         log_var_C = torch.log(var_C)
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
-        # loss = ((loss_S + loss_D)+0.01*loss_KL)
-        loss = loss_S + loss_D
+        loss = ((loss_S + loss_D)+0.001*loss_KL)
+        # loss = loss_S + loss_D
         return loss
 
     def losses(
