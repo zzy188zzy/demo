@@ -167,6 +167,7 @@ class DecoupleNet(nn.Module):
     ):
         super().__init__()
         self.dim = input_dim // 2
+        self.relu = nn.ReLU()
         self.embd = nn.ModuleList()
         self.embd_norm = nn.ModuleList()
         for idx in range(4):
