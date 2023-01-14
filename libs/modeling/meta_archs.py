@@ -159,6 +159,27 @@ class PtTransformerRegHead(nn.Module):
         return out_offsets
 
 
+class DecoupleNet(nn.Module):
+    def __init__(
+        self,
+        input_dim
+    ):
+        super().__init__()
+        self.dim = input_dim // 2
+        self.conv1 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        
+
+    def forward(self, feats):
+        flow = feats[:, :self.dim, :]
+        rgb = feats[:, self.dim:, :]
+
+        flow_s = self.conv1(flow)
+        print(flow_s.shape)
+        exit()
+
+        
+        return flow_s
+
 @register_meta_arch("LocPointTransformer")
 class PtTransformer(nn.Module):
     """
@@ -245,7 +266,6 @@ class PtTransformer(nn.Module):
         # we will need a better way to dispatch the params to backbones / necks
         # backbone network: conv + transformer
         assert backbone_type in ['convTransformer', 'conv']
-        print(backbone_type)  # fy
         if backbone_type == 'convTransformer':
             self.backbone = make_backbone(
                 'convTransformer',
@@ -325,6 +345,8 @@ class PtTransformer(nn.Module):
         self.loss_normalizer = train_cfg['init_loss_norm']
         self.loss_normalizer_momentum = 0.9
 
+        self.decouple = DecoupleNet(dim=2048)
+
     @property
     def device(self):
         # a hacky way to get the device type
@@ -333,12 +355,14 @@ class PtTransformer(nn.Module):
 
     def forward(self, video_list):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
-        batched_inputs, batched_masks = self.preprocessing(video_list)
+        batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
+
+        batched_feats = self.decouple(batched_inputs)
 
         # forward the network (backbone -> neck -> heads)
-        print(batched_inputs.shape)
-        feats, masks = self.backbone(batched_inputs, batched_masks)
-        print(feats.shape)
+        feats, masks = self.backbone(batched_feats, batched_masks)
+        print(feats[0].shape)
+
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
         # compute the point coordinate along the FPN
