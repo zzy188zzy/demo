@@ -345,7 +345,7 @@ class PtTransformer(nn.Module):
         self.loss_normalizer = train_cfg['init_loss_norm']
         self.loss_normalizer_momentum = 0.9
 
-        self.decouple = DecoupleNet(dim=2048)
+        self.decouple = DecoupleNet(2048)
 
     @property
     def device(self):
