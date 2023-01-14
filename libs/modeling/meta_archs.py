@@ -167,18 +167,21 @@ class DecoupleNet(nn.Module):
         super().__init__()
         self.dim = input_dim // 2
         self.conv1 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        self.conv2 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        self.conv3 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        self.conv4 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
         
 
     def forward(self, feats):
         flow = feats[:, :self.dim, :]
         rgb = feats[:, self.dim:, :]
 
-        flow_s = self.conv1(flow)
-        print(flow_s.shape)
-        exit()
+        a = self.conv1(flow)
+        b = self.conv2(flow)
+        c = self.conv3(rgb)
+        d = self.conv4(rgb)
 
-        
-        return flow_s
+        return torch.cat((a, b, c, d), dim=1)
 
 @register_meta_arch("LocPointTransformer")
 class PtTransformer(nn.Module):
@@ -345,7 +348,7 @@ class PtTransformer(nn.Module):
         self.loss_normalizer = train_cfg['init_loss_norm']
         self.loss_normalizer_momentum = 0.9
 
-        # self.decouple = DecoupleNet(2048)
+        self.decouple = DecoupleNet(2048)
 
     @property
     def device(self):
@@ -357,11 +360,10 @@ class PtTransformer(nn.Module):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
-        # batched_feats = self.decouple(batched_inputs)
+        batched_feats = self.decouple(batched_inputs)
 
         # forward the network (backbone -> neck -> heads)
-        feats, masks = self.backbone(batched_inputs, batched_masks)
-        print(feats[0].shape)
+        feats, masks = self.backbone(torch.nn.ReLU(batched_feats), batched_masks)
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
@@ -395,7 +397,7 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=10
+            time=1
 
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
@@ -417,16 +419,14 @@ class PtTransformer(nn.Module):
                 reg_loss.append(loss['reg_loss'])
                 final_loss.append(loss['final_loss'])
 
-            # return {'cls_loss'   : torch.stack(cls_loss).mean(),
-            #         'reg_loss'   : torch.stack(reg_loss).mean(),
-            #         # 'sco_loss'   : torch.stack(sco_loss).mean(),
-            #         'final_loss' : torch.stack(final_loss).mean()}
+            dcp_loss = self.dcp_loss(batched_feats)
 
 
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
                     'reg_loss'   : torch.stack(reg_loss).mean(),
                     # 'sco_loss'   : torch.min(torch.stack(sco_loss)),
-                    'final_loss' : torch.min(torch.stack(final_loss))}
+                    'dcp_loss'   : dcp_loss,
+                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -628,6 +628,47 @@ class PtTransformer(nn.Module):
         reg_targets /= concat_points[:, 3, None]
 
         return cls_targets, reg_targets
+
+    def dcp_loss(self, feats):
+
+        B, dim, T = feats.shape
+        feats = feats.transpose(2, 1)
+        feats = feats.reshape(B*T, dim)
+
+
+        dim = feats.shape[1] // 2
+        flow = feats[:, :dim]
+        rgb = feats[:, dim:]
+
+        dim /= 2
+        flow_same = flow[:, :dim]
+        flow_diff = flow[:, dim:]
+        rgb_same = rgb[:, :dim]
+        rgb_diff = rgb[:, dim:]
+
+        cos_D1 = F.cosine_similarity(rgb_diff,rgb_same)
+        cos_D2 = F.cosine_similarity(flow_diff,flow_same)
+        cos_D3 = F.cosine_similarity(rgb_diff,flow_same)
+        cos_D4 = F.cosine_similarity(flow_diff,rgb_same)
+
+        cos_S1 = F.cosine_similarity(rgb_same,flow_same)
+        cos_S2 = F.cosine_similarity(rgb_diff,flow_diff)
+
+        loss_S = torch.mean((torch.ones(cos_S1.shape).to(cos_S1.device)-cos_S1)) \
+                    +torch.mean((torch.ones(cos_S2.shape).to(cos_S1.device)-cos_S2))
+        loss_D = torch.mean(torch.max(torch.zeros(cos_D1.shape).to(cos_S1.device),cos_D1)) \
+                    +torch.mean(torch.max(torch.zeros(cos_D2.shape).to(cos_S1.device),cos_D2)) \
+                    +torch.mean(torch.max(torch.zeros(cos_D3.shape).to(cos_S1.device),cos_D3)) \
+                    +torch.mean(torch.max(torch.zeros(cos_D4.shape).to(cos_S1.device),cos_D4))
+
+        ft_C = feats
+        mean_C = torch.mean(ft_C, axis=0)
+        var_C = torch.var(ft_C, axis=0)
+        log_var_C = torch.log(var_C)
+        loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
+        loss = ((loss_S + loss_D)+0.1*loss_KL)
+        # loss = (loss_S + loss_D)
+        return loss
 
     def losses(
         self, fpn_masks,
