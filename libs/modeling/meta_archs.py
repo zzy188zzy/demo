@@ -429,7 +429,7 @@ class PtTransformer(nn.Module):
                     'reg_loss'   : torch.stack(reg_loss).mean(),
                     'sco_loss'   : torch.stack(sco_loss).mean(),
                     'dcp_loss'   : dcp_loss,
-                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss + sco_loss}
+                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -780,7 +780,7 @@ class PtTransformer(nn.Module):
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight
+        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
                 'sco_loss'   : sco_loss,
