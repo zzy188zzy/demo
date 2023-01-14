@@ -162,24 +162,49 @@ class PtTransformerRegHead(nn.Module):
 class DecoupleNet(nn.Module):
     def __init__(
         self,
-        input_dim
+        input_dim,
+        with_ln=False
     ):
         super().__init__()
         self.dim = input_dim // 2
-        self.conv1 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
-        self.conv2 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
-        self.conv3 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
-        self.conv4 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        self.embd = nn.ModuleList()
+        self.embd_norm = nn.ModuleList()
+        for idx in range(4):
+            self.embd.append(
+                MaskedConv1D(
+                    self.dim, self.dim//2, 3,
+                    stride=1, padding=1, bias=(not with_ln)
+                )
+            )
+            if with_ln:
+                self.embd_norm.append(LayerNorm(self.dim))
+            else:
+                self.embd_norm.append(nn.Identity())
+        # self.conv1 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        # self.conv2 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        # self.conv3 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
+        # self.conv4 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
         
 
-    def forward(self, feats):
+    def forward(self, feats, mask):
         flow = feats[:, :self.dim, :]
         rgb = feats[:, self.dim:, :]
 
-        a = self.conv1(flow)
-        b = self.conv2(flow)
-        c = self.conv3(rgb)
-        d = self.conv4(rgb)
+        a, mask = self.embd[0](flow, mask)
+        a = self.relu(self.embd_norm[0](a))
+
+        b, mask = self.embd[1](flow, mask)
+        b = self.relu(self.embd_norm[1](b))
+
+        c, mask = self.embd[2](rgb, mask)
+        c = self.relu(self.embd_norm[2](c))
+
+        d, mask = self.embd[3](rgb, mask)
+        d = self.relu(self.embd_norm[3](d))
+        # a = self.conv1(flow)
+        # b = self.conv2(flow)
+        # c = self.conv3(rgb)
+        # d = self.conv4(rgb)
 
         return torch.cat((a, b, c, d), dim=1)
 
@@ -361,15 +386,10 @@ class PtTransformer(nn.Module):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
-        # batched_feats = self.decouple(batched_inputs)
+        batched_feats = self.decouple(batched_inputs, batched_masks)
 
         # forward the network (backbone -> neck -> heads)
-        feats, masks = self.backbone(batched_inputs, batched_masks)
-        print(feats[0].shape)
-        print(feats[1].shape)
-        print(masks[0].shape)
-        print(masks[1].shape)
-        exit()
+        feats, masks = self.backbone(batched_feats, batched_masks)
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
