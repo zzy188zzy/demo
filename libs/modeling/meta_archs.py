@@ -392,9 +392,6 @@ class PtTransformer(nn.Module):
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(self.relu(batched_feats), batched_masks)
 
-        print(masks)
-        exit()
-
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
         # compute the point coordinate along the FPN
@@ -451,7 +448,7 @@ class PtTransformer(nn.Module):
                 sco_loss.append(loss['sco_loss'])
                 final_loss.append(loss['final_loss'])
 
-            dcp_loss = self.dcp_loss(batched_feats)
+            dcp_loss = self.dcp_loss(batched_feats, batched_masks)
 
 
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
@@ -666,10 +663,18 @@ class PtTransformer(nn.Module):
 
         return cls_targets, reg_targets
 
-    def dcp_loss(self, feats):
+    def dcp_loss(self, feats, masks):
         B, dim, T = feats.shape
+
         feats = feats.transpose(2, 1)
+        masks = masks.transpose(2, 1)
         feats = feats.reshape(B*T, dim)
+        masks = masks.reshape(B*T, 1)
+
+        print(feats.shape)
+        feats = feats[masks]
+        print(feats.shape)
+        exit()
 
         dim = feats.shape[1] // 2
         flow = feats[:, :dim]
