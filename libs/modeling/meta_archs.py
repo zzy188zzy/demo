@@ -178,7 +178,7 @@ class DecoupleNet(nn.Module):
                 )
             )
             if with_ln:
-                self.embd_norm.append(LayerNorm(self.dim))
+                self.embd_norm.append(LayerNorm(self.dim//2))
             else:
                 self.embd_norm.append(nn.Identity())
         # self.conv1 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
