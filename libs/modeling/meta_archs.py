@@ -349,6 +349,7 @@ class PtTransformer(nn.Module):
         self.loss_normalizer_momentum = 0.9
 
         self.decouple = DecoupleNet(2048)
+        self.relu = nn.ReLU()
 
     @property
     def device(self):
@@ -360,14 +361,10 @@ class PtTransformer(nn.Module):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
-        print(batched_inputs.type)
         batched_feats = self.decouple(batched_inputs)
-        print(batched_feats.type)
-        print(torch.nn.ReLU(batched_feats).type)
-        exit()
 
         # forward the network (backbone -> neck -> heads)
-        feats, masks = self.backbone(torch.nn.ReLU(batched_feats), batched_masks)
+        feats, masks = self.backbone(self.relu(batched_feats), batched_masks)
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
