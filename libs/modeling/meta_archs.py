@@ -701,11 +701,11 @@ class PtTransformer(nn.Module):
         ft_C = torch.cat((flow_diff, rgb_diff), dim=0)
         mean_C = torch.mean(ft_C, axis=0)
         var_C = torch.var(ft_C, axis=0)
-        log_var_C = torch.log(var_C)
+        log_var_C = torch.log(var_C + 1e-5)
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
         loss = ((loss_S + loss_D)+0.001*loss_KL)
         # loss = loss_S + loss_D
-        return (loss / L) * T
+        return (loss / max(L, 1)) * T
 
     def losses(
         self, fpn_masks,
