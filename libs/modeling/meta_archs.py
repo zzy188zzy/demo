@@ -360,7 +360,11 @@ class PtTransformer(nn.Module):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
+        print(batched_inputs.type)
         batched_feats = self.decouple(batched_inputs)
+        print(batched_feats.type)
+        print(torch.nn.ReLU(batched_feats).type)
+        exit()
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(torch.nn.ReLU(batched_feats), batched_masks)
