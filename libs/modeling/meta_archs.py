@@ -671,10 +671,9 @@ class PtTransformer(nn.Module):
         feats = feats.reshape(B*T, dim)
         masks = masks.reshape(B*T)
 
-        print(feats.shape)
         feats = feats[masks]
-        print(feats.shape)
-        exit()
+
+        L = feats.shape[0]
 
         dim = feats.shape[1] // 2
         flow = feats[:, :dim]
@@ -706,7 +705,7 @@ class PtTransformer(nn.Module):
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
         loss = ((loss_S + loss_D)+0.001*loss_KL)
         # loss = loss_S + loss_D
-        return loss
+        return (loss / L) * T
 
     def losses(
         self, fpn_masks,
