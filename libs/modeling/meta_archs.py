@@ -641,7 +641,7 @@ class PtTransformer(nn.Module):
         flow = feats[:, :dim]
         rgb = feats[:, dim:]
 
-        dim /= 2
+        dim = dim // 2
         flow_same = flow[:, :dim]
         flow_diff = flow[:, dim:]
         rgb_same = rgb[:, :dim]
