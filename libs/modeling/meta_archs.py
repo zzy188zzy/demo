@@ -429,7 +429,7 @@ class PtTransformer(nn.Module):
                     'reg_loss'   : torch.stack(reg_loss).mean(),
                     'sco_loss'   : torch.stack(sco_loss).mean(),
                     'dcp_loss'   : dcp_loss,
-                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss}
+                    'final_loss' : torch.min(torch.stack(final_loss))}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -633,7 +633,6 @@ class PtTransformer(nn.Module):
         return cls_targets, reg_targets
 
     def dcp_loss(self, feats):
-
         B, dim, T = feats.shape
         feats = feats.transpose(2, 1)
         feats = feats.reshape(B*T, dim)
