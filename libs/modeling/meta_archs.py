@@ -163,7 +163,7 @@ class DecoupleNet(nn.Module):
     def __init__(
         self,
         input_dim,
-        with_ln=False
+        with_ln=True
     ):
         super().__init__()
         self.dim = input_dim // 2
@@ -186,7 +186,6 @@ class DecoupleNet(nn.Module):
         # self.conv3 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
         # self.conv4 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
         
-
     def forward(self, feats, mask):
         flow = feats[:, :self.dim, :]
         rgb = feats[:, self.dim:, :]
@@ -450,7 +449,6 @@ class PtTransformer(nn.Module):
 
             dcp_loss = self.dcp_loss(batched_feats, batched_masks)
 
-
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
                     'reg_loss'   : torch.stack(reg_loss).mean(),
                     'sco_loss'   : torch.stack(sco_loss).mean(),
@@ -701,7 +699,7 @@ class PtTransformer(nn.Module):
         ft_C = torch.cat((flow_diff, rgb_diff), dim=0)
         mean_C = torch.mean(ft_C, axis=0)
         var_C = torch.var(ft_C, axis=0)
-        log_var_C = torch.log(var_C + 1e-5)
+        log_var_C = torch.log(var_C + 1e-6)
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
         loss = ((loss_S + loss_D)+0.001*loss_KL)
         # loss = loss_S + loss_D
