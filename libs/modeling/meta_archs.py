@@ -245,6 +245,7 @@ class PtTransformer(nn.Module):
         # we will need a better way to dispatch the params to backbones / necks
         # backbone network: conv + transformer
         assert backbone_type in ['convTransformer', 'conv']
+        print(backbone_type)  # fy
         if backbone_type == 'convTransformer':
             self.backbone = make_backbone(
                 'convTransformer',
@@ -335,7 +336,9 @@ class PtTransformer(nn.Module):
         batched_inputs, batched_masks = self.preprocessing(video_list)
 
         # forward the network (backbone -> neck -> heads)
+        print(batched_inputs.shape)
         feats, masks = self.backbone(batched_inputs, batched_masks)
+        print(feats.shape)
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
         # compute the point coordinate along the FPN
