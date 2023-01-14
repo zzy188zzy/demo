@@ -669,7 +669,7 @@ class PtTransformer(nn.Module):
         feats = feats.transpose(2, 1)
         masks = masks.transpose(2, 1)
         feats = feats.reshape(B*T, dim)
-        masks = masks.reshape(B*T, 1)
+        masks = masks.reshape(B*T)
 
         print(feats.shape)
         feats = feats[masks]
