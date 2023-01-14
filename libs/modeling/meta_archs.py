@@ -405,6 +405,7 @@ class PtTransformer(nn.Module):
             
             cls_loss = []
             reg_loss = []
+            sco_loss = []
             final_loss = []
             for idx in range(time):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
@@ -418,6 +419,7 @@ class PtTransformer(nn.Module):
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
+                sco_loss.append(loss['sco_loss'])
                 final_loss.append(loss['final_loss'])
 
             dcp_loss = self.dcp_loss(batched_feats)
@@ -425,9 +427,9 @@ class PtTransformer(nn.Module):
 
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
                     'reg_loss'   : torch.stack(reg_loss).mean(),
-                    # 'sco_loss'   : torch.min(torch.stack(sco_loss)),
+                    'sco_loss'   : torch.stack(sco_loss).mean(),
                     'dcp_loss'   : dcp_loss,
-                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss}
+                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss + sco_loss}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -631,7 +633,6 @@ class PtTransformer(nn.Module):
         return cls_targets, reg_targets
 
     def dcp_loss(self, feats):
-        feats = self.relu(feats)
 
         B, dim, T = feats.shape
         feats = feats.transpose(2, 1)
@@ -665,7 +666,7 @@ class PtTransformer(nn.Module):
         var_C = torch.var(ft_C, axis=0)
         log_var_C = torch.log(var_C)
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
-        loss = ((loss_S + loss_D)+0.1*loss_KL)
+        loss = ((loss_S + loss_D)+0.01*loss_KL)
         # loss = (loss_S + loss_D)
         return loss
 
@@ -782,7 +783,7 @@ class PtTransformer(nn.Module):
         final_loss = cls_loss + reg_loss * loss_weight
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
-                # 'sco_loss'   : sco_loss,
+                'sco_loss'   : sco_loss,
                 'final_loss' : final_loss}
 
     @torch.no_grad()
