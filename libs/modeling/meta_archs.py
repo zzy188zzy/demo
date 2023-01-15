@@ -793,7 +793,7 @@ class PtTransformer(nn.Module):
 
         scores = scores[idx]
 
-        # scores -= torch.ones(scores.shape, device=scores.device)*0.05  # 0.05
+        scores -= torch.ones(scores.shape, device=scores.device)*0.05  # 0.05
 
         # level = 3
         # scores = scores[:, :level, :]
