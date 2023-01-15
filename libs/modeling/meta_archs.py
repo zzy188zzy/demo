@@ -763,7 +763,7 @@ class PtTransformer(nn.Module):
             mask = mask==False
             # print(cls_i)
             # cls_i = torch.softmax(cls_i, dim=2)
-            cls_i = torch.softmax(cls_i)
+            cls_i = torch.sigmoid(cls_i)
             # print(cls_i)
             cls_i = torch.max(cls_i, dim=2).values
             # print(cls_i)
