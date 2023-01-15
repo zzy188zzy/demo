@@ -677,23 +677,25 @@ class PtTransformer(nn.Module):
 
         cos_D1 = F.cosine_similarity(rgb_diff,rgb_same)
         cos_D2 = F.cosine_similarity(flow_diff,flow_same)
-        # cos_D3 = F.cosine_similarity(rgb_diff,flow_same)
-        # cos_D4 = F.cosine_similarity(flow_diff,rgb_same)
+        cos_D3 = F.cosine_similarity(rgb_diff,flow_same)
+        cos_D4 = F.cosine_similarity(flow_diff,rgb_same)
 
         cos_S1 = F.cosine_similarity(rgb_same,flow_same)
+        cos_S2 = F.cosine_similarity(rgb_diff,flow_diff)
 
-        loss_S = torch.mean((torch.ones(cos_S1.shape).to(cos_S1.device)-cos_S1)) 
+        loss_S = torch.mean((torch.ones(cos_S1.shape).to(cos_S1.device)-cos_S1)) \
+                    +torch.mean((torch.ones(cos_S2.shape).to(cos_S2.device)-cos_S2)) 
         loss_D = torch.mean(torch.max(torch.zeros(cos_D1.shape).to(cos_S1.device),cos_D1)) \
-                    +torch.mean(torch.max(torch.zeros(cos_D2.shape).to(cos_S1.device),cos_D2)) 
-                    # +torch.mean(torch.max(torch.zeros(cos_D3.shape).to(cos_S1.device),cos_D3)) \
-                    # +torch.mean(torch.max(torch.zeros(cos_D4.shape).to(cos_S1.device),cos_D4))
+                    +torch.mean(torch.max(torch.zeros(cos_D2.shape).to(cos_S1.device),cos_D2)) \
+                    +torch.mean(torch.max(torch.zeros(cos_D3.shape).to(cos_S1.device),cos_D3)) \
+                    +torch.mean(torch.max(torch.zeros(cos_D4.shape).to(cos_S1.device),cos_D4))
 
-        ft_C = torch.cat((flow_diff, rgb_diff), dim=0)
+        ft_C = feats
         mean_C = torch.mean(ft_C, axis=0)
         var_C = torch.var(ft_C, axis=0)
         log_var_C = torch.log(var_C + 1e-6)
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
-        loss = ((loss_S + loss_D)+0.1*loss_KL)
+        loss = ((loss_S + loss_D)+0.01*loss_KL)
         # loss = loss_S + loss_D
         return (loss / max(L, 1)) * T
 
