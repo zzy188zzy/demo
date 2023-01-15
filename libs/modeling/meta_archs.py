@@ -181,10 +181,6 @@ class DecoupleNet(nn.Module):
                 self.embd_norm.append(LayerNorm(self.dim//2))
             else:
                 self.embd_norm.append(nn.Identity())
-        # self.conv1 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
-        # self.conv2 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
-        # self.conv3 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
-        # self.conv4 = torch.nn.Conv1d(in_channels=self.dim, out_channels=self.dim//2, kernel_size=3, padding=1)
         
     def forward(self, feats, mask):
         flow = feats[:, :self.dim, :]
@@ -201,10 +197,6 @@ class DecoupleNet(nn.Module):
 
         d, mask = self.embd[3](rgb, mask)
         d = self.embd_norm[3](d)
-        # a = self.conv1(flow)
-        # b = self.conv2(flow)
-        # c = self.conv3(rgb)
-        # d = self.conv4(rgb)
 
         return torch.cat((a, b, c, d), dim=1)
 
@@ -437,7 +429,7 @@ class PtTransformer(nn.Module):
                 gt_offsets = [b[i][idx] for i in range(len(b))]
 
                 # compute the loss and return
-                loss = self.losses(
+                loss, norm = self.losses(
                     fpn_masks,
                     out_cls_logits, out_offsets,
                     gt_cls_labels, gt_offsets
@@ -447,7 +439,7 @@ class PtTransformer(nn.Module):
                 sco_loss.append(loss['sco_loss'])
                 final_loss.append(loss['final_loss'])
 
-            dcp_loss = self.dcp_loss(batched_feats, batched_masks)
+            dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
                     'reg_loss'   : torch.stack(reg_loss).mean(),
@@ -814,12 +806,14 @@ class PtTransformer(nn.Module):
         else:
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
+        sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
+
         # return a dict of losses
         final_loss = cls_loss + reg_loss * loss_weight + sco_loss
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
                 'sco_loss'   : sco_loss,
-                'final_loss' : final_loss}
+                'final_loss' : final_loss}, self.loss_normalizer / max(num_pos, 1)
 
     @torch.no_grad()
     def inference(
