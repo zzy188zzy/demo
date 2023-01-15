@@ -163,7 +163,7 @@ class DecoupleNet(nn.Module):
     def __init__(
         self,
         input_dim,
-        with_ln=True
+        with_ln=False
     ):
         super().__init__()
         self.dim = input_dim // 2
@@ -191,16 +191,16 @@ class DecoupleNet(nn.Module):
         rgb = feats[:, self.dim:, :]
 
         a, mask = self.embd[0](flow, mask)
-        a = self.relu(self.embd_norm[0](a))
+        a = self.embd_norm[0](a)
 
         b, mask = self.embd[1](flow, mask)
-        b = self.relu(self.embd_norm[1](b))
+        b = self.embd_norm[1](b)
 
         c, mask = self.embd[2](rgb, mask)
-        c = self.relu(self.embd_norm[2](c))
+        c = self.embd_norm[2](c)
 
         d, mask = self.embd[3](rgb, mask)
-        d = self.relu(self.embd_norm[3](d))
+        d = self.embd_norm[3](d)
         # a = self.conv1(flow)
         # b = self.conv2(flow)
         # c = self.conv3(rgb)
