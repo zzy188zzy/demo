@@ -812,7 +812,7 @@ class PtTransformer(nn.Module):
         sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight
+        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
                 'sco_loss'   : sco_loss,
