@@ -365,7 +365,7 @@ class PtTransformer(nn.Module):
         self.loss_normalizer = train_cfg['init_loss_norm']
         self.loss_normalizer_momentum = 0.9
 
-        self.decouple = DecoupleNet(2048)
+        # self.decouple = DecoupleNet(2048)
         self.relu = nn.ReLU()
 
     @property
@@ -378,10 +378,10 @@ class PtTransformer(nn.Module):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
-        batched_feats = self.decouple(batched_inputs, batched_masks)
+        # batched_feats = self.decouple(batched_inputs, batched_masks)
 
         # forward the network (backbone -> neck -> heads)
-        feats, masks = self.backbone(self.relu(batched_feats), batched_masks)
+        feats, masks = self.backbone(batched_inputs, batched_masks)
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
 
@@ -439,13 +439,13 @@ class PtTransformer(nn.Module):
                 sco_loss.append(loss['sco_loss'])
                 final_loss.append(loss['final_loss'])
 
-            dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
+            # dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
             return {'cls_loss'   : torch.stack(cls_loss).mean(),
                     'reg_loss'   : torch.stack(reg_loss).mean(),
                     'sco_loss'   : torch.stack(sco_loss).mean(),
-                    'dcp_loss'   : dcp_loss,
-                    'final_loss' : torch.min(torch.stack(final_loss)) + dcp_loss}
+                    # 'dcp_loss'   : dcp_loss,
+                    'final_loss' : torch.min(torch.stack(final_loss))}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -695,8 +695,8 @@ class PtTransformer(nn.Module):
         var_C = torch.var(ft_C, axis=0)
         log_var_C = torch.log(var_C + 1e-6)
         loss_KL = torch.mean(mean_C*mean_C + var_C - log_var_C - 1) / 2
-        # loss = ((loss_S + loss_D)+0.0001*loss_KL)
-        loss = loss_S + loss_D
+        loss = ((loss_S + loss_D)+0.1*loss_KL)
+        # loss = loss_S + loss_D
         return (loss / max(L, 1)) * T
 
     def losses(
