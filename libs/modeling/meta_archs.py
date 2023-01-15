@@ -762,7 +762,8 @@ class PtTransformer(nn.Module):
         for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
             mask = mask==False
             # print(cls_i)
-            cls_i = torch.softmax(cls_i, dim=2)
+            # cls_i = torch.softmax(cls_i, dim=2)
+            cls_i = torch.softmax(cls_i)
             # print(cls_i)
             cls_i = torch.max(cls_i, dim=2).values
             # print(cls_i)
