@@ -767,11 +767,12 @@ class PtTransformer(nn.Module):
         poses = []
         t = 1
         for i, (gt, cls_i, mask) in enumerate(zip(gt_cls_labels, out_cls_logits, fpn_masks)):
-            # print(cls_i.sum(-1))
+            print(gt.shape)
             pos = gt.sum(-1) > 0
             mask = mask==False
-            # print(mask)
-            # exit()
+            print(mask.shape)
+            print(pos.shape)
+            exit()
             # print(cls_i)
             cls_i = torch.softmax(cls_i, dim=2)
             # cls_i = torch.sigmoid(cls_i)
