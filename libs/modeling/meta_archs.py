@@ -820,7 +820,7 @@ class PtTransformer(nn.Module):
         # print((low_idx==3).sum())
         # print((low_idx==4).sum())
         # print((low_idx==5).sum())
-        low_idx = (torch.ones(low_idx.shape, device=low_idx.device)*2).pow(low_idx)/8
+        low_idx = (torch.ones(low_idx.shape, device=low_idx.device)*2).pow(low_idx)
         Low -= torch.ones(Low.shape, device=Low.device)*0.05  # 0.05
         Low /= low_idx
         # exit()
