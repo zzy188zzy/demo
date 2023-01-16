@@ -847,7 +847,7 @@ class PtTransformer(nn.Module):
         # print(low.shape)
         sco_loss += t[:low.shape[0]*2].mean() - 0.05
 
-        sco_loss *= 0.1
+        # sco_loss *= 0.1
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
