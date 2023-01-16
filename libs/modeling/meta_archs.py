@@ -765,14 +765,24 @@ class PtTransformer(nn.Module):
         scores = []
         masks = []
         poses = []
+
+        tmp = gt_cls_labels.sum(-1) > 0  # [2, 4536]
+        gt_labels = []
+        s = 0
+        l = 2304
+        for i in range(6):
+            gt_labels.append(tmp[:, s:s+l])
+            s += l
+            l = l // 2
+
         t = 1
-        for i, (gt, cls_i, mask) in enumerate(zip(gt_cls_labels, out_cls_logits, fpn_masks)):
-            print(gt.shape)
-            pos = gt.sum(-1) > 0
+        for i, (gt, cls_i, mask) in enumerate(zip(gt_labels, out_cls_logits, fpn_masks)):
+            # print(gt.shape)
+            pos = gt  # [2, 2304]
             mask = mask==False
-            print(mask.shape)
-            print(pos.shape)
-            exit()
+            # print(mask.shape)
+            # print(pos.shape)
+            # exit()
             # print(cls_i)
             cls_i = torch.softmax(cls_i, dim=2)
             # cls_i = torch.sigmoid(cls_i)
