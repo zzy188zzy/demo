@@ -442,7 +442,7 @@ class PtTransformer(nn.Module):
             # dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
             cls_loss = torch.stack(cls_loss).mean()
-            reg_loss = torch.min(torch.stack(reg_loss))
+            reg_loss = reg_loss[0]
             sco_loss = torch.stack(sco_loss).mean()
             final_loss = cls_loss + reg_loss + sco_loss
 
@@ -513,8 +513,8 @@ class PtTransformer(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.1
-        p_len = 0.1
+        p_ctr = 0.2
+        p_len = 0.2
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
