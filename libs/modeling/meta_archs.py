@@ -810,7 +810,7 @@ class PtTransformer(nn.Module):
         pos_idx = torch.sum(poses, dim=1) > 0
 
         idx = torch.sum(masks, dim=1)
-        idx = torch.logical_and(idx < 5, pos_idx)
+        idx = torch.logical_and(idx < 6, pos_idx)
         
         low = torch.min(scores, dim=1).values
         scores[masks]=0
@@ -844,7 +844,7 @@ class PtTransformer(nn.Module):
         else:
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
-        sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
+        # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # return a dict of losses
         final_loss = cls_loss + reg_loss * loss_weight + sco_loss
