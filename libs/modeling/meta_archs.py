@@ -766,7 +766,8 @@ class PtTransformer(nn.Module):
         masks = []
         t = 1
         for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
-            mask = mask==False
+            mask = torch.logical_or((out_cls_logits.sum(-1) < 0), mask==False)
+             
             # print(cls_i)
             cls_i = torch.softmax(cls_i, dim=2)
             # cls_i = torch.sigmoid(cls_i)
@@ -813,18 +814,18 @@ class PtTransformer(nn.Module):
         # sco_loss = low.sum() / (level*2304*low.shape[0])
         
         sco_loss = (weight * low).sum()
-        # sco_loss /= idx.sum()
-        sco_loss /= self.loss_normalizer
+        sco_loss /= idx.sum()
+        # sco_loss /= self.loss_normalizer
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
         else:
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
-        # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
+        sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight + sco_loss*0.1
+        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
