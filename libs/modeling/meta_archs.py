@@ -847,6 +847,8 @@ class PtTransformer(nn.Module):
         # print(low.shape)
         sco_loss += t[:low.shape[0]*2].mean() - 0.05
 
+        sco_loss *= 0.1
+
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
         else:
@@ -855,7 +857,7 @@ class PtTransformer(nn.Module):
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight + sco_loss*0.1
+        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
