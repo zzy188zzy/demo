@@ -845,7 +845,7 @@ class PtTransformer(nn.Module):
         t = t[idx].view(t.size())
         # print(t.shape)
         # print(low.shape)
-        sco_loss += t[:low.shape[0]*2].mean() - 0.05 + 1 - scores[poses].mean()
+        sco_loss += t[:low.shape[0]*2].mean() - 0.05 - torch.log(scores[poses].mean())
 
         # sco_loss *= 0.1
 
