@@ -783,7 +783,7 @@ class PtTransformer(nn.Module):
         masks = torch.stack(masks,dim=1)
 
         idx = torch.sum(masks, dim=1)
-        idx = idx < 5
+        idx = idx < 6
         
         low = torch.min(scores, dim=1).values
         scores[masks]=0
