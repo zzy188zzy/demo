@@ -812,17 +812,17 @@ class PtTransformer(nn.Module):
         idx = torch.sum(masks, dim=1)
         idx = torch.logical_and(idx < 6, pos_idx)
         
-        low = torch.min(scores, dim=1).values
+        Low = torch.min(scores, dim=1).values
         scores[masks]=0
-        high = torch.max(scores, dim=1).values
+        High = torch.max(scores, dim=1).values
 
         # print(low[0, :, 0])
         # low = torch.sort(low, dim=1).values
         # print(low[0, :, 0])
         # exit()
 
-        low = low[idx]
-        high = high[idx]
+        low = Low[idx]
+        high = High[idx]
 
         # weight = (high + torch.ones(high.shape, device=high.device)*0.95)
 
@@ -839,7 +839,7 @@ class PtTransformer(nn.Module):
         sco_loss /= (idx.sum() + 1)
         # sco_loss /= self.loss_normalizer
 
-        t = high[torch.logical_and(idx < 6, pos_idx==False)]
+        t = High[torch.logical_and(idx < 6, pos_idx==False)]
         print(t.shape)
         idx = torch.randperm(t.shape[1])
         t = t[:, idx].view(t.size())
