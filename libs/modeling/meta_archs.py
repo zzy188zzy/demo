@@ -813,7 +813,7 @@ class PtTransformer(nn.Module):
         # idx = torch.logical_and(idx < 6, pos_idx)
         idx = idx < 6
         
-        low_idx, Low = torch.min(scores, dim=1)
+        Low, low_idx = torch.min(scores, dim=1)
         print(low_idx)
         exit()
         scores[masks]=0
