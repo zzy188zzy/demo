@@ -814,13 +814,15 @@ class PtTransformer(nn.Module):
         idx = idx < 6
         
         Low, low_idx = torch.min(scores, dim=1)
-        print((low_idx==0).sum())
-        print((low_idx==1).sum())
-        print((low_idx==2).sum())
-        print((low_idx==3).sum())
-        print((low_idx==4).sum())
-        print((low_idx==5).sum())
-        exit()
+        # print((low_idx==0).sum())
+        # print((low_idx==1).sum())
+        # print((low_idx==2).sum())
+        # print((low_idx==3).sum())
+        # print((low_idx==4).sum())
+        # print((low_idx==5).sum())
+        low_idx = (torch.ones(low_idx.shape, device=low_idx.device)*2).pow(low_idx)/8
+        Low /= low_idx
+        # exit()
         scores[masks]=0
         High = torch.max(scores, dim=1).values
 
