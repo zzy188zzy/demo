@@ -801,8 +801,8 @@ class PtTransformer(nn.Module):
         # sco_loss = scores.sum() / (level*2304*scores.shape[0])
         
         sco_loss = scores.sum()
-        sco_loss /= idx.sum()
-        # sco_loss /= self.loss_normalizer
+        # sco_loss /= idx.sum()
+        sco_loss /= self.loss_normalizer
 
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
@@ -814,16 +814,6 @@ class PtTransformer(nn.Module):
         # return a dict of losses
         final_loss = cls_loss + reg_loss * loss_weight + sco_loss
 
-        print(cls_loss)
-        print(reg_loss)
-        print(cls_loss*self.loss_normalizer)
-        print(reg_loss*self.loss_normalizer)
-        print(self.loss_normalizer)
-        print(loss_weight)
-        print(max(num_pos, 1))
-        print(self.loss_normalizer/max(num_pos, 1))
-        print(sco_loss*idx.sum())
-        exit()
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
                 'sco_loss'   : sco_loss,
