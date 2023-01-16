@@ -839,6 +839,13 @@ class PtTransformer(nn.Module):
         sco_loss /= (idx.sum() + 1)
         # sco_loss /= self.loss_normalizer
 
+        t = high[torch.logical_and(idx < 6, pos_idx==False)]
+        print(t.shape)
+        idx = torch.randperm(t.shape[1])
+        t = t[:, idx].view(t.size())
+        print(t.shape)
+        sco_loss += t[:, :low.shape[0]].mean() - 0.05
+
         if self.train_loss_weight > 0:
             loss_weight = self.train_loss_weight
         else:
