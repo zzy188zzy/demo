@@ -718,6 +718,10 @@ class PtTransformer(nn.Module):
         # stack the list -> (B, FT) -> (# Valid, )
         gt_cls = torch.stack(gt_cls_labels)                                         # [2, 4536, 20]
         pos_mask = torch.logical_and((gt_cls.sum(-1) > 0), valid_mask)
+        print((gt_cls.sum(-1) > 0))
+        print((gt_cls.sum(-1)))
+        print((gt_cls.sum(-1) > 0).sum())
+        exit()
 
         # cat the predicted offsets -> (B, FT, 2 (xC)) -> # (#Pos, 2 (xC))
         pred_offsets = torch.cat(out_offsets, dim=1)[pos_mask]
