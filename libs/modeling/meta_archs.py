@@ -415,7 +415,7 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=5
+            time=1
 
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
@@ -718,10 +718,6 @@ class PtTransformer(nn.Module):
         # stack the list -> (B, FT) -> (# Valid, )
         gt_cls = torch.stack(gt_cls_labels)                                         # [2, 4536, 20]
         pos_mask = torch.logical_and((gt_cls.sum(-1) > 0), valid_mask)
-        print((gt_cls.sum(-1) > 0))
-        print((gt_cls.sum(-1)))
-        print((gt_cls.sum(-1) > 0).sum())
-        exit()
 
         # cat the predicted offsets -> (B, FT, 2 (xC)) -> # (#Pos, 2 (xC))
         pred_offsets = torch.cat(out_offsets, dim=1)[pos_mask]
@@ -768,12 +764,14 @@ class PtTransformer(nn.Module):
         # print('==========================')
         scores = []
         masks = []
+        poses = []
         t = 1
-        for i, (cls_i, mask) in enumerate(zip(out_cls_logits, fpn_masks)):
-            print(cls_i.sum(-1))
-            mask = torch.logical_or((cls_i.sum(-1) <= 0), mask==False)
-            print(mask)
-            exit()
+        for i, (gt, cls_i, mask) in enumerate(zip(gt_cls_labels, out_cls_logits, fpn_masks)):
+            # print(cls_i.sum(-1))
+            pos = gt.sum(-1) > 0
+            mask = mask==False
+            # print(mask)
+            # exit()
             # print(cls_i)
             cls_i = torch.softmax(cls_i, dim=2)
             # cls_i = torch.sigmoid(cls_i)
@@ -784,19 +782,24 @@ class PtTransformer(nn.Module):
             # print(cls_i)
             cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
             mask = mask.unsqueeze(2).expand(mask.shape[0], mask.shape[1], t).resize(mask.shape[0], 2304)
+            pos = pos.unsqueeze(2).expand(pos.shape[0], pos.shape[1], t).resize(pos.shape[0], 2304)
             # print(cls_i.shape)
             # print(mask.shape)
             scores.append(cls_i)
             masks.append(mask)
+            poses.append(pos)
             t *= 2
             # print('---------------------------------------------------------------')
         
-        scores = torch.stack(scores,dim=1)  # [2, 6, 2304]
+        scores = torch.stack(scores, dim=1)  # [2, 6, 2304]
         # print(scores)
-        masks = torch.stack(masks,dim=1)
+        masks = torch.stack(masks, dim=1)
+        poses = torch.stack(poses, dim=1)
+
+        pos_idx = torch.sum(poses, dim=1) > 0
 
         idx = torch.sum(masks, dim=1)
-        idx = idx < 5
+        idx = torch.logical_and(idx < 5, pos_idx)
         
         low = torch.min(scores, dim=1).values
         scores[masks]=0
@@ -810,17 +813,19 @@ class PtTransformer(nn.Module):
         low = low[idx]
         high = high[idx]
 
-        weight = (high + torch.ones(high.shape, device=high.device)*0.95)
+        # weight = (high + torch.ones(high.shape, device=high.device)*0.95)
 
-        low -= torch.ones(low.shape, device=low.device)*0.05  # 0.05
+        # low -= torch.ones(low.shape, device=low.device)*0.05  # 0.05
 
         # level = 3
         # low = low[:, :level, :]
 
         # sco_loss = low.sum() / (level*2304*low.shape[0])
         
-        sco_loss = (weight * low).sum()
-        sco_loss /= idx.sum()
+        # sco_loss = (weight * low).sum()
+        sco_loss = (torch.ones(low.shape, device=low.device)*0.95-high+low).sum()
+
+        sco_loss /= (idx.sum() + 1)
         # sco_loss /= self.loss_normalizer
 
         if self.train_loss_weight > 0:
