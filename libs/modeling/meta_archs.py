@@ -415,7 +415,7 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=1
+            time=10
 
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
@@ -432,7 +432,7 @@ class PtTransformer(nn.Module):
                 loss, norm = self.losses(
                     fpn_masks,
                     out_cls_logits, out_offsets,
-                    gt_cls_labels, gt_offsets
+                    gt_cls_labels, gt_offsets, idx
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
@@ -441,11 +441,16 @@ class PtTransformer(nn.Module):
 
             # dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
-            return {'cls_loss'   : torch.stack(cls_loss).mean(),
-                    'reg_loss'   : torch.stack(reg_loss).mean(),
-                    'sco_loss'   : torch.stack(sco_loss).mean(),
+            cls_loss = torch.stack(cls_loss).mean()
+            reg_loss = torch.min(torch.stack(reg_loss))
+            sco_loss = torch.stack(sco_loss).mean()
+            final_loss = cls_loss + reg_loss + sco_loss
+
+            return {'cls_loss'   : cls_loss,
+                    'reg_loss'   : reg_loss,
+                    'sco_loss'   : sco_loss,
                     # 'dcp_loss'   : dcp_loss,
-                    'final_loss' : torch.min(torch.stack(final_loss))}
+                    'final_loss' : final_loss}
         else:
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
@@ -508,8 +513,8 @@ class PtTransformer(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.2
-        p_len = 0.2
+        p_ctr = 0.1
+        p_len = 0.1
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
@@ -720,9 +725,10 @@ class PtTransformer(nn.Module):
 
         # update the loss normalizer
         num_pos = pos_mask.sum().item()
-        self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
-            1 - self.loss_normalizer_momentum
-        ) * max(num_pos, 1)
+        if idx == 0:
+            self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
+                1 - self.loss_normalizer_momentum
+            ) * max(num_pos, 1)
 
         # gt_cls is already one hot encoded now, simply masking out
         gt_target = gt_cls[valid_mask]
