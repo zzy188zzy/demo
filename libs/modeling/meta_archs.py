@@ -415,7 +415,7 @@ class PtTransformer(nn.Module):
             # compute the gt labels for cls & reg
             # list of prediction targets
             
-            time=10
+            time=5
 
             a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
@@ -513,8 +513,8 @@ class PtTransformer(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.2
-        p_len = 0.2
+        p_ctr = 0.4
+        p_len = 0.4
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
