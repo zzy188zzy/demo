@@ -766,7 +766,7 @@ class PtTransformer(nn.Module):
         masks = []
         poses = []
 
-        tmp = gt_cls_labels.sum(-1) > 0  # [2, 4536]
+        tmp = torch.stack(gt_cls_labels).sum(-1) > 0  # [2, 4536]
         gt_labels = []
         s = 0
         l = 2304
