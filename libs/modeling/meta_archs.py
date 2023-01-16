@@ -707,7 +707,7 @@ class PtTransformer(nn.Module):
     def losses(
         self, fpn_masks,
         out_cls_logits, out_offsets,
-        gt_cls_labels, gt_offsets
+        gt_cls_labels, gt_offsets, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -725,7 +725,7 @@ class PtTransformer(nn.Module):
 
         # update the loss normalizer
         num_pos = pos_mask.sum().item()
-        if idx == 0:
+        if step == 0:
             self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
                 1 - self.loss_normalizer_momentum
             ) * max(num_pos, 1)
