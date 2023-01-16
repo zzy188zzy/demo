@@ -834,7 +834,7 @@ class PtTransformer(nn.Module):
         # sco_loss = low.sum() / (level*2304*low.shape[0])
         
         # sco_loss = (weight * low).sum()
-        sco_loss = (torch.ones(low.shape, device=low.device)*0.95-high+low).sum()
+        sco_loss = low.sum() + 1 - scores[poses].mean()
 
         sco_loss /= (idx.sum() + 1)
         # sco_loss /= self.loss_normalizer
