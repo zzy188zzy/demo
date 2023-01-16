@@ -797,7 +797,7 @@ class PtTransformer(nn.Module):
         low = low[idx]
         high = high[idx]
 
-        weight = high + torch.ones(high.shape, device=high.device)
+        weight = (high + torch.ones(high.shape, device=high.device)*0.95)
 
         low -= torch.ones(low.shape, device=low.device)*0.05  # 0.05
 
