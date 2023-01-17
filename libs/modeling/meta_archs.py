@@ -1023,7 +1023,7 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        mask = (gt_ref > 1 or gt_ref < -1) or fpn_masks[0]
+        mask = torch.logical_and(torch.logical_and(gt_ref < 1, gt_ref > -1), fpn_masks[0])
         
         out_ref = out_refines[0].squeeze(2)
 
