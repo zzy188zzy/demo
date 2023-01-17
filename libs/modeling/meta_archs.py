@@ -531,7 +531,7 @@ class PtTransformer(nn.Module):
                 # compute the loss and return
                 loss, norm = self.losses(
                     fpn_masks,
-                    out_cls_logits, out_offsets, out_refines
+                    out_cls_logits, out_offsets, out_refines,
                     gt_cls_labels, gt_offsets, gt_refines, idx
                 )
                 cls_loss.append(loss['cls_loss'])
@@ -862,7 +862,7 @@ class PtTransformer(nn.Module):
 
     def losses(
         self, fpn_masks,
-        out_cls_logits, out_offsets, out_refines
+        out_cls_logits, out_offsets, out_refines,
         gt_cls_labels, gt_offsets, gt_refines, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
