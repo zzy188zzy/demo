@@ -1019,11 +1019,11 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        mask = torch.logical_and(torch.logical_and(gt_ref < 2, gt_ref > -2), fpn_masks[0])  # fy
-        # mask = fpn_masks[0]
+        # mask = torch.logical_and(torch.logical_and(gt_ref < 2, gt_ref > -2), fpn_masks[0])  # fy
+        mask = fpn_masks[0]
 
-        # outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
-        # gt_ref[outside] = 0
+        outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
+        gt_ref[outside] = 0
         
         out_ref = out_refines[0].squeeze(2)
 
@@ -1032,6 +1032,11 @@ class PtTransformer(nn.Module):
 
         # print(gt_ref[mask])
         # print(out_ref[mask])
+
+        err = torch.logical_or(out_ref > 4, out_ref < -4).sum()
+        if err > 0:
+            print(err)
+        
 
         ref_loss = F.l1_loss(out_ref[mask], gt_ref[mask], reduction='mean') / 4
         # ref_loss /= self.loss_normalizer
