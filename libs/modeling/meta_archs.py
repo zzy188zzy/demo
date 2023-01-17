@@ -633,8 +633,8 @@ class PtTransformer(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.1
-        p_len = 0.1
+        p_ctr = 0.4
+        p_len = 0.4
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
@@ -729,10 +729,6 @@ class PtTransformer(nn.Module):
         lens = lens[None, :].repeat(2304, 1)
 
         gt_refine = dis0 / (lens[lis, dis_idx0]*0.1)
-
-        mask = gt_refine > 1  # fy
-
-        gt_refine[mask] = 0
 
         gt_refine[to_left] *= -1
 
@@ -1027,12 +1023,12 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
+        mask = (gt_ref > 1 or gt_ref < -1) or fpn_masks[0]
         
         out_ref = out_refines[0].squeeze(2)
 
-        ref_loss = F.smooth_l1_loss(out_ref[fpn_masks[0]], gt_ref[fpn_masks[0]])
+        ref_loss = F.smooth_l1_loss(out_ref[mask], gt_ref[mask])
 
-        
         # exit()
 
         # return a dict of losses
