@@ -269,7 +269,9 @@ class RefineHead(nn.Module):
             # print('=====')
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             # print(cur_offsets[0, :10])
-            out_offsets += (self.scale[l](cur_offsets), )
+            out_offsets += (torch.sigmoid(self.scale[l](cur_offsets))*2-1, )
+
+            break
             # print(self.scale[l](cur_offsets[0, :10]))
             # print(F.relu(self.scale[l](cur_offsets[0, :10])))
             # exit()
@@ -726,9 +728,9 @@ class PtTransformer(nn.Module):
         lens = gt_segment[:, 1] - gt_segment[:, 0]
         lens = lens[None, :].repeat(2304, 1)
 
-        gt_refine = dis0 / lens[lis, dis_idx0]
+        gt_refine = dis0 / (lens[lis, dis_idx0]*0.1)
 
-        mask = gt_refine > 0.5  # fy
+        mask = gt_refine > 1  # fy
 
         gt_refine[mask] = 0
 
@@ -1159,9 +1161,9 @@ class PtTransformer(nn.Module):
             seg_right[i] = 2303
 
             ref_left = out_refines[0].squeeze(1)[seg_left.round().long()]  # todo [2304]
-            seg_left += ref_left * seg_len
+            seg_left += ref_left * seg_len*0.1
             ref_right = out_refines[0].squeeze(1)[seg_right.round().long()]  # todo [2304]
-            seg_right += ref_right * seg_len
+            seg_right += ref_right * seg_len*0.1
 
             # print(seg_left.shape)
             # print(seg_left)
