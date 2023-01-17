@@ -697,6 +697,9 @@ class PtTransformer(nn.Module):
         num_pts = concat_points.shape[0]
         num_gts = gt_segment.shape[0]
 
+        # refine gt [2304]
+        print(gt_segment)
+
         # corner case where current sample does not have actions
         if num_gts == 0:
             cls_targets = gt_segment.new_full((num_pts, self.num_classes), 0)
@@ -773,8 +776,7 @@ class PtTransformer(nn.Module):
         # normalization based on stride
         reg_targets /= concat_points[:, 3, None]
 
-        print(reg_targets.shape)
-        print(reg_targets)
+        print('====================779')
         exit()
         return cls_targets, reg_targets
 
