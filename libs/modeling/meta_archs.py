@@ -527,8 +527,6 @@ class PtTransformer(nn.Module):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
                 gt_offsets = [b[i][idx] for i in range(len(b))]
                 gt_refines = [c[i][idx] for i in range(len(c))]
-                print(c)
-                print(c[0])
 
                 # compute the loss and return
                 loss, norm = self.losses(
@@ -1027,8 +1025,9 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        print(out_refines.shape)
-        print(gt_refines.shape)
+        out_ref = torch.stack(out_refines)
+        print(gt_ref.shape)
+        print(out_ref.shape)
         exit()
 
         # return a dict of losses
