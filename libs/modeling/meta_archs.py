@@ -1095,17 +1095,17 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
             seg_len = seg_right - seg_left
-            print(seg_left.shape)
+            print(seg_left)
 
-            print(out_refines[0])
-            print(out_refines[0].shape)
+            # print(out_refines[0])
+            # print(out_refines[0].shape)
 
-            ref_left = out_refines[0][seg_left.round().long()]  # todo [2304]
+            ref_left = out_refines[0].sequeeze(1)[seg_left.round().long()]  # todo [2304]
             seg_left += ref_left * seg_len
-            ref_right = out_refines[0][seg_right.round().long()]  # todo [2304]
+            ref_right = out_refines[0].sequeeze(1)[seg_right.round().long()]  # todo [2304]
             seg_right += ref_right * seg_len
 
-            print(seg_left.shape)
+            print(seg_left)
             # print(refines_i.shape)
             print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
