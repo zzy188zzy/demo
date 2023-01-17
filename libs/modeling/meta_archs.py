@@ -1049,7 +1049,7 @@ class PtTransformer(nn.Module):
         # exit()
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight + ref_loss
+        final_loss = cls_loss + reg_loss * loss_weight 
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
