@@ -701,11 +701,28 @@ class PtTransformer(nn.Module):
         pt = concat_points[:2304, :1, None]  # [2304, 1, 1]
         pt = pt.expand(2304, num_gts, 2)  # [2304, N, 2]
         gt = gt_segment[None].expand(2304, num_gts, 2)
-        dis = torch.min(torch.abs(pt - gt), dim=2).values  # [2304, N]
-        dis_idx, dis = torch.min(dis, dim=1)  # [2304]
+        dis = pt - gt  # [2304, N, 2]  左：-- 中：+- 右：++ 
+        dis0, dis_idx1 = torch.min(torch.abs(dis.resize(2304, num_gts*2)), dim=1)  # [2304, N*2] -> [2304]
+        dis_idx0 = (dis_idx1//2)[:, None]  # [2304, 1]
+        s = (dis_idx1%2)==0
+        t = (dis_idx1%2)==1
+        tmp = (dis[:, :, 0] * dis[:, :, 1])[dis_idx0]
+        print(tmp.shape)
+        i = tmp < 0
+        o = tmp >= 0
 
-        print(dis)
-        print(dis_idx)
+        to_left = torch.logical_or(torch.logical_and(o, t), torch.logical_and(i, s))
+        to_right = torch.logical_or(torch.logical_and(o, s), torch.logical_and(i, t))
+
+        lens = gt_segment[:, 1] - gt_segment[:, 0]
+        lens = lens[None, :].repeat(2304, 1)
+
+        gt_refine = dis0 / lens[dis_idx0].squeeze(1)
+
+        gt_refine[to_left] *= -1
+
+        print(gt_refine)
+        print(gt_refine.shape)
 
         # corner case where current sample does not have actions
         if num_gts == 0:
