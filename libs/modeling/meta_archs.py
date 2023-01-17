@@ -1143,6 +1143,12 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
+            print(pts[:, 0])
+            print(pts[:, 3])
+            print(offsets[:, 0])
+            print(seg_left)
+            exit()
+
             seg_len = seg_right - seg_left
             # print(seg_left.shape)
             # print(seg_left)
