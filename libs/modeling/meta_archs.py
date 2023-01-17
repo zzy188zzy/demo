@@ -1025,19 +1025,20 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        print(gt_ref.shape)
-        print(gt_ref)
+        
         out_ref = out_refines[0].squeeze(2)
-        print(out_ref.shape)
-        print(out_ref)
-        exit()
+
+        ref_loss = F.smooth_l1_loss(gt_ref[fpn_masks[0]], out_ref[fpn_masks[0]])
+
+        
+        # exit()
 
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight + sco_loss
+        final_loss = cls_loss + reg_loss * loss_weight + ref_loss
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
-                'sco_loss'   : sco_loss,
+                'ref_loss'   : ref_loss,
                 'final_loss' : final_loss}, self.loss_normalizer / max(num_pos, 1)
 
     @torch.no_grad()
