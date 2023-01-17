@@ -248,7 +248,7 @@ class RefineHead(nn.Module):
 
         # segment regression
         self.offset_head = MaskedConv1D(
-                feat_dim, 2, kernel_size,
+                feat_dim, 1, kernel_size,
                 stride=1, padding=kernel_size//2
             )
 
@@ -262,17 +262,17 @@ class RefineHead(nn.Module):
         for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
             cur_out = cur_feat
             for idx in range(len(self.head)):
-                print(cur_out.shape)
+                # print(cur_out.shape)
                 cur_out, _ = self.head[idx](cur_out, cur_mask)
                 cur_out = self.act(self.norm[idx](cur_out))
-                print(cur_out.shape)
-            print('=====')
+                # print(cur_out.shape)
+            # print('=====')
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            print(cur_offsets[0, :10])
+            # print(cur_offsets[0, :10])
             out_offsets += (F.relu(self.scale[l](cur_offsets)), )
-            print(self.scale[l](cur_offsets[0, :10]))
-            print(F.relu(self.scale[l](cur_offsets[0, :10])))
-            exit()
+            # print(self.scale[l](cur_offsets[0, :10]))
+            # print(F.relu(self.scale[l](cur_offsets[0, :10])))
+            # exit()
 
         # fpn_masks remains the same
         return out_cls_logits, out_offsets
@@ -493,13 +493,15 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_cls_logits, out_offsets = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
+            _, out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
+            # out_refine: F List[B, 1 (xC), T_i] -> F List[B, T_i, 1 (xC)]
+            out_refines = [x.permute(0, 2, 1) for x in out_refines]
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
@@ -555,20 +557,22 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_cls_logits, out_offsets = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
+            _, out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
+            # out_refine: F List[B, 1 (xC), T_i] -> F List[B, T_i, 1 (xC)]
+            out_refines = [x.permute(0, 2, 1) for x in out_refines]
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets
+                out_cls_logits, out_offsets, out_refines
             )
             return results
 
@@ -993,7 +997,7 @@ class PtTransformer(nn.Module):
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets
+        out_cls_logits, out_offsets, out_refines
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -1015,11 +1019,12 @@ class PtTransformer(nn.Module):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             offsets_per_vid = [x[idx] for x in out_offsets]
+            refines_per_vid = [x[idx] for x in out_refines]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -1041,6 +1046,7 @@ class PtTransformer(nn.Module):
         fpn_masks,
         out_cls_logits,
         out_offsets,
+        out_refines,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -1049,8 +1055,8 @@ class PtTransformer(nn.Module):
         cls_idxs_all = []
 
         # loop over fpn levels
-        for cls_i, offsets_i, pts_i, mask_i in zip(
-                out_cls_logits, out_offsets, points, fpn_masks
+        for cls_i, offsets_i, refines_i, pts_i, mask_i in zip(
+                out_cls_logits, out_offsets, out_refines, points, fpn_masks
             ):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
@@ -1074,7 +1080,15 @@ class PtTransformer(nn.Module):
             cls_idxs = torch.fmod(topk_idxs, self.num_classes)
 
             # 3. gather predicted offsets
+            print(offsets_i.shape)
+            print(refines_i.shape)
+            print(offsets_i)
+            print(refines_i)
+            exit()
             offsets = offsets_i[pt_idxs]
+            
+
+
             pts = pts_i[pt_idxs]
 
             # 4. compute predicted segments (denorm by stride for output offsets)
