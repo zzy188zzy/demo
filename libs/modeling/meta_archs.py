@@ -542,7 +542,7 @@ class PtTransformer(nn.Module):
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
-            final_loss = cls_loss + reg_loss + ref_loss
+            final_loss = cls_loss + reg_loss 
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
