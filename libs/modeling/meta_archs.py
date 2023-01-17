@@ -699,6 +699,7 @@ class PtTransformer(nn.Module):
 
         # refine gt [2304]
         print(gt_segment)
+        print(concat_points[:2305])
 
         # corner case where current sample does not have actions
         if num_gts == 0:
