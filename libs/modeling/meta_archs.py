@@ -269,7 +269,7 @@ class RefineHead(nn.Module):
             # print('=====')
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             # print(cur_offsets[0, :10])
-            out_offsets += (torch.sigmoid(cur_offsets)*2-1, )
+            out_offsets += (self.scale[l](cur_offsets), )
 
             # print(self.scale[l](cur_offsets[0, :10]))
             # print(F.relu(self.scale[l](cur_offsets[0, :10])))
@@ -727,7 +727,7 @@ class PtTransformer(nn.Module):
         lens = gt_segment[:, 1] - gt_segment[:, 0]
         lens = lens[None, :].repeat(2304, 1)
 
-        gt_refine = dis0 / (lens[lis, dis_idx0]*0.1)
+        gt_refine = dis0
 
         gt_refine[to_left] *= -1
 
@@ -1022,7 +1022,7 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        mask = torch.logical_and(torch.logical_and(gt_ref < 1, gt_ref > -1), fpn_masks[0])
+        mask = torch.logical_and(torch.logical_and(gt_ref < 10, gt_ref > -10), fpn_masks[0])  # fy
         
         out_ref = out_refines[0].squeeze(2)
 
@@ -1143,11 +1143,11 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            print(pts[:, 0])
-            print(pts[:, 3])
-            print(offsets[:, 0])
-            print(seg_left)
-            exit()
+            # print(pts[:, 0])
+            # print(pts[:, 3])
+            # print(offsets[:, 0])
+            # print(seg_left)
+            # exit()
 
             seg_len = seg_right - seg_left
             # print(seg_left.shape)
@@ -1165,9 +1165,9 @@ class PtTransformer(nn.Module):
             seg_right[i] = 2303
 
             ref_left = out_refines[0].squeeze(1)[seg_left.round().long()]  # todo [2304]
-            seg_left += ref_left * seg_len*0.1
+            seg_left += ref_left
             ref_right = out_refines[0].squeeze(1)[seg_right.round().long()]  # todo [2304]
-            seg_right += ref_right * seg_len*0.1
+            seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
