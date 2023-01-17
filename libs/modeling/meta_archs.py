@@ -1085,15 +1085,18 @@ class PtTransformer(nn.Module):
             # print(offsets_i)
             # print(refines_i)
             # exit()
+            print(offsets_i.shape)
             offsets = offsets_i[pt_idxs]
-            
+            print(offsets.shape)
             pts = pts_i[pt_idxs]
 
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            print(seg_left)
+            print(seg_left.shape)
+            print(refines_i.shape)
+            print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
 
             # 5. Keep seg with duration > a threshold (relative to feature grids)
@@ -1113,6 +1116,7 @@ class PtTransformer(nn.Module):
                    'scores'   : scores_all,
                    'labels'   : cls_idxs_all}
         print('===================1115')
+        exit()
         return results
 
     @torch.no_grad()
