@@ -698,8 +698,11 @@ class PtTransformer(nn.Module):
         num_gts = gt_segment.shape[0]
 
         # refine gt [2304]
-        print(gt_segment)
-        print(concat_points[:2305])
+        pt = concat_points[:2304, :1, None]  # [2304, 1, 1]
+        pt = pt.expand(2304, num_gts, 2)  # [2304, N, 2]
+        gt = gt_segment[None].expand(2304, num_gts, 2)
+        dis = torch.min(torch.abs(pt - gt), dim=2).values
+        print(dis.shape)
 
         # corner case where current sample does not have actions
         if num_gts == 0:
