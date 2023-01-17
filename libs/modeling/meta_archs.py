@@ -1025,9 +1025,11 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        out_ref = torch.stack(out_refines)
         print(gt_ref.shape)
+        print(gt_ref)
+        out_ref = out_refines[0].squeeze(2)
         print(out_ref.shape)
+        print(out_ref)
         exit()
 
         # return a dict of losses
