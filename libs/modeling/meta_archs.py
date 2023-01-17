@@ -1024,8 +1024,9 @@ class PtTransformer(nn.Module):
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # 4 ref_loss
-        print(out_refines)
-        print(gt_refines)
+        gt_ref = torch.stack(gt_refines)
+        print(out_refines.shape)
+        print(gt_refines.shape)
         exit()
 
         # return a dict of losses
