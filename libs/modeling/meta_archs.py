@@ -1023,7 +1023,12 @@ class PtTransformer(nn.Module):
         mask = fpn_masks[0]
 
         outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
-        gt_ref[outside] = 0
+        gt_ref[gt_ref > 4] = 4
+        gt_ref[gt_ref < -4] = -4
+        pos = gt_ref >= 0
+        gt_ref[pos] = -1*(gt_ref[pos]-4)
+        neg = gt_ref < 0
+        gt_ref[neg] = -1*(gt_ref[pos]+4)
         
         out_ref = out_refines[0].squeeze(2)
 
@@ -1174,9 +1179,16 @@ class PtTransformer(nn.Module):
             i = seg_right>2303
             seg_right[i] = 2303
 
-            ref_left = out_refines[0].squeeze(1)[seg_left.round().long()]  # todo [2304]
+            out_refines = out_refines[0].squeeze(1)
+            pos = out_refines >= 0
+            out_refines[pos] = -1 * out_refines[pos] + 4
+            neg = out_refines < 0
+            out_refines[neg] = -1 * out_refines[neg] - 4
+
+
+            ref_left = out_refines[seg_left.round().long()]  # todo [2304]
             seg_left += ref_left
-            ref_right = out_refines[0].squeeze(1)[seg_right.round().long()]  # todo [2304]
+            ref_right = out_refines[seg_right.round().long()]  # todo [2304]
             seg_right += ref_right
 
             # print(seg_left.shape)
