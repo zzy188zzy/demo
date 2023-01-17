@@ -521,7 +521,7 @@ class PtTransformer(nn.Module):
             
             cls_loss = []
             reg_loss = []
-            sco_loss = []
+            ref_loss = []
             final_loss = []
             for idx in range(time):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
@@ -536,19 +536,19 @@ class PtTransformer(nn.Module):
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
-                sco_loss.append(loss['sco_loss'])
+                ref_loss.append(loss['ref_loss'])
                 final_loss.append(loss['final_loss'])
 
             # dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
-            sco_loss = torch.stack(sco_loss).mean()
-            final_loss = cls_loss + reg_loss + sco_loss
+            ref_loss = torch.stack(ref_loss).mean()
+            final_loss = cls_loss + reg_loss + ref_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
-                    'sco_loss'   : sco_loss,
+                    'ref_loss'   : ref_loss,
                     # 'dcp_loss'   : dcp_loss,
                     'final_loss' : final_loss}
         else:
