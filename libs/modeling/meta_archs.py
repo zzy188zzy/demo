@@ -527,14 +527,12 @@ class PtTransformer(nn.Module):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
                 gt_offsets = [b[i][idx] for i in range(len(b))]
                 gt_refines = c
-                print(c)
-                exit()
 
                 # compute the loss and return
                 loss, norm = self.losses(
                     fpn_masks,
-                    out_cls_logits, out_offsets,
-                    gt_cls_labels, gt_offsets, idx
+                    out_cls_logits, out_offsets, out_refines
+                    gt_cls_labels, gt_offsets, gt_refines, idx
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
@@ -718,7 +716,7 @@ class PtTransformer(nn.Module):
         # print((dis[:, :, 0] * dis[:, :, 1]).shape)
         tmp = (dis[:, :, 0] * dis[:, :, 1])[lis, dis_idx0]
         
-        print(tmp.shape)
+        # print(tmp.shape)
         i = tmp < 0
         o = tmp >= 0
 
@@ -864,8 +862,8 @@ class PtTransformer(nn.Module):
 
     def losses(
         self, fpn_masks,
-        out_cls_logits, out_offsets,
-        gt_cls_labels, gt_offsets, step
+        out_cls_logits, out_offsets, out_refines
+        gt_cls_labels, gt_offsets, gt_refines, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -1024,6 +1022,11 @@ class PtTransformer(nn.Module):
             loss_weight = cls_loss.detach() / max(reg_loss.item(), 0.01)
 
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
+
+        # 4 ref_loss
+        print(out_refines)
+        print(gt_refines)
+        exit()
 
         # return a dict of losses
         final_loss = cls_loss + reg_loss * loss_weight + sco_loss
