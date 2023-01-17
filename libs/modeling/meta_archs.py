@@ -516,7 +516,7 @@ class PtTransformer(nn.Module):
             
             time=1
 
-            a, b = self.label_points(
+            a, b, c = self.label_points(
                 points, gt_segments, gt_labels, time)
             
             cls_loss = []
@@ -526,6 +526,9 @@ class PtTransformer(nn.Module):
             for idx in range(time):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
                 gt_offsets = [b[i][idx] for i in range(len(b))]
+                gt_refines = c
+                print(c)
+                exit()
 
                 # compute the loss and return
                 loss, norm = self.losses(
@@ -665,7 +668,7 @@ class PtTransformer(nn.Module):
         # This is shared for all samples in the mini-batch
         num_levels = len(points)
         concat_points = torch.cat(points, dim=0)
-        gt_cls, gt_offset = [], []
+        gt_cls, gt_offset, gt_refine = [], [], []
 
         # loop over each video sample
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
@@ -675,19 +678,23 @@ class PtTransformer(nn.Module):
             # exit()
             aa = []
             bb = []
+            cc = []
             for i, (a, b) in enumerate(zip(coarse_segment, coarse_label)):
                 # print(a.shape)
                 # print(b.shape)
-                cls_targets, reg_targets = self.label_points_single_video(
+                cls_targets, reg_targets, ref_targets = self.label_points_single_video(
                     concat_points, a, b
                 )
                 # append to list (len = # images, each of size FT x C)
                 aa.append(cls_targets)
                 bb.append(reg_targets)
+                cc.append(ref_targets)
             gt_cls.append(aa)
             gt_offset.append(bb)
+            gt_refine.append(cc)
 
-        return gt_cls, gt_offset
+
+        return gt_cls, gt_offset, gt_refine
 
     @torch.no_grad()
     def label_points_single_video(self, concat_points, gt_segment, gt_label):
@@ -708,7 +715,7 @@ class PtTransformer(nn.Module):
         dis_idx0 = (dis_idx1//2).long()  # [2304]
         s = (dis_idx1%2)==0
         t = (dis_idx1%2)==1
-        print((dis[:, :, 0] * dis[:, :, 1]).shape)
+        # print((dis[:, :, 0] * dis[:, :, 1]).shape)
         tmp = (dis[:, :, 0] * dis[:, :, 1])[lis, dis_idx0]
         
         print(tmp.shape)
@@ -716,19 +723,18 @@ class PtTransformer(nn.Module):
         o = tmp >= 0
 
         to_left = torch.logical_or(torch.logical_and(o, t), torch.logical_and(i, s))
-        to_right = torch.logical_or(torch.logical_and(o, s), torch.logical_and(i, t))
+        # to_right = torch.logical_or(torch.logical_and(o, s), torch.logical_and(i, t))
 
         lens = gt_segment[:, 1] - gt_segment[:, 0]
-        print(lens.shape)
         lens = lens[None, :].repeat(2304, 1)
-        print(lens.shape)
 
         gt_refine = dis0 / lens[lis, dis_idx0]
 
-        gt_refine[to_left] *= -1
+        mask = gt_refine > 0.5  # fy
 
-        print(gt_refine)
-        print(gt_refine.shape)
+        gt_refine[mask] = 0
+
+        gt_refine[to_left] *= -1
 
         # corner case where current sample does not have actions
         if num_gts == 0:
@@ -806,9 +812,9 @@ class PtTransformer(nn.Module):
         # normalization based on stride
         reg_targets /= concat_points[:, 3, None]
 
-        print('====================779')
-        exit()
-        return cls_targets, reg_targets
+        # print('====================779')
+        # exit()
+        return cls_targets, reg_targets, gt_refine
 
     def dcp_loss(self, feats, masks):
         B, dim, T = feats.shape
