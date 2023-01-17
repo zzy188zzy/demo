@@ -482,18 +482,26 @@ class PtTransformer(nn.Module):
         # out_offset: List[B, 2, T_i]
         out_offsets = self.reg_head(fpn_feats, fpn_masks)
 
-        # permute the outputs
-        # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
-        out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
-        # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-        out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-        # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
-        fpn_masks = [x.squeeze(1) for x in fpn_masks]
+        # # permute the outputs
+        # # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
+        # out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
+        # # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
+        # out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
+        # # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
+        # fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
         # return loss during training
         if self.training:
             # train refineHead
             out_cls_logits, out_offsets = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
+
+            # permute the outputs
+            # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
+            out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
+            # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
+            out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
+            # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
+            fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
             # generate segment/lable List[N x 2] / List[N] with length = B
             assert video_list[0]['segments'] is not None, "GT action labels does not exist"
@@ -548,6 +556,14 @@ class PtTransformer(nn.Module):
             # exit()
 
             out_cls_logits, out_offsets = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
+
+            # permute the outputs
+            # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
+            out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
+            # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
+            out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
+            # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
+            fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
