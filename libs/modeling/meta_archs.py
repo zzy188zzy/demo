@@ -1022,9 +1022,12 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        mask = torch.logical_and(torch.logical_and(gt_ref < 5, gt_ref > -5), fpn_masks[0])  # fy
+        mask = torch.logical_and(torch.logical_and(gt_ref < 1, gt_ref > -1), fpn_masks[0])  # fy
         
         out_ref = out_refines[0].squeeze(2)
+
+        print(gt_offsets)
+        print(pred_offsets)
 
         print(gt_ref[mask])
         print(out_ref[mask])
