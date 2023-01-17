@@ -259,7 +259,7 @@ class RefineHead(nn.Module):
         # apply the classifier for each pyramid level
         out_offsets = tuple()
         # for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-        cur_feat, cur_mask = fpn_feats[0].detach(), fpn_masks[0]
+        cur_feat, cur_mask = fpn_feats[0].clone().detach(), fpn_masks[0]
         cur_out = cur_feat
         for idx in range(len(self.head)):
             # print(cur_out.shape)
