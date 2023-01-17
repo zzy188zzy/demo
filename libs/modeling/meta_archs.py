@@ -698,6 +698,7 @@ class PtTransformer(nn.Module):
         num_gts = gt_segment.shape[0]
 
         # refine gt [2304]
+        lis = concat_points[:2304, 0]
         pt = concat_points[:2304, :1, None]  # [2304, 1, 1]
         pt = pt.expand(2304, num_gts, 2)  # [2304, N, 2]
         gt = gt_segment[None].expand(2304, num_gts, 2)  # [2304, N, 2]
@@ -708,7 +709,7 @@ class PtTransformer(nn.Module):
         s = (dis_idx1%2)==0
         t = (dis_idx1%2)==1
         print((dis[:, :, 0] * dis[:, :, 1]).shape)
-        tmp = (dis[:, :, 0] * dis[:, :, 1])[:,dis_idx0]
+        tmp = (dis[:, :, 0] * dis[:, :, 1])[lis, dis_idx0]
         
         print(tmp.shape)
         i = tmp < 0
@@ -722,7 +723,7 @@ class PtTransformer(nn.Module):
         lens = lens[None, :].repeat(2304, 1)
         print(lens.shape)
 
-        gt_refine = dis0 / lens[dis_idx0]
+        gt_refine = dis0 / lens[lis, dis_idx0]
 
         gt_refine[to_left] *= -1
 
