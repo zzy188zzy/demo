@@ -269,7 +269,7 @@ class RefineHead(nn.Module):
             # print('=====')
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             # print(cur_offsets[0, :10])
-            out_offsets += (F.relu(self.scale[l](cur_offsets)), )
+            out_offsets += (self.scale[l](cur_offsets), )
             # print(self.scale[l](cur_offsets[0, :10]))
             # print(F.relu(self.scale[l](cur_offsets[0, :10])))
             # exit()
@@ -1085,19 +1085,28 @@ class PtTransformer(nn.Module):
             # print(offsets_i)
             # print(refines_i)
             # exit()
-            print(offsets_i.shape)
+            # print(offsets_i.shape)
             offsets = offsets_i[pt_idxs]
-            print(offsets.shape)
+            # print(offsets.shape)
             pts = pts_i[pt_idxs]
 
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
+            seg_len = seg_right - seg_left
             print(seg_left.shape)
-            print(refines_i.shape)
+
+            ref_left = out_refines[0][seg_left.round()]  # todo [2304,1]
+            seg_left += ref_left * seg_len
+            ref_right = out_refines[0][seg_right.round()]  # todo [2304,1]
+            seg_right += ref_right * seg_len
+
+            print(seg_left.shape)
+            # print(refines_i.shape)
             print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
+            
 
             # 5. Keep seg with duration > a threshold (relative to feature grids)
             seg_areas = seg_right - seg_left
