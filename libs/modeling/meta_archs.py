@@ -1148,25 +1148,26 @@ class PtTransformer(nn.Module):
             # print(seg_left)
             # print(out_refines[0])
             # print(out_refines[0].shape)
-            i = seg_left<0 
-            seg_left[i] = 0
-            i = seg_left>2303
-            seg_left[i] = 2303
-            i = seg_right<0 
-            seg_right[i] = 0
-            i = seg_right>2303
-            seg_right[i] = 2303
-            
-            ref_left = out_refines[0].squeeze(1)[seg_left.round().long()]  # todo [2304]
-            seg_left += ref_left * seg_len
-            ref_right = out_refines[0].squeeze(1)[seg_right.round().long()]  # todo [2304]
-            seg_right += ref_right * seg_len
+
+            # i = seg_left<0 
+            # seg_left[i] = 0
+            # i = seg_left>2303
+            # seg_left[i] = 2303
+            # i = seg_right<0 
+            # seg_right[i] = 0
+            # i = seg_right>2303
+            # seg_right[i] = 2303
+
+            # ref_left = out_refines[0].squeeze(1)[seg_left.round().long()]  # todo [2304]
+            # seg_left += ref_left * seg_len
+            # ref_right = out_refines[0].squeeze(1)[seg_right.round().long()]  # todo [2304]
+            # seg_right += ref_right * seg_len
 
             # print(seg_left.shape)
             # print(seg_left)
             # print(refines_i.shape)
             # print('----')
-            pred_segs = torch.stack((torch.max(seg_left, torch.zeros(seg_left.shape, device=seg_left.device)), seg_right), -1)
+            pred_segs = torch.stack((seg_left, seg_right), -1)
             
 
             # 5. Keep seg with duration > a threshold (relative to feature grids)
