@@ -1032,7 +1032,8 @@ class PtTransformer(nn.Module):
         # print(gt_ref[mask])
         # print(out_ref[mask])
 
-        ref_loss = F.smooth_l1_loss(out_ref[mask], gt_ref[mask])
+        ref_loss = F.smooth_l1_loss(out_ref[mask], gt_ref[mask], reduction='sum')
+        ref_loss /= self.loss_normalizer
     
         # exit()
 
