@@ -258,25 +258,22 @@ class RefineHead(nn.Module):
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
-        out_cls_logits = tuple()
-        for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-            cur_out = cur_feat
-            for idx in range(len(self.head)):
-                # print(cur_out.shape)
-                cur_out, _ = self.head[idx](cur_out, cur_mask)
-                cur_out = self.act(self.norm[idx](cur_out))
-                # print(cur_out.shape)
-            # print('=====')
-            cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            # print(cur_offsets[0, :10])
-            out_offsets += (self.scale[l](cur_offsets), )
+        # for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
+        cur_feat, cur_mask = fpn_feats[0], fpn_masks[0]
+        cur_out = cur_feat
+        for idx in range(len(self.head)):
+            # print(cur_out.shape)
+            cur_out, _ = self.head[idx](cur_out, cur_mask)
+            cur_out = self.act(self.norm[idx](cur_out))
+            # print(cur_out.shape)
+        # print('=====')
+        cur_offsets, _ = self.offset_head(cur_out, cur_mask)
+        # print(cur_offsets[0, :10])
+        out_offsets += (self.scale[0](cur_offsets), )
 
-            # print(self.scale[l](cur_offsets[0, :10]))
-            # print(F.relu(self.scale[l](cur_offsets[0, :10])))
-            # exit()
 
         # fpn_masks remains the same
-        return out_cls_logits, out_offsets
+        return out_offsets
 
 
 
@@ -1022,7 +1019,11 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        mask = torch.logical_and(torch.logical_and(gt_ref < 4, gt_ref > -4), fpn_masks[0])  # fy
+        # mask = torch.logical_and(torch.logical_and(gt_ref < 4, gt_ref > -4), fpn_masks[0])  # fy
+        mask = fpn_masks[0]
+
+        outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
+        gt_ref[outside] = 0
         
         out_ref = out_refines[0].squeeze(2)
 
@@ -1032,7 +1033,7 @@ class PtTransformer(nn.Module):
         # print(gt_ref[mask])
         # print(out_ref[mask])
 
-        ref_loss = F.l1_loss(out_ref[mask], gt_ref[mask], reduction='mean') / 8
+        ref_loss = F.l1_loss(out_ref[mask], gt_ref[mask], reduction='mean')
         # ref_loss /= self.loss_normalizer
     
         # exit()
