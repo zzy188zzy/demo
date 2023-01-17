@@ -1028,7 +1028,7 @@ class PtTransformer(nn.Module):
         
         out_ref = out_refines[0].squeeze(2)
 
-        ref_loss = F.smooth_l1_loss(gt_ref[fpn_masks[0]], out_ref[fpn_masks[0]])
+        ref_loss = F.smooth_l1_loss(out_ref[fpn_masks[0]], gt_ref[fpn_masks[0]])
 
         
         # exit()
