@@ -200,6 +200,77 @@ class DecoupleNet(nn.Module):
 
         return torch.cat((a, b, c, d), dim=1)
 
+
+class RefineHead(nn.Module):
+    """
+    denoise
+    """
+    def __init__(
+        self,
+        input_dim,
+        feat_dim,
+        fpn_levels,
+        num_layers=3,
+        kernel_size=3,
+        act_layer=nn.ReLU,
+        with_ln=False
+    ):
+        super().__init__()
+        self.fpn_levels = fpn_levels
+        self.act = act_layer()
+
+        # build the conv head
+        self.head = nn.ModuleList()
+        self.norm = nn.ModuleList()
+        for idx in range(num_layers-1):
+            if idx == 0:
+                in_dim = input_dim
+                out_dim = feat_dim
+            else:
+                in_dim = feat_dim
+                out_dim = feat_dim
+            self.head.append(
+                MaskedConv1D(
+                    in_dim, out_dim, kernel_size,
+                    stride=1,
+                    padding=kernel_size//2,
+                    bias=(not with_ln)
+                )
+            )
+            if with_ln:
+                self.norm.append(LayerNorm(out_dim))
+            else:
+                self.norm.append(nn.Identity())
+
+        self.scale = nn.ModuleList()
+        for idx in range(fpn_levels):
+            self.scale.append(Scale())
+
+        # segment regression
+        self.offset_head = MaskedConv1D(
+                feat_dim, 2, kernel_size,
+                stride=1, padding=kernel_size//2
+            )
+
+    def forward(self, fpn_feats, fpn_masks):
+        assert len(fpn_feats) == len(fpn_masks)
+        assert len(fpn_feats) == self.fpn_levels
+
+        # apply the classifier for each pyramid level
+        out_offsets = tuple()
+        for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
+            cur_out = cur_feat
+            for idx in range(len(self.head)):
+                cur_out, _ = self.head[idx](cur_out, cur_mask)
+                cur_out = self.act(self.norm[idx](cur_out))
+            cur_offsets, _ = self.offset_head(cur_out, cur_mask)
+            out_offsets += (F.relu(self.scale[l](cur_offsets)), )
+
+        # fpn_masks remains the same
+        return out_offsets
+
+
+
 @register_meta_arch("LocPointTransformer")
 class PtTransformer(nn.Module):
     """
@@ -406,6 +477,9 @@ class PtTransformer(nn.Module):
 
         # return loss during training
         if self.training:
+            # train refineHead
+
+
             # generate segment/lable List[N x 2] / List[N] with length = B
             assert video_list[0]['segments'] is not None, "GT action labels does not exist"
             assert video_list[0]['labels'] is not None, "GT action labels does not exist"
@@ -452,6 +526,12 @@ class PtTransformer(nn.Module):
                     # 'dcp_loss'   : dcp_loss,
                     'final_loss' : final_loss}
         else:
+            # refineHead
+            for i in range(len(out_offsets)):
+                print(out_offsets[i].shape)
+                print(out_cls_logits[i].shape)
+            exit()
+
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
@@ -764,7 +844,7 @@ class PtTransformer(nn.Module):
         # print('==========================')
         scores = []
         masks = []
-        poses = []
+        # poses = []
 
         tmp = torch.stack(gt_cls_labels).sum(-1) > 0  # [2, 4536]
         gt_labels = []
@@ -793,21 +873,21 @@ class PtTransformer(nn.Module):
             # print(cls_i)
             cls_i = cls_i.unsqueeze(2).expand(cls_i.shape[0], cls_i.shape[1], t).resize(cls_i.shape[0], 2304)
             mask = mask.unsqueeze(2).expand(mask.shape[0], mask.shape[1], t).resize(mask.shape[0], 2304)
-            pos = pos.unsqueeze(2).expand(pos.shape[0], pos.shape[1], t).resize(pos.shape[0], 2304)
+            # pos = pos.unsqueeze(2).expand(pos.shape[0], pos.shape[1], t).resize(pos.shape[0], 2304)
             # print(cls_i.shape)
             # print(mask.shape)
             scores.append(cls_i)
             masks.append(mask)
-            poses.append(pos)
+            # poses.append(pos)
             t *= 2
             # print('---------------------------------------------------------------')
         
         scores = torch.stack(scores, dim=1)  # [2, 6, 2304]
         # print(scores)
         masks = torch.stack(masks, dim=1)
-        poses = torch.stack(poses, dim=1)
+        # poses = torch.stack(poses, dim=1)
 
-        pos_idx = torch.sum(poses, dim=1) > 0
+        # pos_idx = torch.sum(poses, dim=1) > 0
 
         idx = torch.sum(masks, dim=1)
         # idx = torch.logical_and(idx < 6, pos_idx)
@@ -820,12 +900,12 @@ class PtTransformer(nn.Module):
         # print((low_idx==3).sum())
         # print((low_idx==4).sum())
         # print((low_idx==5).sum())
-        low_idx = (torch.ones(low_idx.shape, device=low_idx.device)*2).pow(low_idx)
+        # low_idx = (torch.ones(low_idx.shape, device=low_idx.device)*2).pow(low_idx)
         Low -= torch.ones(Low.shape, device=Low.device)*0.05  # 0.05
         # Low /= low_idx
         # exit()
-        scores[masks]=0
-        High = torch.max(scores, dim=1).values
+        # scores[masks]=0
+        # High = torch.max(scores, dim=1).values
 
         # print(low[0, :, 0])
         # low = torch.sort(low, dim=1).values
@@ -833,7 +913,7 @@ class PtTransformer(nn.Module):
         # exit()
 
         low = Low[idx]
-        high = High[idx]
+        # high = High[idx]
 
         # weight = (high + torch.ones(high.shape, device=high.device)*0.95)
 
@@ -850,10 +930,10 @@ class PtTransformer(nn.Module):
         sco_loss /= idx.sum()
         # sco_loss /= self.loss_normalizer
 
-        t = High[torch.logical_and(idx < 6, pos_idx==False)]
+        # t = High[torch.logical_and(idx < 6, pos_idx==False)]
         # print(t.shape)
-        idx = torch.randperm(t.shape[0])
-        t = t[idx].view(t.size())
+        # idx = torch.randperm(t.shape[0])
+        # t = t[idx].view(t.size())
         # print(t.shape)
         # print(low.shape)
         # sco_loss += t[:low.shape[0]*2].mean() - 0.05 - torch.log(scores[poses].mean())
