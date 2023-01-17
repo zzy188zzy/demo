@@ -1158,7 +1158,7 @@ class PtTransformer(nn.Module):
             # print(seg_left)
             # print(refines_i.shape)
             # print('----')
-            pred_segs = torch.stack((seg_left, seg_right), -1)
+            pred_segs = torch.stack((torch.max(seg_left, torch.zeros(seg_left.shape, device=seg_left.device)), seg_right), -1)
             
 
             # 5. Keep seg with duration > a threshold (relative to feature grids)
