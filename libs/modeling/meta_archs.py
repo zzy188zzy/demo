@@ -271,7 +271,6 @@ class RefineHead(nn.Module):
             # print(cur_offsets[0, :10])
             out_offsets += (torch.sigmoid(self.scale[l](cur_offsets))*2-1, )
 
-            break
             # print(self.scale[l](cur_offsets[0, :10]))
             # print(F.relu(self.scale[l](cur_offsets[0, :10])))
             # exit()
@@ -1027,11 +1026,11 @@ class PtTransformer(nn.Module):
         
         out_ref = out_refines[0].squeeze(2)
 
-        print(gt_ref[mask])
-        print(out_ref[mask])
+        # print(gt_ref[mask])
+        # print(out_ref[mask])
 
         ref_loss = F.l1_loss(out_ref[mask], gt_ref[mask])
-        exit()
+    
         # exit()
 
         # return a dict of losses
