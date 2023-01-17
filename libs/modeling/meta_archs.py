@@ -1028,7 +1028,7 @@ class PtTransformer(nn.Module):
         pos = gt_ref >= 0
         gt_ref[pos] = -1*(gt_ref[pos]-4)
         neg = gt_ref < 0
-        gt_ref[neg] = -1*(gt_ref[pos]+4)
+        gt_ref[neg] = -1*(gt_ref[neg]+4)
         
         out_ref = out_refines[0].squeeze(2)
 
