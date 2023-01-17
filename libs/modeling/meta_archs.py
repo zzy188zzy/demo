@@ -1022,19 +1022,19 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        mask = torch.logical_and(torch.logical_and(gt_ref < 1, gt_ref > -1), fpn_masks[0])  # fy
+        mask = torch.logical_and(torch.logical_and(gt_ref < 4, gt_ref > -4), fpn_masks[0])  # fy
         
         out_ref = out_refines[0].squeeze(2)
 
-        print(gt_offsets)
-        print(pred_offsets)
+        # print(gt_offsets)
+        # print(pred_offsets)
 
-        print(gt_ref[mask])
-        print(out_ref[mask])
+        # print(gt_ref[mask])
+        # print(out_ref[mask])
 
         ref_loss = F.smooth_l1_loss(out_ref[mask], gt_ref[mask])
     
-        exit()
+        # exit()
 
         # return a dict of losses
         final_loss = cls_loss + reg_loss * loss_weight + ref_loss
