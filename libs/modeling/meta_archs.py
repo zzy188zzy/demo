@@ -269,7 +269,7 @@ class RefineHead(nn.Module):
             # print('=====')
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             # print(cur_offsets[0, :10])
-            out_offsets += (torch.sigmoid(self.scale[l](cur_offsets))*2-1, )
+            out_offsets += (torch.sigmoid(cur_offsets)*2-1, )
 
             # print(self.scale[l](cur_offsets[0, :10]))
             # print(F.relu(self.scale[l](cur_offsets[0, :10])))
