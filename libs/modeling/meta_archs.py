@@ -704,10 +704,12 @@ class PtTransformer(nn.Module):
         dis = pt - gt  # [2304, N, 2]  左：-- 中：+- 右：++ 
         dis0, dis_idx1 = torch.min(torch.abs(dis.resize(2304, num_gts*2)), dim=1)  # [2304, N*2] -> [2304]
 
-        dis_idx0 = (dis_idx1//2)  # [2304, 1]
+        dis_idx0 = (dis_idx1//2)  # [2304]
         s = (dis_idx1%2)==0
         t = (dis_idx1%2)==1
-        tmp = (dis[:, :, 0] * dis[:, :, 1])[dis_idx0]
+        print((dis[:, :, 0] * dis[:, :, 1]).shape)
+        tmp = (dis[:, :, 0] * dis[:, :, 1])[:,dis_idx0]
+        
         print(tmp.shape)
         i = tmp < 0
         o = tmp >= 0
