@@ -699,11 +699,18 @@ class PtTransformer(nn.Module):
 
         # refine gt [2304]
         pt = concat_points[:2304, :1, None]  # [2304, 1, 1]
+        print(pt.shape)
         pt = pt.expand(2304, num_gts, 2)  # [2304, N, 2]
+        print(pt.shape)
         gt = gt_segment[None].expand(2304, num_gts, 2)
+        print(gt.shape)
         dis = pt - gt  # [2304, N, 2]  左：-- 中：+- 右：++ 
+        print(dis.shape)
         dis0, dis_idx1 = torch.min(torch.abs(dis.resize(2304, num_gts*2)), dim=1)  # [2304, N*2] -> [2304]
+        print(dis0.shape)
+        print(dis_idx1.shape)
         dis_idx0 = (dis_idx1//2)[:, None]  # [2304, 1]
+        print(dis_idx0.shape)
         s = (dis_idx1%2)==0
         t = (dis_idx1%2)==1
         tmp = (dis[:, :, 0] * dis[:, :, 1])[dis_idx0]
