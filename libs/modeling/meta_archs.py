@@ -550,10 +550,10 @@ class PtTransformer(nn.Module):
                     'final_loss' : final_loss}
         else:
             # refineHead
-            for i in range(len(out_offsets)):
-                print(out_offsets[i].shape)
-                print(out_cls_logits[i].shape)
-            exit()
+            # for i in range(len(out_offsets)):
+            #     print(out_offsets[i].shape)
+            #     print(out_cls_logits[i].shape)
+            # exit()
 
             out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
 
@@ -1084,6 +1084,11 @@ class PtTransformer(nn.Module):
             offsets_per_vid = [x[idx] for x in out_offsets]
             refines_per_vid = [x[idx] for x in out_refines]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
+
+            for i in range(len(offsets_per_vid)):
+                print(offsets_per_vid[i].shape)
+                print(refines_per_vid[i].shape)
+
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
