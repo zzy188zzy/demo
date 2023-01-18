@@ -1085,9 +1085,9 @@ class PtTransformer(nn.Module):
             refines_per_vid = [x[idx] for x in out_refines]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
-            for i in range(len(offsets_per_vid)):
-                print(offsets_per_vid[i].shape)
-                print(refines_per_vid[i].shape)
+            # for i in range(len(offsets_per_vid)):
+            #     print(offsets_per_vid[i].shape)
+            #     print(refines_per_vid[i].shape)
 
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
@@ -1123,8 +1123,8 @@ class PtTransformer(nn.Module):
         cls_idxs_all = []
 
         # loop over fpn levels
-        for cls_i, offsets_i, refines_i, pts_i, mask_i in zip(
-                out_cls_logits, out_offsets, out_refines, points, fpn_masks
+        for cls_i, offsets_i, pts_i, mask_i in zip(
+                out_cls_logits, out_offsets, points, fpn_masks
             ):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
