@@ -1135,7 +1135,7 @@ class PtTransformer(nn.Module):
         cls_idxs_all = []
 
         out_refines = out_refines[0].squeeze(1)
-        pos = out_refines >= 0
+        pos = out_refines > 0
         out_refines[pos] = -1 * out_refines[pos] + 4
         neg = out_refines < 0
         out_refines[neg] = -1 * out_refines[neg] - 4
@@ -1199,10 +1199,10 @@ class PtTransformer(nn.Module):
             i = seg_right>2303
             seg_right[i] = 2303
 
-            # ref_left = out_refines[seg_left.round().long()]  # todo [2304]
-            # seg_left += ref_left
-            # ref_right = out_refines[seg_right.round().long()]  # todo [2304]
-            # seg_right += ref_right
+            ref_left = out_refines[seg_left.round().long()]  # todo [2304]
+            seg_left += ref_left
+            ref_right = out_refines[seg_right.round().long()]  # todo [2304]
+            seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
