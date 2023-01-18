@@ -1027,8 +1027,8 @@ class PtTransformer(nn.Module):
 
         outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
 
-        print(gt_ref)
-        print(gt_ref[182:214])
+        print(gt_ref[0])
+        print(gt_ref[0, 182:214])
 
         gt_ref[gt_ref > 4] = 4
         gt_ref[gt_ref < -4] = -4
@@ -1037,8 +1037,8 @@ class PtTransformer(nn.Module):
         neg = gt_ref < 0
         gt_ref[neg] = -1*(gt_ref[neg]+4)
 
-        print(gt_ref)
-        print(gt_ref[182:214])
+        print(gt_ref[0])
+        print(gt_ref[0, 182:214])
         exit()
         
         out_ref = out_refines[0].squeeze(2)
