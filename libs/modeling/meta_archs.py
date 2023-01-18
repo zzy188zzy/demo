@@ -1199,10 +1199,10 @@ class PtTransformer(nn.Module):
             i = seg_right>2303
             seg_right[i] = 2303
 
-            ref_left = out_refines[seg_left.round().long()]  # todo [2304]
-            seg_left += ref_left
-            ref_right = out_refines[seg_right.round().long()]  # todo [2304]
-            seg_right += ref_right
+            # ref_left = out_refines[seg_left.round().long()]  # todo [2304]
+            # seg_left += ref_left
+            # ref_right = out_refines[seg_right.round().long()]  # todo [2304]
+            # seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
