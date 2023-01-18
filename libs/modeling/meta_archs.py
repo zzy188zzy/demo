@@ -727,9 +727,9 @@ class PtTransformer(nn.Module):
 
         gt_refine[to_left] *= -1
 
-        print(gt_segment[182:214])
-        print(gt_refine[182:214])
-        exit()
+        # print(gt_segment[182:214])
+        # print(gt_refine[182:214])
+        # exit()
 
         # corner case where current sample does not have actions
         if num_gts == 0:
@@ -1026,12 +1026,20 @@ class PtTransformer(nn.Module):
         mask = fpn_masks[0]
 
         outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
+
+        print(gt_ref)
+        print(gt_ref[182:214])
+
         gt_ref[gt_ref > 4] = 4
         gt_ref[gt_ref < -4] = -4
         pos = gt_ref >= 0
         gt_ref[pos] = -1*(gt_ref[pos]-4)
         neg = gt_ref < 0
         gt_ref[neg] = -1*(gt_ref[neg]+4)
+
+        print(gt_ref)
+        print(gt_ref[182:214])
+        exit()
         
         out_ref = out_refines[0].squeeze(2)
 
