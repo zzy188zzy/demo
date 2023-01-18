@@ -1190,7 +1190,7 @@ class PtTransformer(nn.Module):
             # print(seg_left.shape)
             print(seg_left)
             print(seg_right)
-            
+
             i = seg_left<0 
             print(i.sum())
             seg_left[i] = 0
@@ -1206,6 +1206,7 @@ class PtTransformer(nn.Module):
 
             print(seg_left)
             print(seg_right)
+            exit()
 
             # ref_left = out_refines[seg_left.round().long()]  # todo [2304]
             # seg_left += ref_left
