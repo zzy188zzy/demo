@@ -727,6 +727,10 @@ class PtTransformer(nn.Module):
 
         gt_refine[to_left] *= -1
 
+        print(gt_segment)
+        print(gt_refine)
+        exit()
+
         # corner case where current sample does not have actions
         if num_gts == 0:
             cls_targets = gt_segment.new_full((num_pts, self.num_classes), 0)
