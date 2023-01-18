@@ -1171,8 +1171,8 @@ class PtTransformer(nn.Module):
             # seg_len = seg_right - seg_left
             # print(seg_left.shape)
             # print(seg_left)
-            # print(out_refines[0])
-            # print(out_refines[0].shape)
+            print(out_refines[0])
+            print(out_refines[0].shape)
 
             i = seg_left<0 
             seg_left[i] = 0
