@@ -1195,10 +1195,10 @@ class PtTransformer(nn.Module):
             # ref_right = out_refines[seg_right.round().long()]  # todo [2304]
             # seg_right += ref_right
 
-            print(seg_left.shape)
-            print(seg_left)
+            # print(seg_left.shape)
+            # print(seg_left)
             # print(refines_i.shape)
-            print('----')
+            # print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
             
 
@@ -1218,8 +1218,8 @@ class PtTransformer(nn.Module):
         results = {'segments' : segs_all,
                    'scores'   : scores_all,
                    'labels'   : cls_idxs_all}
-        print('===================1115')
-        exit()
+        # print('===================1115')
+        # exit()
         return results
 
     @torch.no_grad()
