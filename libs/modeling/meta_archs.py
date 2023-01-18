@@ -541,11 +541,11 @@ class PtTransformer(nn.Module):
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
-            final_loss = cls_loss + reg_loss 
+            final_loss = cls_loss + reg_loss + ref_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
-                    # 'ref_loss'   : ref_loss,
+                    'ref_loss'   : ref_loss,
                     # 'dcp_loss'   : dcp_loss,
                     'final_loss' : final_loss}
         else:
@@ -1042,7 +1042,7 @@ class PtTransformer(nn.Module):
             print(err)
         
 
-        ref_loss = F.l1_loss(out_ref[mask], gt_ref[mask], reduction='mean') / 4
+        ref_loss = F.mse_loss(out_ref[mask], gt_ref[mask], reduction='mean') / 4
         # ref_loss /= self.loss_normalizer
     
         # exit()
@@ -1174,26 +1174,26 @@ class PtTransformer(nn.Module):
             # print(out_refines[0])
             # print(out_refines[0].shape)
 
-            # i = seg_left<0 
-            # seg_left[i] = 0
-            # i = seg_left>2303
-            # seg_left[i] = 2303
-            # i = seg_right<0 
-            # seg_right[i] = 0
-            # i = seg_right>2303
-            # seg_right[i] = 2303
+            i = seg_left<0 
+            seg_left[i] = 0
+            i = seg_left>2303
+            seg_left[i] = 2303
+            i = seg_right<0 
+            seg_right[i] = 0
+            i = seg_right>2303
+            seg_right[i] = 2303
 
-            # out_refines = out_refines[0].squeeze(1)
-            # pos = out_refines >= 0
-            # out_refines[pos] = -1 * out_refines[pos] + 4
-            # neg = out_refines < 0
-            # out_refines[neg] = -1 * out_refines[neg] - 4
+            out_refines = out_refines[0].squeeze(1)
+            pos = out_refines >= 0
+            out_refines[pos] = -1 * out_refines[pos] + 4
+            neg = out_refines < 0
+            out_refines[neg] = -1 * out_refines[neg] - 4
 
 
-            # ref_left = out_refines[seg_left.round().long()]  # todo [2304]
-            # seg_left += ref_left
-            # ref_right = out_refines[seg_right.round().long()]  # todo [2304]
-            # seg_right += ref_right
+            ref_left = out_refines[seg_left.round().long()]  # todo [2304]
+            seg_left += ref_left
+            ref_right = out_refines[seg_right.round().long()]  # todo [2304]
+            seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
