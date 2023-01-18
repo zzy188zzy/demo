@@ -242,9 +242,9 @@ class RefineHead(nn.Module):
             else:
                 self.norm.append(nn.Identity())
 
-        self.scale = nn.ModuleList()
-        for idx in range(fpn_levels):
-            self.scale.append(Scale())
+        # self.scale = nn.ModuleList()
+        # for idx in range(fpn_levels):
+        #     self.scale.append(Scale())
 
         # segment regression
         self.offset_head = MaskedConv1D(
@@ -268,7 +268,7 @@ class RefineHead(nn.Module):
         # print('=====')
         cur_offsets, _ = self.offset_head(cur_out, cur_mask)
         # print(cur_offsets[0, :10])
-        out_offsets += (self.scale[0](cur_offsets), )
+        out_offsets += (8*(torch.sigmoid(cur_offsets)-0.5), )
 
 
         # fpn_masks remains the same
@@ -1027,19 +1027,19 @@ class PtTransformer(nn.Module):
 
         outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
 
-        print(gt_ref[0])
-        print(gt_ref[0, 182:214])
+        # print(gt_ref[0])
+        # print(gt_ref[0, 182:214])
 
         gt_ref[gt_ref > 4] = 4
         gt_ref[gt_ref < -4] = -4
-        pos = gt_ref >= 0
+        pos = gt_ref > 0
         gt_ref[pos] = -1*(gt_ref[pos]-4)
         neg = gt_ref < 0
         gt_ref[neg] = -1*(gt_ref[neg]+4)
 
-        print(gt_ref[0])
-        print(gt_ref[0, 182:214])
-        exit()
+        # print(gt_ref[0])
+        # print(gt_ref[0, 182:214])
+        # exit()
         
         out_ref = out_refines[0].squeeze(2)
 
