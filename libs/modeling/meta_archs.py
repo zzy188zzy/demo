@@ -446,7 +446,7 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
+            fpn_dim, head_dim, 1,
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -542,11 +542,11 @@ class PtTransformer(nn.Module):
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
-            final_loss = cls_loss + reg_loss + ref_loss
+            final_loss = cls_loss + reg_loss 
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
-                    'ref_loss'   : ref_loss,
+                    # 'ref_loss'   : ref_loss,
                     # 'dcp_loss'   : dcp_loss,
                     'final_loss' : final_loss}
         else:
@@ -1164,20 +1164,20 @@ class PtTransformer(nn.Module):
             # print(seg_left)
             # exit()
 
-            seg_len = seg_right - seg_left
+            # seg_len = seg_right - seg_left
             # print(seg_left.shape)
             # print(seg_left)
             # print(out_refines[0])
             # print(out_refines[0].shape)
 
-            i = seg_left<0 
-            seg_left[i] = 0
-            i = seg_left>2303
-            seg_left[i] = 2303
-            i = seg_right<0 
-            seg_right[i] = 0
-            i = seg_right>2303
-            seg_right[i] = 2303
+            # i = seg_left<0 
+            # seg_left[i] = 0
+            # i = seg_left>2303
+            # seg_left[i] = 2303
+            # i = seg_right<0 
+            # seg_right[i] = 0
+            # i = seg_right>2303
+            # seg_right[i] = 2303
 
             out_refines = out_refines[0].squeeze(1)
             pos = out_refines >= 0
@@ -1186,10 +1186,10 @@ class PtTransformer(nn.Module):
             out_refines[neg] = -1 * out_refines[neg] - 4
 
 
-            ref_left = out_refines[seg_left.round().long()]  # todo [2304]
-            seg_left += ref_left
-            ref_right = out_refines[seg_right.round().long()]  # todo [2304]
-            seg_right += ref_right
+            # ref_left = out_refines[seg_left.round().long()]  # todo [2304]
+            # seg_left += ref_left
+            # ref_right = out_refines[seg_right.round().long()]  # todo [2304]
+            # seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
