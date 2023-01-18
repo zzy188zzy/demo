@@ -254,7 +254,6 @@ class RefineHead(nn.Module):
 
     def forward(self, fpn_feats, fpn_masks, cls_logits, offsets):
         assert len(fpn_feats) == len(fpn_masks)
-        assert len(fpn_feats) == self.fpn_levels
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
