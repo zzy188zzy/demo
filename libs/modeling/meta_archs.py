@@ -1189,23 +1189,23 @@ class PtTransformer(nn.Module):
             # seg_len = seg_right - seg_left
             # print(seg_left.shape)
             # print(seg_left)
-            print(torch.min(seg_left))
-            print(torch.max(seg_right))
-            print(pt_idxs.sum())
-            print(pt_idxs)
+            # print(torch.min(seg_left))
+            # print(torch.max(seg_right))
+            # print(pt_idxs.shape[0])
+            # print(pt_idxs)
 
-            i = seg_left<0 
-            print(i.sum())
-            seg_left[i] = 0
-            i = seg_left>2303
-            # print(i.sum())
-            seg_left[i] = 2303
-            i = seg_right<0 
-            # print(i.sum())
-            seg_right[i] = 0
-            i = seg_right>2303
-            # print(i.sum())
-            seg_right[i] = 2303
+            # i = seg_left<0 
+            # # print(i.sum())
+            # seg_left[i] = 0
+            # i = seg_left>2303
+            # # print(i.sum())
+            # seg_left[i] = 2303
+            # i = seg_right<0 
+            # # print(i.sum())
+            # seg_right[i] = 0
+            # i = seg_right>2303
+            # # print(i.sum())
+            # seg_right[i] = 2303
 
             # print(seg_left)
             # exit()
@@ -1217,7 +1217,7 @@ class PtTransformer(nn.Module):
 
             # print(seg_left.shape)
             # print(seg_left)
-            print('----')
+            # print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
             
 
@@ -1237,8 +1237,8 @@ class PtTransformer(nn.Module):
         results = {'segments' : segs_all,
                    'scores'   : scores_all,
                    'labels'   : cls_idxs_all}
-        print('===================1115')
-        exit()
+        # print('===================1115')
+        # exit()
         return results
 
     @torch.no_grad()
@@ -1271,7 +1271,10 @@ class PtTransformer(nn.Module):
                 )
             # 3: convert from feature grids to seconds
             if segs.shape[0] > 0:
+                print(segs)
                 segs = (segs * stride + 0.5 * nframes) / fps
+                print(segs*fps)
+                exit()
                 # truncate all boundaries within [0, duration]
                 segs[segs<=0.0] *= 0.0
                 segs[segs>=vlen] = segs[segs>=vlen] * 0.0 + vlen
