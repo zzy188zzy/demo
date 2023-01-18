@@ -550,10 +550,10 @@ class PtTransformer(nn.Module):
                     'final_loss' : final_loss}
         else:
             # refineHead
-            # for i in range(len(out_offsets)):
-            #     print(out_offsets[i].shape)
-            #     print(out_cls_logits[i].shape)
-            # exit()
+            for i in range(len(out_offsets)):
+                print(out_offsets[i].shape)
+                print(out_cls_logits[i].shape)
+            exit()
 
             out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
 
