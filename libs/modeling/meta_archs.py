@@ -1122,6 +1122,12 @@ class PtTransformer(nn.Module):
         scores_all = []
         cls_idxs_all = []
 
+        out_refines = out_refines[0].squeeze(1)
+        pos = out_refines >= 0
+        out_refines[pos] = -1 * out_refines[pos] + 4
+        neg = out_refines < 0
+        out_refines[neg] = -1 * out_refines[neg] - 4
+
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
                 out_cls_logits, out_offsets, points, fpn_masks
@@ -1171,8 +1177,6 @@ class PtTransformer(nn.Module):
             # seg_len = seg_right - seg_left
             # print(seg_left.shape)
             # print(seg_left)
-            print(out_refines[0])
-            print(out_refines[0].shape)
 
             i = seg_left<0 
             seg_left[i] = 0
@@ -1182,13 +1186,6 @@ class PtTransformer(nn.Module):
             seg_right[i] = 0
             i = seg_right>2303
             seg_right[i] = 2303
-
-            out_refines = out_refines[0].squeeze(1)
-            pos = out_refines >= 0
-            out_refines[pos] = -1 * out_refines[pos] + 4
-            neg = out_refines < 0
-            out_refines[neg] = -1 * out_refines[neg] - 4
-
 
             ref_left = out_refines[seg_left.round().long()]  # todo [2304]
             seg_left += ref_left
