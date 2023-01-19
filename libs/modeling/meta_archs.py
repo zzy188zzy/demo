@@ -1141,12 +1141,7 @@ class PtTransformer(nn.Module):
         out_refines[pos] = -1 * out_refines[pos] + 4
         neg = out_refines < 0
         out_refines[neg] = -1 * out_refines[neg] - 4
-        print(stride)
-        print(nframes)
-        print(stride.shape)
-        print(nframes.shape)
-        
-        exit()
+       
 
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
@@ -1188,7 +1183,17 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            left_idx = (seg_left * stride + 0.5 * nframes)
+            left_idx = (seg_left * stride + 0.5 * nframes).round().long()
+            right_idx = (seg_right * stride + 0.5 * nframes).round().long()
+            i = left_idx < 0
+            left_idx[i] = 0
+            i = right_idx > 2303
+            if i > 0:
+                print(i)
+                print(right_idx[i])
+                right_idx[i] = 2303
+            
+
 
             # print(pts[:, 0])
             # print(pts[:, 3])
@@ -1220,10 +1225,10 @@ class PtTransformer(nn.Module):
             # print(seg_left)
             # exit()
 
-            # ref_left = out_refines[seg_left.round().long()]  # todo [2304]
-            # seg_left += ref_left
-            # ref_right = out_refines[seg_right.round().long()]  # todo [2304]
-            # seg_right += ref_right
+            ref_left = out_refines[left_idx]  # todo [2304]
+            seg_left += ref_left
+            ref_right = out_refines[right_idx]  # todo [2304]
+            seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
