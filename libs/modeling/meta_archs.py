@@ -1222,13 +1222,13 @@ class PtTransformer(nn.Module):
             # exit()
 
             print(seg_left[left_mask])
-            print(ref_left)
+            
 
             ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
             seg_left[left_mask] += ref_left
             ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
             seg_right[right_mask] += ref_right
-
+            print(ref_left)
             # print(seg_left.shape)
             print(seg_left[left_mask])
             print('----')
