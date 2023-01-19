@@ -1137,9 +1137,9 @@ class PtTransformer(nn.Module):
 
         out_refines = out_refines[0].squeeze(1)
         pos = out_refines > 0
-        out_refines[pos] = -1 * out_refines[pos] + 4
+        out_refines[pos] = -1 * out_refines[pos] + 1
         neg = out_refines < 0
-        out_refines[neg] = -1 * out_refines[neg] - 4
+        out_refines[neg] = -1 * out_refines[neg] - 1
        
 
         # loop over fpn levels
