@@ -1141,11 +1141,11 @@ class PtTransformer(nn.Module):
         out_refines[pos] = -1 * out_refines[pos] + 4
         neg = out_refines < 0
         out_refines[neg] = -1 * out_refines[neg] - 4
-
-        print(stride.shape)
-        print(nframes.shape)
         print(stride)
         print(nframes)
+        print(stride.shape)
+        print(nframes.shape)
+        
         exit()
 
         # loop over fpn levels
