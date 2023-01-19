@@ -1188,8 +1188,8 @@ class PtTransformer(nn.Module):
             i = left_idx < 0
             left_idx[i] = 0
             i = right_idx > 2303
-            if i > 0:
-                print(i)
+            if i.sum() > 0:
+                print(i.sum())
                 print(right_idx[i])
                 right_idx[i] = 2303
             
