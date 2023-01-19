@@ -268,8 +268,7 @@ class RefineHead(nn.Module):
         # print('=====')
         cur_offsets, _ = self.offset_head(cur_out, cur_mask)
         # print(cur_offsets[0, :10])
-        out_offsets += (8*(torch.sigmoid(cur_offsets)-0.5), )
-
+        out_offsets += (2*(torch.sigmoid(cur_offsets)-0.5), )
 
         # fpn_masks remains the same
         return out_offsets
@@ -1025,17 +1024,17 @@ class PtTransformer(nn.Module):
         # mask = torch.logical_and(torch.logical_and(gt_ref < 2, gt_ref > -2), fpn_masks[0])  # fy
         mask = fpn_masks[0]
 
-        outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
+        # outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
 
         # print(gt_ref[0])
         # print(gt_ref[0, 182:214])
 
-        gt_ref[gt_ref > 4] = 4
-        gt_ref[gt_ref < -4] = -4
+        gt_ref[gt_ref > 1] = 1
+        gt_ref[gt_ref < -1] = -1
         pos = gt_ref > 0
-        gt_ref[pos] = -1*(gt_ref[pos]-4)
+        gt_ref[pos] = -1*(gt_ref[pos]-1)
         neg = gt_ref < 0
-        gt_ref[neg] = -1*(gt_ref[neg]+4)
+        gt_ref[neg] = -1*(gt_ref[neg]+1)
 
         # print(gt_ref[0])
         # print(gt_ref[0, 182:214])
@@ -1049,12 +1048,12 @@ class PtTransformer(nn.Module):
         # print(gt_ref[mask])
         # print(out_ref[mask])
 
-        err = torch.logical_or(out_ref > 4, out_ref < -4).sum()
-        if err > 0:
-            print(err)
+        # err = torch.logical_or(out_ref > 2, out_ref < -2).sum()
+        # if err > 0:
+        #     print(err)
         
 
-        ref_loss = F.mse_loss(out_ref[mask], gt_ref[mask], reduction='mean') / 4
+        ref_loss = F.mse_loss(out_ref[mask], gt_ref[mask], reduction='mean')
         # ref_loss /= self.loss_normalizer
     
         # exit()
