@@ -727,7 +727,7 @@ class PtTransformer(nn.Module):
 
         gt_refine[to_left] *= -1
 
-        # print(gt_segment[182:214])
+        print(gt_segment)
         # print(gt_refine[182:214])
         # exit()
 
