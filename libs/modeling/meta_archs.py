@@ -1104,7 +1104,7 @@ class PtTransformer(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid, refines_per_vid
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid, stride, nframes
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -1127,6 +1127,8 @@ class PtTransformer(nn.Module):
         out_cls_logits,
         out_offsets,
         out_refines,
+        stride,
+        nframes,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -1139,6 +1141,12 @@ class PtTransformer(nn.Module):
         out_refines[pos] = -1 * out_refines[pos] + 4
         neg = out_refines < 0
         out_refines[neg] = -1 * out_refines[neg] - 4
+
+        print(stride.shape)
+        print(nframes.shape)
+        print(stride)
+        print(nframes)
+        exit()
 
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
@@ -1179,6 +1187,8 @@ class PtTransformer(nn.Module):
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
+
+            left_idx = (seg_left * stride + 0.5 * nframes)
 
             # print(pts[:, 0])
             # print(pts[:, 3])
@@ -1271,10 +1281,10 @@ class PtTransformer(nn.Module):
                 )
             # 3: convert from feature grids to seconds
             if segs.shape[0] > 0:
-                print(segs)
+                # print(segs)
                 segs = (segs * stride + 0.5 * nframes) / fps
-                print(segs*fps)
-                exit()
+                # print(segs*fps)
+                # exit()
                 # truncate all boundaries within [0, duration]
                 segs[segs<=0.0] *= 0.0
                 segs[segs>=vlen] = segs[segs>=vlen] * 0.0 + vlen
