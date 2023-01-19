@@ -1183,15 +1183,15 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            left_idx = (seg_left * stride + 0.5 * nframes).round().long()
-            right_idx = (seg_right * stride + 0.5 * nframes).round().long()
-            i = left_idx < 0
-            left_idx[i] = 0
-            i = right_idx > 2303
-            if i.sum() > 0:
-                print(i.sum())
-                print(right_idx[i])
-                right_idx[i] = 2303
+            # left_idx = (seg_left * stride + 0.5 * nframes).round().long()
+            # right_idx = (seg_right * stride + 0.5 * nframes).round().long()
+            # i = left_idx < 0
+            # left_idx[i] = 0
+            # i = right_idx > 2303
+            # if i.sum() > 0:
+            #     print(i.sum())
+            #     print(right_idx[i])
+            #     right_idx[i] = 2303
             
 
 
@@ -1225,10 +1225,10 @@ class PtTransformer(nn.Module):
             # print(seg_left)
             # exit()
 
-            ref_left = out_refines[left_idx]  # todo [2304]
-            seg_left += ref_left
-            ref_right = out_refines[right_idx]  # todo [2304]
-            seg_right += ref_right
+            # ref_left = out_refines[left_idx]  # todo [2304]
+            # seg_left += ref_left
+            # ref_right = out_refines[right_idx]  # todo [2304]
+            # seg_right += ref_right
 
             # print(seg_left.shape)
             # print(seg_left)
@@ -1286,10 +1286,12 @@ class PtTransformer(nn.Module):
                 )
             # 3: convert from feature grids to seconds
             if segs.shape[0] > 0:
-                # print(segs)
+                print(segs)
+                print(stride)
+                print(nframes)
                 segs = (segs * stride + 0.5 * nframes) / fps
-                # print(segs*fps)
-                # exit()
+                print(segs*fps)
+                exit()
                 # truncate all boundaries within [0, duration]
                 segs[segs<=0.0] *= 0.0
                 segs[segs>=vlen] = segs[segs>=vlen] * 0.0 + vlen
