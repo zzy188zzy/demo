@@ -1144,6 +1144,7 @@ class PtTransformer(nn.Module):
         out_refines[neg] = -1 * out_refines[neg] - 1
        
 
+
         # loop over fpn levels
         for cls_i, offsets_i, pts_i, mask_i in zip(
                 out_cls_logits, out_offsets, points, fpn_masks
@@ -1225,10 +1226,12 @@ class PtTransformer(nn.Module):
             # print(seg_left[left_mask])
             
 
-            ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
-            seg_left[left_mask] += ref_left
-            ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
-            seg_right[right_mask] += ref_right
+            # ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
+            # seg_left[left_mask] += ref_left
+            # ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
+            # seg_right[right_mask] += ref_right
+
+
             # print(ref_left)
             # print(seg_left.shape)
             # print(seg_left[left_mask])
