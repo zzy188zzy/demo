@@ -541,7 +541,7 @@ class PtTransformer(nn.Module):
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
-            ref_loss = torch.stack(ref_loss).mean()
+            ref_loss = torch.stack(ref_loss).mean() * 10
             final_loss = cls_loss + reg_loss + ref_loss
 
             return {'cls_loss'   : cls_loss,
@@ -1242,12 +1242,12 @@ class PtTransformer(nn.Module):
 
             # print(seg_left[left_mask])
             
-            # if i==1:
-            out_ref = out_refines * 1
-            ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
-            seg_left[left_mask] += ref_left
-            ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
-            seg_right[right_mask] += ref_right
+            if i==1:
+                out_ref = out_refines * 1
+                ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
+                seg_left[left_mask] += ref_left
+                ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
+                seg_right[right_mask] += ref_right
 
             # print(ref_left)
             # print(seg_left.shape)
