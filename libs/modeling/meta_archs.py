@@ -896,11 +896,11 @@ class PtTransformer(nn.Module):
         # fpn_masks -> (B, FT)
         valid_mask = torch.cat(fpn_masks, dim=1)
 
-        print(torch.stack(gt_offsets).shape)
-        print(torch.cat(out_offsets, dim=1).shape)
-        print(torch.stack(gt_offsets))
-        print(torch.cat(out_offsets, dim=1))
-        exit()
+        # print(torch.stack(gt_offsets).shape)
+        # print(torch.cat(out_offsets, dim=1).shape)
+        # print(torch.stack(gt_offsets))
+        # print(torch.cat(out_offsets, dim=1))
+        # exit()
 
         # 1. classification loss
         # stack the list -> (B, FT) -> (# Valid, )
@@ -1056,6 +1056,11 @@ class PtTransformer(nn.Module):
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # 4 ref_loss
+        print(torch.stack(gt_refines).shape)
+        print(torch.cat(out_refines, dim=1).shape)
+        print(torch.stack(gt_refines))
+        print(torch.cat(out_refines, dim=1))
+        exit()
         gt_ref = torch.stack(gt_refines) / self.scale
         inside = torch.logical_and(torch.logical_and(gt_ref <= 1, gt_ref >= -1), fpn_masks[0])  # fy
         # mask = fpn_masks[0]
