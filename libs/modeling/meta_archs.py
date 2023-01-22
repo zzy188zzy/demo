@@ -208,7 +208,7 @@ class RefineHead(nn.Module):
     def __init__(
         self,
         input_dim,
-        feat_dim=2048,
+        feat_dim=512,
         num_layers=3,
         kernel_size=3,
         act_layer=nn.ReLU,
