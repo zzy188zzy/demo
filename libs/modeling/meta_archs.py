@@ -1029,17 +1029,21 @@ class PtTransformer(nn.Module):
         outside = torch.logical_and(torch.logical_or(gt_ref > 1, gt_ref < -1), fpn_masks[0])
         gt_ref[outside] = 0
 
-        t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[None, :].repeat(gt_ref.shape[0], 1)[outside]
-        print(t)
-        print(t.shape)
-        idx = torch.randperm(t.nelement())
-        t = t.view(-1)[idx].view(t.size())
-        print(t)
-        t = t[:, :inside.sum(-1)]
-        print(t)
-
-        exit()
-
+        for i in range(gt_ref.shape[0]):
+            pos = inside[i].sum()
+            neg = outside[i].sum()
+            if pos <= neg:
+                t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[outside[i]]
+                # print(t)
+                # print(t.shape)
+                idx = torch.randperm(t.nelement())
+                t = t.view(-1)[idx].view(t.size())
+                # print(t)
+                t = t[:(neg-pos)]
+                # print(t)
+                outside[i][t] = False
+                inside[i] = torch.logical_or(inside[i], outside[i])
+        mask = inside
 
         # print(gt_ref[0])
         # print(gt_ref[0, 182:214])
