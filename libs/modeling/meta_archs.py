@@ -1104,7 +1104,7 @@ class PtTransformer(nn.Module):
         # print(gt_ref[0, 182:214])
         # exit()
         
-        out_ref = out_refines[0].squeeze(2)
+        # out_ref = out_refines[0].squeeze(2)
 
         # print(gt_offsets)
         # print(pred_offsets)
