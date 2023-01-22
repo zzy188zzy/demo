@@ -1225,7 +1225,7 @@ class PtTransformer(nn.Module):
 
             # print(seg_left[left_mask])
             
-            if i==0:
+            if i==1:
                 out_ref = out_refines * 1
                 ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
                 seg_left[left_mask] += ref_left
