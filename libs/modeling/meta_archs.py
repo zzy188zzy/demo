@@ -896,11 +896,11 @@ class PtTransformer(nn.Module):
         # fpn_masks -> (B, FT)
         valid_mask = torch.cat(fpn_masks, dim=1)
 
-        print(torch.stack(gt_offsets).shape)
-        print(torch.cat(out_offsets, dim=1).shape)
-        print(torch.stack(gt_offsets)[0, :100])
-        print(torch.cat(out_offsets, dim=1)[0, :100])
-        exit()
+        # print(torch.stack(gt_offsets).shape)
+        # print(torch.cat(out_offsets, dim=1).shape)
+        # print(torch.stack(gt_offsets)[0, :100])
+        # print(torch.cat(out_offsets, dim=1)[0, :100])
+        # exit()
 
         # 1. classification loss
         # stack the list -> (B, FT) -> (# Valid, )
@@ -938,9 +938,9 @@ class PtTransformer(nn.Module):
         if num_pos == 0:
             reg_loss = 0 * pred_offsets.sum()
         else:
-            print(pred_offsets)
-            print(gt_offsets)
-            exit()
+            # print(pred_offsets)
+            # print(gt_offsets)
+            # exit()
             # giou loss defined on positive samples
             reg_loss = ctr_diou_loss_1d(
                 pred_offsets,
@@ -1061,10 +1061,13 @@ class PtTransformer(nn.Module):
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536]
-        
-        mask = fpn_masks
-
-
+        outside = torch.isinf(gt_ref)
+        mask = torch.logical_and((outside==False), valid_mask)
+        print(gt_ref[mask].shape)
+        print(out_ref[mask].shape)
+        print(gt_ref[mask])
+        print(out_ref[mask])
+        exit()
         # for i in range(gt_ref.shape[0]):
         #     pos = inside[i].sum()
         #     neg = outside[i].sum()
