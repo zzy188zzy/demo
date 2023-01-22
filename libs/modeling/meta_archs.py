@@ -216,6 +216,7 @@ class RefineHead(nn.Module):
         with_ln=False
     ):
         super().__init__()
+        self.fpn_levels = fpn_levels
         self.act = act_layer()
 
         # build the conv head
