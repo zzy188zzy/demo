@@ -240,9 +240,9 @@ class RefineHead(nn.Module):
             else:
                 self.norm.append(nn.Identity())
 
-        # self.scale = nn.ModuleList()
-        # for idx in range(fpn_levels):
-        #     self.scale.append(Scale())
+        self.scale = nn.ModuleList()
+        for idx in range(fpn_levels):
+            self.scale.append(Scale())
 
         # segment regression
         self.offset_head = MaskedConv1D(
@@ -250,23 +250,19 @@ class RefineHead(nn.Module):
                 stride=1, padding=kernel_size//2
             )
 
-    def forward(self, fpn_feats, fpn_masks, cls_logits, offsets):
-        # assert len(fpn_feats) == len(fpn_masks)
+    def forward(self, fpn_feats, fpn_masks):
+        assert len(fpn_feats) == len(fpn_masks)
+        assert len(fpn_feats) == self.fpn_levels
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
-        # for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-        cur_feat, cur_mask = fpn_feats[0], fpn_masks[0]
-        cur_out = cur_feat
-        for idx in range(len(self.head)):
-            # print(cur_out.shape)
-            cur_out, _ = self.head[idx](cur_out, cur_mask)
-            cur_out = self.act(self.norm[idx](cur_out))
-            # print(cur_out.shape)
-        # print('=====')
-        cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-        # print(cur_offsets[0, :10])
-        out_offsets += (2*(torch.sigmoid(cur_offsets)-0.5), )
+        for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
+            cur_out = cur_feat
+            for idx in range(len(self.head)):
+                cur_out, _ = self.head[idx](cur_out, cur_mask)
+                cur_out = self.act(self.norm[idx](cur_out))
+            cur_offsets, _ = self.offset_head(cur_out, cur_mask)
+            out_offsets += (self.scale[l](cur_offsets), )
 
         # fpn_masks remains the same
         return out_offsets
@@ -503,7 +499,7 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_refines = self.refineHead(fpn_feats0, fpn_masks0, out_cls_logits, out_offsets)
+            out_refines = self.refineHead(fpn_feats0, fpn_masks0)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -568,7 +564,7 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_refines = self.refineHead(fpn_feats0, fpn_masks0, out_cls_logits, out_offsets)
+            out_refines = self.refineHead(fpn_feats0, fpn_masks0)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -743,12 +739,13 @@ class PtTransformer(nn.Module):
             (gt_refine >= concat_points[:, 1]),
             (gt_refine <= concat_points[:, 2])
         )
-        print(gt_refine)
-        gt_refine.masked_fill_(inside_regress_range==0, float('inf'))
-        print(gt_refine)
-        exit()
+        
         gt_refine[to_left] *= -1
-
+        gt_refine /= concat_points[:, 3]
+        # print(gt_refine)
+        gt_refine.masked_fill_(inside_regress_range==0, float('inf'))
+        # print(gt_refine)
+        # exit()
         # print(gt_segment)
         # print(gt_refine[182:214])
         # exit()
@@ -829,13 +826,13 @@ class PtTransformer(nn.Module):
         # OK to use min_len_inds
         reg_targets = reg_targets[range(num_pts), min_len_inds]
         # normalization based on stride
-        print(reg_targets.shape)
-        print(reg_targets)
+        # print(reg_targets.shape)
+        # print(reg_targets)
         reg_targets /= concat_points[:, 3, None]
-        print(reg_targets)
-        print(gt_segment)
-        print('====================779')
-        exit()
+        # print(reg_targets)
+        # print(gt_segment)
+        # print('====================779')
+        # exit()
         return cls_targets, reg_targets, gt_refine
 
     def dcp_loss(self, feats, masks):
@@ -893,6 +890,12 @@ class PtTransformer(nn.Module):
         # gt_* : B (list) [F T, C]
         # fpn_masks -> (B, FT)
         valid_mask = torch.cat(fpn_masks, dim=1)
+
+        print(gt_offsets)
+        print(gt_refines)
+        print(out_offsets)
+        print(out_refines)
+        exit()
 
         # 1. classification loss
         # stack the list -> (B, FT) -> (# Valid, )
