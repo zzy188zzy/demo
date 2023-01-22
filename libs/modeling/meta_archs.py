@@ -1023,10 +1023,19 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines) / self.scale
-        mask = torch.logical_and(torch.logical_and(gt_ref <= 1, gt_ref >= -1), fpn_masks[0])  # fy
+        inside = torch.logical_and(torch.logical_and(gt_ref <= 1, gt_ref >= -1), fpn_masks[0])  # fy
         # mask = fpn_masks[0]
 
-        # outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
+        outside = torch.logical_and(torch.logical_or(gt_ref > 1, gt_ref < -1), fpn_masks[0])
+        gt_ref[outside] = 0
+
+        t=outside
+        print(t)
+        idx = torch.randperm(t.nelement())
+        t = t.view(-1)[idx].view(t.size())
+        print(t)
+        exit()
+
 
         # print(gt_ref[0])
         # print(gt_ref[0, 182:214])
@@ -1225,7 +1234,7 @@ class PtTransformer(nn.Module):
 
             # print(seg_left[left_mask])
             
-            if i==2:
+            if i==1:
                 out_ref = out_refines * 1
                 ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
                 seg_left[left_mask] += ref_left
