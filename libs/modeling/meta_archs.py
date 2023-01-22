@@ -478,8 +478,8 @@ class PtTransformer(nn.Module):
             i = i.detach()
         fpn_feats0, fpn_masks0 = self.neck0(feats, masks)
 
-        err = (fpn_feats[0]==fpn_feats0[0]).sum()
-        print(err)
+        # err = (fpn_feats[0]==fpn_feats0[0]).sum()
+        # print(err)
 
         # compute the point coordinate along the FPN
         # this is used for computing the GT or decode the final results
