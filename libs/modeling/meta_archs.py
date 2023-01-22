@@ -1146,9 +1146,9 @@ class PtTransformer(nn.Module):
 
 
         # loop over fpn levels
-        for cls_i, offsets_i, pts_i, mask_i in zip(
+        for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
                 out_cls_logits, out_offsets, points, fpn_masks
-            ):
+            )):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
 
@@ -1225,12 +1225,12 @@ class PtTransformer(nn.Module):
 
             # print(seg_left[left_mask])
             
-            out_refines *= 10
-            ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
+            # if i==0:
+            out_ref = out_refines * 10
+            ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
             seg_left[left_mask] += ref_left
-            ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
+            ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
             seg_right[right_mask] += ref_right
-
 
             # print(ref_left)
             # print(seg_left.shape)
