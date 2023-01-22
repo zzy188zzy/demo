@@ -1173,6 +1173,8 @@ class PtTransformer(nn.Module):
         cls_idxs_all = []
 
         out_refines = out_refines[0].squeeze(1)
+        out_ref = out_refines
+        out_ref[torch.abs(out_ref)<0.25] = 0
         # pos = out_refines > 0
         # out_refines[pos] = -1 * out_refines[pos] + 1
         # neg = out_refines < 0
@@ -1258,8 +1260,7 @@ class PtTransformer(nn.Module):
             print(seg_left[left_mask])
             
             # if i==1:
-            out_ref = out_refines
-            out_ref[torch.abs(out_ref)<0.25] = 0
+            
             ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
             seg_left[left_mask] += ref_left
             ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
