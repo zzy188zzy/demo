@@ -1029,13 +1029,13 @@ class PtTransformer(nn.Module):
         outside = torch.logical_and(torch.logical_or(gt_ref > 1, gt_ref < -1), fpn_masks[0])
         gt_ref[outside] = 0
 
-        t=torch.arange(start=0, end=2304, device=gt_ref.device).long()
+        t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[None, :].repeat(gt_ref.shape[0], 1)[outside]
         print(t)
         print(t.shape)
         idx = torch.randperm(t.nelement())
         t = t.view(-1)[idx].view(t.size())
         print(t)
-        t = t[:inside.shape[0]]
+        t = t[:, :inside.sum(-1)]
         print(t)
 
         exit()
