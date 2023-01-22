@@ -739,13 +739,13 @@ class PtTransformer(nn.Module):
         gt_refine = dis0
 
         # F T
-        print(concat_points[:, 1])
-        print(concat_points[:, 1].shape)
         inside_regress_range = torch.logical_and(
             (gt_refine >= concat_points[:, 1]),
             (gt_refine <= concat_points[:, 2])
         )
-        print(inside_regress_range.shape)
+        print(gt_refine)
+        gt_refine.masked_fill_(inside_regress_range==0, float('inf'))
+        print(gt_refine)
         exit()
         gt_refine[to_left] *= -1
 
