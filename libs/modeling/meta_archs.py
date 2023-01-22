@@ -712,15 +712,15 @@ class PtTransformer(nn.Module):
         num_pts = concat_points.shape[0]
         num_gts = gt_segment.shape[0]
 
-        # refine gt [2304]
-        lis = concat_points[:2304, 0].long()
-        pt = concat_points[:2304, :1, None]  # [2304, 1, 1]
-        pt = pt.expand(2304, num_gts, 2)  # [2304, N, 2]
-        gt = gt_segment[None].expand(2304, num_gts, 2)  # [2304, N, 2]
-        dis = pt - gt  # [2304, N, 2]  左：-- 中：+- 右：++ 
-        dis0, dis_idx1 = torch.min(torch.abs(dis.resize(2304, num_gts*2)), dim=1)  # [2304, N*2] -> [2304]
+        # refine gt [4536]
+        lis = concat_points[:, 0].long()
+        pt = concat_points[:, :1, None]  # [4536, 1, 1]
+        pt = pt.expand(num_pts, num_gts, 2)  # [4536, N, 2]
+        gt = gt_segment[None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
+        dis = pt - gt  # [4536, N, 2]  左：-- 中：+- 右：++ 
+        dis0, dis_idx1 = torch.min(torch.abs(dis.resize(num_pts, num_gts*2)), dim=1)  # [4536, N*2] -> [4536]
 
-        dis_idx0 = (dis_idx1//2).long()  # [2304]
+        dis_idx0 = (dis_idx1//2).long()  # [4536]
         s = (dis_idx1%2)==0
         t = (dis_idx1%2)==1
         # print((dis[:, :, 0] * dis[:, :, 1]).shape)
@@ -728,16 +728,25 @@ class PtTransformer(nn.Module):
         
         # print(tmp.shape)
         i = tmp < 0
-        o = tmp >= 0
+        o = tmp > 0
 
         to_left = torch.logical_or(torch.logical_and(o, t), torch.logical_and(i, s))
         # to_right = torch.logical_or(torch.logical_and(o, s), torch.logical_and(i, t))
 
         lens = gt_segment[:, 1] - gt_segment[:, 0]
-        lens = lens[None, :].repeat(2304, 1)
+        lens = lens[None, :].repeat(num_pts, 1)
 
         gt_refine = dis0
 
+        # F T
+        print(concat_points[:, 1])
+        print(concat_points[:, 1].shape)
+        inside_regress_range = torch.logical_and(
+            (gt_refine >= concat_points[:, 1]),
+            (gt_refine <= concat_points[:, 2])
+        )
+        print(inside_regress_range.shape)
+        exit()
         gt_refine[to_left] *= -1
 
         # print(gt_segment)
@@ -748,6 +757,8 @@ class PtTransformer(nn.Module):
         if num_gts == 0:
             cls_targets = gt_segment.new_full((num_pts, self.num_classes), 0)
             reg_targets = gt_segment.new_zeros((num_pts, 2))
+            print('751')
+            exit()
             return cls_targets, reg_targets
 
         # compute the lengths of all segments -> F T x N
