@@ -208,7 +208,8 @@ class RefineHead(nn.Module):
     def __init__(
         self,
         input_dim,
-        feat_dim=512,
+        feat_dim,
+        fpn_levels,
         num_layers=3,
         kernel_size=3,
         act_layer=nn.ReLU,
@@ -448,7 +449,10 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim
+            fpn_dim, head_dim, len(self.fpn_strides),
+            kernel_size=head_kernel_size,
+            num_layers=head_num_layers,
+            with_ln=head_with_ln
         )
 
         self.scale = 1
