@@ -1058,7 +1058,7 @@ class PtTransformer(nn.Module):
                 # print(outside[i].sum())
                 outside[i][t] = False
                 # print(outside[i].sum())
-                # inside[i] = torch.logical_or(inside[i], outside[i])
+                inside[i] = torch.logical_or(inside[i], outside[i])
                 # print('----')
         mask = inside
         # exit()
