@@ -251,12 +251,13 @@ class RefineHead(nn.Module):
             )
 
     def forward(self, fpn_feats, fpn_masks, cls_logits, offsets):
-        assert len(fpn_feats) == len(fpn_masks)
+        # assert len(fpn_feats) == len(fpn_masks)
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
         # for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-        cur_feat, cur_mask = fpn_feats[0], fpn_masks[0]
+        # cur_feat, cur_mask = fpn_feats[0], fpn_masks[0]
+        cur_feat, cur_mask = fpn_feats, fpn_masks
         cur_out = cur_feat
         for idx in range(len(self.head)):
             # print(cur_out.shape)
@@ -486,7 +487,7 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
+            out_refines = self.refineHead(feats, masks, out_cls_logits, out_offsets)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
