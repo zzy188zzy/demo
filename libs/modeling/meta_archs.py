@@ -1028,6 +1028,8 @@ class PtTransformer(nn.Module):
             pos = inside[i].sum()
             neg = outside[i].sum()
             if pos <= neg:
+                print(pos)
+                print(neg)
                 t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[outside[i]]
                 print(t)
                 print(t.shape)
@@ -1038,6 +1040,7 @@ class PtTransformer(nn.Module):
                 print(t)
                 outside[i][t] = False
                 inside[i] = torch.logical_or(inside[i], outside[i])
+                print('----')
         mask = inside
         exit()
 
