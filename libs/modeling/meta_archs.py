@@ -208,15 +208,13 @@ class RefineHead(nn.Module):
     def __init__(
         self,
         input_dim,
-        feat_dim,
-        fpn_levels,
+        feat_dim=2048,
         num_layers=3,
         kernel_size=3,
         act_layer=nn.ReLU,
         with_ln=False
     ):
         super().__init__()
-        self.fpn_levels = fpn_levels
         self.act = act_layer()
 
         # build the conv head
@@ -444,10 +442,7 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim, head_dim, 1,
-            kernel_size=head_kernel_size,
-            num_layers=head_num_layers,
-            with_ln=head_with_ln
+            fpn_dim
         )
 
         self.scale = 1
@@ -541,7 +536,7 @@ class PtTransformer(nn.Module):
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
-            ref_loss = torch.stack(ref_loss).mean() * 10
+            ref_loss = torch.stack(ref_loss).mean()
             final_loss = cls_loss + reg_loss + ref_loss
 
             return {'cls_loss'   : cls_loss,
