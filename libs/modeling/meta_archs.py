@@ -472,10 +472,10 @@ class PtTransformer(nn.Module):
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(batched_inputs, batched_masks)
 
-        print(feats)
-        exit()
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
+        for i in range(6):
+            feats[i] = feats[i].detach()
         fpn_feats0, fpn_masks0 = self.neck0(feats, masks)
 
         # compute the point coordinate along the FPN
