@@ -450,7 +450,7 @@ class PtTransformer(nn.Module):
             with_ln=head_with_ln
         )
 
-        self.scale = 4
+        self.scale = 1
 
     @property
     def device(self):
@@ -724,7 +724,7 @@ class PtTransformer(nn.Module):
         lens = gt_segment[:, 1] - gt_segment[:, 0]
         lens = lens[None, :].repeat(2304, 1)
 
-        gt_refine = dis0 / self.scale
+        gt_refine = dis0
 
         gt_refine[to_left] *= -1
 
@@ -1022,21 +1022,21 @@ class PtTransformer(nn.Module):
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # 4 ref_loss
-        gt_ref = torch.stack(gt_refines)
-        # mask = torch.logical_and(torch.logical_and(gt_ref < 2, gt_ref > -2), fpn_masks[0])  # fy
-        mask = fpn_masks[0]
+        gt_ref = torch.stack(gt_refines) / self.scale
+        mask = torch.logical_and(torch.logical_and(gt_ref <= 1, gt_ref >= -1), fpn_masks[0])  # fy
+        # mask = fpn_masks[0]
 
         # outside = torch.logical_or(gt_ref > 4, gt_ref < -4)
 
         # print(gt_ref[0])
         # print(gt_ref[0, 182:214])
 
-        gt_ref[gt_ref > 1] = 1
-        gt_ref[gt_ref < -1] = -1
-        pos = gt_ref > 0
-        gt_ref[pos] = -1*(gt_ref[pos]-1)
-        neg = gt_ref < 0
-        gt_ref[neg] = -1*(gt_ref[neg]+1)
+        # gt_ref[gt_ref > 1] = 1
+        # gt_ref[gt_ref < -1] = -1
+        # pos = gt_ref > 0
+        # gt_ref[pos] = -1*(gt_ref[pos]-1)
+        # neg = gt_ref < 0
+        # gt_ref[neg] = -1*(gt_ref[neg]+1)
 
         # print(gt_ref[0])
         # print(gt_ref[0, 182:214])
@@ -1055,7 +1055,7 @@ class PtTransformer(nn.Module):
         #     print(err)
         
 
-        ref_loss = F.mse_loss(out_ref[mask], gt_ref[mask], reduction='mean')
+        ref_loss = F.smooth_l1_loss(out_ref[mask], gt_ref[mask], reduction='mean')
         # ref_loss /= self.loss_normalizer
     
         # exit()
@@ -1138,10 +1138,10 @@ class PtTransformer(nn.Module):
         cls_idxs_all = []
 
         out_refines = out_refines[0].squeeze(1)
-        pos = out_refines > 0
-        out_refines[pos] = -1 * out_refines[pos] + 1
-        neg = out_refines < 0
-        out_refines[neg] = -1 * out_refines[neg] - 1
+        # pos = out_refines > 0
+        # out_refines[pos] = -1 * out_refines[pos] + 1
+        # neg = out_refines < 0
+        # out_refines[neg] = -1 * out_refines[neg] - 1
        
 
 
@@ -1225,11 +1225,11 @@ class PtTransformer(nn.Module):
 
             # print(seg_left[left_mask])
             
-            out_refines *= 0.1
-            ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
-            seg_left[left_mask] += ref_left
-            ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
-            seg_right[right_mask] += ref_right
+            # out_refines *= 0.1
+            # ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
+            # seg_left[left_mask] += ref_left
+            # ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
+            # seg_right[right_mask] += ref_right
 
 
             # print(ref_left)
