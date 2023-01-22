@@ -1223,19 +1223,19 @@ class PtTransformer(nn.Module):
             # print(seg_left)
             # exit()
 
-            print(seg_left[left_mask])
+            # print(seg_left[left_mask])
             
-            # out_refines *= 0.1
+            out_refines *= 10
             ref_left = out_refines[left_idx[left_mask]]  # todo [2304]
             seg_left[left_mask] += ref_left
             ref_right = out_refines[right_idx[right_mask]]  # todo [2304]
             seg_right[right_mask] += ref_right
 
 
-            print(ref_left)
+            # print(ref_left)
             # print(seg_left.shape)
-            print(seg_left[left_mask])
-            print('----')
+            # print(seg_left[left_mask])
+            # print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
             
             # 5. Keep seg with duration > a threshold (relative to feature grids)
@@ -1254,8 +1254,8 @@ class PtTransformer(nn.Module):
         results = {'segments' : segs_all,
                    'scores'   : scores_all,
                    'labels'   : cls_idxs_all}
-        print('===================1115')
-        exit()
+        # print('===================1115')
+        # exit()
         return results
 
     @torch.no_grad()
