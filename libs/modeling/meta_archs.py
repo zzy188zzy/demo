@@ -896,10 +896,10 @@ class PtTransformer(nn.Module):
         # fpn_masks -> (B, FT)
         valid_mask = torch.cat(fpn_masks, dim=1)
 
-        print(gt_offsets)
-        print(gt_refines)
-        print(out_offsets)
-        print(out_refines)
+        print(torch.stack(gt_offsets).shape)
+        print(torch.cat(out_offsets, dim=1).shape)
+        print(torch.stack(gt_offsets))
+        print(torch.cat(out_offsets, dim=1))
         exit()
 
         # 1. classification loss
