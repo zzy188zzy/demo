@@ -1225,9 +1225,6 @@ class PtTransformer(nn.Module):
             left_mask = left_idx >= 0
             right_mask = right_idx <= 2303
             
-            
-
-
             # print(pts[:, 0])
             # print(pts[:, 3])
             # print(offsets[:, 0])
@@ -1261,11 +1258,11 @@ class PtTransformer(nn.Module):
             # print(seg_left[left_mask])
             
             # if i==1:
-            out_ref = out_refines * 1
-            ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
-            seg_left[left_mask] += ref_left
-            ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
-            seg_right[right_mask] += ref_right
+            # out_ref = out_refines * 1
+            # ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
+            # seg_left[left_mask] += ref_left
+            # ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
+            # seg_right[right_mask] += ref_right
 
             # print(ref_left)
             # print(seg_left.shape)
