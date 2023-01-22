@@ -938,6 +938,9 @@ class PtTransformer(nn.Module):
         if num_pos == 0:
             reg_loss = 0 * pred_offsets.sum()
         else:
+            print(pred_offsets)
+            print(gt_offsets)
+            exit()
             # giou loss defined on positive samples
             reg_loss = ctr_diou_loss_1d(
                 pred_offsets,
@@ -1056,38 +1059,32 @@ class PtTransformer(nn.Module):
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
         # 4 ref_loss
-        print(torch.stack(gt_refines).shape)
-        print(torch.cat(out_refines, dim=1).shape)
-        print(torch.stack(gt_refines))
-        print(torch.cat(out_refines, dim=1))
-        exit()
-        gt_ref = torch.stack(gt_refines) / self.scale
-        inside = torch.logical_and(torch.logical_and(gt_ref <= 1, gt_ref >= -1), fpn_masks[0])  # fy
-        # mask = fpn_masks[0]
+        gt_ref = torch.stack(gt_refines)
+        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536]
+        
+        mask = fpn_masks
 
-        outside = torch.logical_and(torch.logical_or(gt_ref > 1, gt_ref < -1), fpn_masks[0])
-        gt_ref[outside] = 0
 
-        for i in range(gt_ref.shape[0]):
-            pos = inside[i].sum()
-            neg = outside[i].sum()
-            if pos <= neg:
-                # print(pos)
-                # print(neg)
-                t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[outside[i]]
-                # print(t)
-                # print(t.shape)
-                idx = torch.randperm(t.nelement())
-                t = t.view(-1)[idx].view(t.size())
-                # print(t)
-                t = t[:(neg-pos)]
-                # print(t.shape)
-                # print(outside[i].sum())
-                outside[i][t] = False
-                # print(outside[i].sum())
-                inside[i] = torch.logical_or(inside[i], outside[i])
-                # print('----')
-        mask = inside
+        # for i in range(gt_ref.shape[0]):
+        #     pos = inside[i].sum()
+        #     neg = outside[i].sum()
+        #     if pos <= neg:
+        #         # print(pos)
+        #         # print(neg)
+        #         t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[outside[i]]
+        #         # print(t)
+        #         # print(t.shape)
+        #         idx = torch.randperm(t.nelement())
+        #         t = t.view(-1)[idx].view(t.size())
+        #         # print(t)
+        #         t = t[:(neg-pos)]
+        #         # print(t.shape)
+        #         # print(outside[i].sum())
+        #         outside[i][t] = False
+        #         # print(outside[i].sum())
+        #         inside[i] = torch.logical_or(inside[i], outside[i])
+        #         # print('----')
+        # mask = inside
         # exit()
 
         # print(gt_ref[0])
