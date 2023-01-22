@@ -400,22 +400,23 @@ class PtTransformer(nn.Module):
             fpn_type,
             **{
                 'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
-                'out_channel' : fpn_dim,
+                'out_channel' : fpn_dim*2,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
                 'with_ln' : fpn_with_ln
             }
         )
-        self.neck0 = make_neck(
-            fpn_type,
-            **{
-                'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
-                'out_channel' : fpn_dim,
-                'scale_factor' : scale_factor,
-                'start_level' : fpn_start_level,
-                'with_ln' : fpn_with_ln
-            }
-        )
+        self.fpn_dim = fpn_dim
+        # self.neck0 = make_neck(
+        #     fpn_type,
+        #     **{
+        #         'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
+        #         'out_channel' : fpn_dim,
+        #         'scale_factor' : scale_factor,
+        #         'start_level' : fpn_start_level,
+        #         'with_ln' : fpn_with_ln
+        #     }
+        # )
 
         # location generator: points
         self.point_generator = make_generator(
@@ -473,10 +474,17 @@ class PtTransformer(nn.Module):
         feats, masks = self.backbone(batched_inputs, batched_masks)
 
 
-        fpn_feats, fpn_masks = self.neck(feats, masks)
-        for i in feats:
-            i = i.detach()
-        fpn_feats0, fpn_masks0 = self.neck0(feats, masks)
+        fpn_feats_all, fpn_masks = self.neck(feats, masks)
+        fpn_feats = []
+        fpn_feats0 = []
+        for i in range(6):
+            print(fpn_feats_all[i].shape)
+        exit()
+
+
+        # for i in feats:
+        #     i = i.detach()
+        # fpn_feats0, fpn_masks0 = self.neck0(feats, masks)
 
         # compute the point coordinate along the FPN
         # this is used for computing the GT or decode the final results
@@ -500,7 +508,7 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_refines = self.refineHead(fpn_feats0, fpn_masks0, out_cls_logits, out_offsets)
+            out_refines = self.refineHead(fpn_feats0, fpn_masks, out_cls_logits, out_offsets)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -565,7 +573,7 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
+            out_refines = self.refineHead(fpn_feats0, fpn_masks, out_cls_logits, out_offsets)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
