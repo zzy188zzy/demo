@@ -818,10 +818,11 @@ class PtTransformer(nn.Module):
         # OK to use min_len_inds
         reg_targets = reg_targets[range(num_pts), min_len_inds]
         # normalization based on stride
+        print(reg_targets)
         reg_targets /= concat_points[:, 3, None]
-
-        # print('====================779')
-        # exit()
+        print(reg_targets)
+        print('====================779')
+        exit()
         return cls_targets, reg_targets, gt_refine
 
     def dcp_loss(self, feats, masks):
