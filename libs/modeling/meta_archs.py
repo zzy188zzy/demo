@@ -565,7 +565,7 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_refines = self.refineHead(fpn_feats0, fpn_masks0, out_cls_logits, out_offsets)
+            out_refines = self.refineHead(fpn_feats, fpn_masks, out_cls_logits, out_offsets)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
