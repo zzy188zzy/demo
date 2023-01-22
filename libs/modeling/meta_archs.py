@@ -1063,11 +1063,11 @@ class PtTransformer(nn.Module):
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536]
         outside = torch.isinf(gt_ref)
         mask = torch.logical_and((outside==False), valid_mask)
-        print(gt_ref[mask].shape)
-        print(out_ref[mask].shape)
-        print(gt_ref[mask])
-        print(out_ref[mask])
-        exit()
+        # print(gt_ref[mask].shape)
+        # print(out_ref[mask].shape)
+        # print(gt_ref[mask])
+        # print(out_ref[mask])
+        # exit()
         # for i in range(gt_ref.shape[0]):
         #     pos = inside[i].sum()
         #     neg = outside[i].sum()
