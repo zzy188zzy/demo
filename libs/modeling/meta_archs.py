@@ -1249,9 +1249,9 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
             # print(seg_left)
-            left_idx = (seg_left/pts[:, 3]).round().long()
+            left_idx = (seg_left/pts[:, 3][0]).round().long()
             # print(left_idx)
-            right_idx = (seg_right/pts[:, 3]).round().long()
+            right_idx = (seg_right/pts[:, 3][0]).round().long()
             # print(right_idx)
             # exit()
             left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//pts[:, 3][0])
