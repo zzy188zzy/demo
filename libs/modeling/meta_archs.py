@@ -1210,7 +1210,7 @@ class PtTransformer(nn.Module):
         for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
                 out_cls_logits, out_offsets, out_refines, points, fpn_masks
             )):
-            ref_i = ref_i[0]
+            ref_i = ref_i
             print(ref_i.shape)
             exit()
             # sigmoid normalization for output logits
