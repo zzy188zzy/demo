@@ -1198,10 +1198,11 @@ class PtTransformer(nn.Module):
         segs_all = []
         scores_all = []
         cls_idxs_all = []
-        print(out_refines)
+        # print(out_refines)
         for ref_i in zip(out_refines):
-            print(ref_i.shape)
+            # print(ref_i.shape)
             print(ref_i)
+            exit()
         exit()
 
         out_refines = out_refines[0].squeeze(1)
