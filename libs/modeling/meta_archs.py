@@ -1215,7 +1215,8 @@ class PtTransformer(nn.Module):
             # exit()
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
-
+            score = pred_prob
+            print(score.shape)
             # Apply filtering to make NMS faster following detectron2
             # 1. Keep seg with confidence score > a threshold
             keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
@@ -1259,7 +1260,7 @@ class PtTransformer(nn.Module):
             
             # if i==1:
             
-            ref_left = ref_i[left_idx[left_mask]]  # todo [2304]
+            ref_left = ref_i[left_idx[left_mask]]*score[left_idx[left_mask]]  # todo
             # print(ref_left.shape)
             # print(pts[:, 3])
             # print(left_mask.shape)
@@ -1268,7 +1269,7 @@ class PtTransformer(nn.Module):
             seg_left[left_mask] += ref_left * pts[:, 3][0]
             # print(ref_left * pts[:, 3][0])
             # print(seg_left)
-            ref_right = ref_i[right_idx[right_mask]]  # todo [2304]
+            ref_right = ref_i[right_idx[right_mask]]*score[left_idx[left_mask]]  # todo 
             seg_right[right_mask] += ref_right * pts[:, 3][0]
             # exit()
             # print(ref_left)
