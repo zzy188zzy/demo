@@ -1257,11 +1257,11 @@ class PtTransformer(nn.Module):
             
             ref_left = ref_i[left_idx[left_mask]]  # todo [2304]
             print(ref_left)
-            seg_left[left_mask] += ref_left * pts[:, 3]
+            seg_left[left_mask] += ref_left * pts[:, 3][left_mask]
             print(ref_left * pts[:, 3])
             print(seg_left)
             ref_right = ref_i[right_idx[right_mask]]  # todo [2304]
-            seg_right[right_mask] += ref_right * pts[:, 3]
+            seg_right[right_mask] += ref_right * pts[:, 3][left_mask]
             exit()
             # print(ref_left)
             # print(seg_left.shape)
