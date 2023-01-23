@@ -1254,8 +1254,8 @@ class PtTransformer(nn.Module):
             right_idx = (seg_right/pts[:, 3]).round().long()
             # print(right_idx)
             # exit()
-            left_mask = torch.logical_and(left_idx >= 0, left_idx <= 2303)
-            right_mask = torch.logical_and(right_idx >= 0, right_idx <= 2303)
+            left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//pts[:, 3][0])
+            right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//pts[:, 3][0])
             
             # if i==1:
             
