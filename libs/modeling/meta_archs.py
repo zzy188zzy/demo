@@ -1246,14 +1246,18 @@ class PtTransformer(nn.Module):
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
-            print(seg_left)
+            # print(seg_left)
             left_idx = (seg_left/pts[:, 3]).round().long()
             print(left_idx)
             right_idx = (seg_right/pts[:, 3]).round().long()
-            left_mask = left_idx >= 0
-            right_mask = right_idx <= 2303
+            print(right_idx)
+            # exit()
+            left_mask = torch.logical_and(left_idx >= 0, left_idx <= 2303)
+            right_mask = torch.logical_and(right_idx >= 0, right_idx <= 2303)
+            print((left_mask==False).sum())
+            print((right_mask==False).sum())
             
-            
+            exit()
             # if i==1:
             
             ref_left = ref_i[left_idx[left_mask]]  # todo [2304]
