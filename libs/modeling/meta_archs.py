@@ -1215,12 +1215,12 @@ class PtTransformer(nn.Module):
             # exit()
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
-            score = pred_prob
-            print(score.shape)
+            
             # Apply filtering to make NMS faster following detectron2
             # 1. Keep seg with confidence score > a threshold
             keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
             pred_prob = pred_prob[keep_idxs1]
+            
             topk_idxs = keep_idxs1.nonzero(as_tuple=True)[0]
 
             # 2. Keep top k top scoring boxes only
@@ -1260,7 +1260,7 @@ class PtTransformer(nn.Module):
             
             # if i==1:
             
-            ref_left = ref_i[left_idx[left_mask]]*score[left_idx[left_mask]]  # todo
+            ref_left = ref_i[left_idx[left_mask]]  # todo
             # print(ref_left.shape)
             # print(pts[:, 3])
             # print(left_mask.shape)
@@ -1269,7 +1269,7 @@ class PtTransformer(nn.Module):
             seg_left[left_mask] += ref_left * pts[:, 3][0]
             # print(ref_left * pts[:, 3][0])
             # print(seg_left)
-            ref_right = ref_i[right_idx[right_mask]]*score[left_idx[left_mask]]  # todo 
+            ref_right = ref_i[right_idx[right_mask]]  # todo 
             seg_right[right_mask] += ref_right * pts[:, 3][0]
             # exit()
             # print(ref_left)
@@ -1277,6 +1277,7 @@ class PtTransformer(nn.Module):
             # print(seg_left[left_mask])
             print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
+            print(pred_segs.shape)
             print(pred_prob.shape)
             print(cls_idxs.shape)
             print(pred_prob)
