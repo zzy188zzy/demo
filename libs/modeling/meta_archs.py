@@ -1198,17 +1198,7 @@ class PtTransformer(nn.Module):
         segs_all = []
         scores_all = []
         cls_idxs_all = []
-        # print(out_refines)
-        for ref_i in zip(out_refines):
-            print(ref_i[0])
-            print(ref_i[0].shape)
-            
-            # exit()
-        exit()
 
-        out_refines = out_refines[0].squeeze(1)
-        out_ref = out_refines
-        out_ref[torch.abs(out_ref)<0.25] = 0
         # pos = out_refines > 0
         # out_refines[pos] = -1 * out_refines[pos] + 1
         # neg = out_refines < 0
@@ -1217,8 +1207,8 @@ class PtTransformer(nn.Module):
 
 
         # loop over fpn levels
-        for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
-                out_cls_logits, out_offsets, points, fpn_masks
+        for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
+                out_cls_logits, out_offsets, out_refines, points, fpn_masks
             )):
             # sigmoid normalization for output logits
             pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
@@ -1255,51 +1245,24 @@ class PtTransformer(nn.Module):
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
-
-            left_idx = seg_left.round().long()
-            right_idx = seg_right.round().long()
+            print(seg_left)
+            left_idx = (seg_left/pts[:, 3]).round().long()
+            print(left_idx)
+            right_idx = (seg_right/pts[:, 3]).round().long()
             left_mask = left_idx >= 0
             right_mask = right_idx <= 2303
             
-            # print(pts[:, 0])
-            # print(pts[:, 3])
-            # print(offsets[:, 0])
-            # print(seg_left)
-            # exit()
-
-            # seg_len = seg_right - seg_left
-            # print(seg_left.shape)
-            # print(seg_left)
-            # print(torch.min(seg_left))
-            # print(torch.max(seg_right))
-            # print(pt_idxs.shape[0])
-            # print(pt_idxs)
-
-            # i = seg_left<0 
-            # # print(i.sum())
-            # seg_left[i] = 0
-            # i = seg_left>2303
-            # # print(i.sum())
-            # seg_left[i] = 2303
-            # i = seg_right<0 
-            # # print(i.sum())
-            # seg_right[i] = 0
-            # i = seg_right>2303
-            # # print(i.sum())
-            # seg_right[i] = 2303
-
-            # print(seg_left)
-            # exit()
-
-            # print(seg_left[left_mask])
             
             # if i==1:
             
-            ref_left = out_ref[left_idx[left_mask]]  # todo [2304]
-            seg_left[left_mask] += ref_left
-            ref_right = out_ref[right_idx[right_mask]]  # todo [2304]
-            seg_right[right_mask] += ref_right
-
+            ref_left = ref_i[left_idx[left_mask]]  # todo [2304]
+            print(ref_left)
+            seg_left[left_mask] += ref_left * pts[:, 3]
+            print(ref_left * pts[:, 3])
+            print(seg_left)
+            ref_right = ref_i[right_idx[right_mask]]  # todo [2304]
+            seg_right[right_mask] += ref_right * pts[:, 3]
+            exit()
             # print(ref_left)
             # print(seg_left.shape)
             # print(seg_left[left_mask])
