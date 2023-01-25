@@ -248,7 +248,7 @@ class RefineHead(nn.Module):
 
         # segment regression
         self.offset_head = MaskedConv1D(
-                feat_dim, 1, kernel_size,
+                feat_dim, 2, kernel_size,
                 stride=1, padding=kernel_size//2
             )
 
@@ -718,10 +718,15 @@ class PtTransformer(nn.Module):
         pt = concat_points[:, :1, None]  # [4536, 1, 1]
         pt = pt.expand(num_pts, num_gts, 2)  # [4536, N, 2]
         gt = gt_segment[None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
-        dis = pt - gt  # [4536, N, 2]  左：-- 中：+- 右：++ 
-        dis0, dis_idx1 = torch.min(torch.abs(dis.resize(num_pts, num_gts*2)), dim=1)  # [4536, N*2] -> [4536]
+        dis = pt - gt  # [4536, N, 2]  左：-, 右：+ 
+        dis0, dis_idx1 = torch.min(torch.abs(dis), dim=1)  # [4536, N, 2] -> [4536, 2]
+        print(dis0.shape)
+        print(dis_idx1.shape)
+        print(dis0)
+        print(dis_idx1)
 
-        dis_idx0 = (dis_idx1//2).long()  # [4536]
+        dis_idx0 = dis_idx1.long()  # [4536, 2]
+        exit()
         s = (dis_idx1%2)==0
         t = (dis_idx1%2)==1
         # print((dis[:, :, 0] * dis[:, :, 1]).shape)
