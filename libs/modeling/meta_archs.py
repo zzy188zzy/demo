@@ -1073,12 +1073,10 @@ class PtTransformer(nn.Module):
 
         # 4 ref_loss
         gt_ref = torch.stack(gt_refines)
-        print(gt_ref.shape)
-        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536]
-        print(out_ref.shape)
-        exit()
+        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]
+        
         outside = torch.isinf(gt_ref)
-        mask = torch.logical_and((outside==False), valid_mask)
+        mask = torch.logical_and((outside==False), valid_mask[:, :, None].repeat(1, 1, 2))
         # print(gt_ref[mask].shape)
         # print(out_ref[mask].shape)
         # print(gt_ref[mask])
