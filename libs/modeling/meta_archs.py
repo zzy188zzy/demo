@@ -756,7 +756,9 @@ class PtTransformer(nn.Module):
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
         print(dis0)
-        idx = dis[lis, dis_idx0]<0
+        print(dis0.shape)
+        print(dis.shape)
+        idx = dis[lis[:, None].repeat(1, 2), dis_idx0]<0
         print(idx.shape)
         dis0[idx] *= -1
         print(dis0)
