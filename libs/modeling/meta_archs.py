@@ -722,13 +722,9 @@ class PtTransformer(nn.Module):
         abs_dis = torch.abs(dis)
         dis0, dis_idx1 = torch.min(abs_dis, dim=1)  # [4536, N, 2] -> [4536, 2]
         
-        idx = dis_idx1[:,0]!=dis_idx1[:,1]
-        print(idx.shape)
-        print(idx.sum())
-        
-        exit()
-
-
+        # idx = dis_idx1[:,0]!=dis_idx1[:,1]
+        # print(idx.shape)
+        # print(idx.sum())
 
         dis_idx0 = dis_idx1.long()  # [4536, 2]
         # exit()
@@ -747,18 +743,23 @@ class PtTransformer(nn.Module):
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
 
-        gt_refine = dis0
-
-        # F T
-        inside_regress_range = torch.logical_and(
-            (gt_refine >= concat_points[:, 1]),
-            (gt_refine <= concat_points[:, 2])
-        )
-        
-        # gt_refine[to_left] *= -1
-        gt_refine /= concat_points[:, 3]
-        # print(gt_refine)
-        gt_refine.masked_fill_(inside_regress_range==0, float('inf'))
+        for i in range(2):
+            dis_s = dis0[:, i]
+            # F T
+            s = torch.logical_and(
+                (dis_s >= concat_points[:, 1]),
+                (dis_s <= concat_points[:, 2])
+            )
+            
+            # gt_refine[to_left] *= -1
+            dis_s /= concat_points[:, 3]
+            # print(gt_refine)
+            dis_s.masked_fill_(s==0, float('inf'))
+        print(dis0)
+        idx = dis[lis, dis_idx0]<0
+        print(idx.shape)
+        dis0[idx] *= -1
+        print(dis0)
         # print(gt_refine)
         # exit()
         # print(gt_segment)
