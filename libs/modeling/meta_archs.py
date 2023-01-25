@@ -1306,7 +1306,7 @@ class PtTransformer(nn.Module):
             
             # if i==1:
             
-            ref_left = ref_i[left_idx[left_mask]]  # todo
+            ref_left = ref_i[left_idx[left_mask], 0]  # todo
             # print(ref_left.shape)
             # print(pts[:, 3])
             # print(left_mask.shape)
@@ -1315,7 +1315,7 @@ class PtTransformer(nn.Module):
             seg_left[left_mask] += (ref_left * pts[:, 3][0]) * (1 - pred_prob[left_mask])
             # print(ref_left * pts[:, 3][0])
             # print(seg_left)
-            ref_right = ref_i[right_idx[right_mask]]  # todo 
+            ref_right = ref_i[right_idx[right_mask], 1]  # todo 
             seg_right[right_mask] += (ref_right * pts[:, 3][0]) * (1 - pred_prob[right_mask])
             # exit()
             # print(ref_left)
