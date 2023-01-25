@@ -756,16 +756,12 @@ class PtTransformer(nn.Module):
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
         print(dis0)
-        print(dis0.shape)
-        print(dis.shape)
-        print(dis_idx0.shape)
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
-        print(idx.shape)
-        # exit()
+        print((idx==False).sum())
         dis0[idx] *= -1
         print(dis0)
         # print(gt_refine)
-        # exit()
+        exit()
         # print(gt_segment)
         # print(gt_refine[182:214])
         # exit()
