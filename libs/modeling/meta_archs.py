@@ -761,7 +761,7 @@ class PtTransformer(nn.Module):
         print(dis_idx0.shape)
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         print(idx.shape)
-        exit()
+        # exit()
         dis0[idx] *= -1
         print(dis0)
         # print(gt_refine)
