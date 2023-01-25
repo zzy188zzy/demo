@@ -1292,34 +1292,31 @@ class PtTransformer(nn.Module):
             # print(offsets.shape)
             pts = pts_i[pt_idxs]
 
-            print(pts[:, 0])
-            print(offsets[:, 0])
-            print(pts[:, 3])
+            # print(pts[:, 0])
+            # print(offsets[:, 0])
+            # print(pts[:, 3])
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
-            print(seg_left)
-            left_idx = (seg_left/pts[:, 3][0]).round().long()
-            print(left_idx)
-            right_idx = (seg_right/pts[:, 3][0]).round().long()
-            # print(right_idx)
-            # exit()
-            left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//pts[:, 3][0])
-            right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//pts[:, 3][0])
-            
-            # if i==1:
-            
-            ref_left = ref_i[left_idx[left_mask], 0]  # todo
-            print(ref_i)
-            print(ref_left)
-            exit()
 
 
-            # seg_left[left_mask] += (ref_left * pts[:, 3][0]) * (1 - pred_prob[left_mask])
-            # print(ref_left * pts[:, 3][0])
-            # print(seg_left)
-            ref_right = ref_i[right_idx[right_mask], 1]  # todo 
-            # seg_right[right_mask] += (ref_right * pts[:, 3][0]) * (1 - pred_prob[right_mask])
+            if i==5:
+                stride_i = 1
+                ref = out_refines[0].squeeze(1)
+            
+                left_idx = (seg_left/stride_i).round().long()
+                
+                right_idx = (seg_right/stride_i).round().long()
+                left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
+                right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
+
+            
+                ref_left = ref[left_idx[left_mask], 0]  # todo
+
+                seg_left[left_mask] += (ref_left * pts[:, 3][0]) * (1 - pred_prob[left_mask])
+    
+                ref_right = ref[right_idx[right_mask], 1]  # todo 
+                seg_right[right_mask] += (ref_right * pts[:, 3][0]) * (1 - pred_prob[right_mask])
             # exit()
             # print(ref_left)
             # print(seg_left.shape)
