@@ -759,6 +759,8 @@ class PtTransformer(nn.Module):
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         # print((idx==False).sum())
         dis0[idx] *= -1
+
+        gt_refine = dis0
         # print(dis0)
         # print(gt_refine)
         # exit()
