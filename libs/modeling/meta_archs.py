@@ -719,11 +719,18 @@ class PtTransformer(nn.Module):
         pt = pt.expand(num_pts, num_gts, 2)  # [4536, N, 2]
         gt = gt_segment[None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
         dis = gt - pt  # [4536, N, 2]  左：+, 右：-
-        dis0, dis_idx1 = torch.min(torch.abs(dis), dim=1)  # [4536, N, 2] -> [4536, 2]
+        abs_dis = torch.abs(dis)
+        dis0, dis_idx1 = torch.min(abs_dis, dim=1)  # [4536, N, 2] -> [4536, 2]
         
-        print((dis_idx1[:,0]!=dis_idx1[:,1]).sum())
+        idx = dis_idx1[:,0]!=dis_idx1[:,1]
+        print(idx.shape)
+        print(idx.sum())
+        
+        exit()
 
-        # dis_idx0 = dis_idx1.long()  # [4536, 2]
+
+
+        dis_idx0 = dis_idx1.long()  # [4536, 2]
         # exit()
         # s = (dis_idx1%2)==0
         # t = (dis_idx1%2)==1
