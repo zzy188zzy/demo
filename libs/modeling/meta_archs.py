@@ -1292,12 +1292,15 @@ class PtTransformer(nn.Module):
             # print(offsets.shape)
             pts = pts_i[pt_idxs]
 
+            print(pts[:, 0])
+            print(offsets[:, 0])
+            print(pts[:, 3])
             # 4. compute predicted segments (denorm by stride for output offsets)
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
-            # print(seg_left)
+            print(seg_left)
             left_idx = (seg_left/pts[:, 3][0]).round().long()
-            # print(left_idx)
+            print(left_idx)
             right_idx = (seg_right/pts[:, 3][0]).round().long()
             # print(right_idx)
             # exit()
@@ -1307,10 +1310,10 @@ class PtTransformer(nn.Module):
             # if i==1:
             
             ref_left = ref_i[left_idx[left_mask], 0]  # todo
-            # print(ref_left.shape)
-            # print(pts[:, 3])
-            # print(left_mask.shape)
-            # print(seg_left)
+            print(ref_i)
+            print(ref_left)
+            exit()
+
 
             # seg_left[left_mask] += (ref_left * pts[:, 3][0]) * (1 - pred_prob[left_mask])
             # print(ref_left * pts[:, 3][0])
