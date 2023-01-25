@@ -377,8 +377,38 @@ class PtTransformer(nn.Module):
                     'use_rel_pe' : use_rel_pe
                 }
             )
+            self.backbone0 = make_backbone(
+                'convTransformer',
+                **{
+                    'n_in' : input_dim,
+                    'n_embd' : embd_dim,
+                    'n_head': n_head,
+                    'n_embd_ks': embd_kernel_size,
+                    'max_len': max_seq_len,
+                    'arch' : backbone_arch,
+                    'mha_win_size': self.mha_win_size,
+                    'scale_factor' : scale_factor,
+                    'with_ln' : embd_with_ln,
+                    'attn_pdrop' : 0.0,
+                    'proj_pdrop' : self.train_dropout,
+                    'path_pdrop' : self.train_droppath,
+                    'use_abs_pe' : use_abs_pe,
+                    'use_rel_pe' : use_rel_pe
+                }
+            )
         else:
             self.backbone = make_backbone(
+                'conv',
+                **{
+                    'n_in': input_dim,
+                    'n_embd': embd_dim,
+                    'n_embd_ks': embd_kernel_size,
+                    'arch': backbone_arch,
+                    'scale_factor': scale_factor,
+                    'with_ln' : embd_with_ln
+                }
+            )
+            self.backbone0 = make_backbone(
                 'conv',
                 **{
                     'n_in': input_dim,
@@ -472,12 +502,13 @@ class PtTransformer(nn.Module):
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(batched_inputs, batched_masks)
+        feats0, masks0 = self.backbone0(batched_inputs, batched_masks)
 
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
-        for i in feats:
-            i = i.detach()
-        fpn_feats0, fpn_masks0 = self.neck0(feats, masks)
+        # for i in feats:
+        #     i = i.detach()
+        fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
 
         # err = (fpn_feats[0]==fpn_feats0[0]).sum()
         # print(err)
@@ -755,13 +786,14 @@ class PtTransformer(nn.Module):
             dis_s /= concat_points[:, 3]
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
-        # print(dis0)
+        # print(dis0[:100])
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         # print((idx==False).sum())
         dis0[idx] *= -1
 
         gt_refine = dis0
-        # print(dis0)
+        # print(dis0[:100])
+        # exit()
         # print(gt_refine)
         # exit()
         # print(gt_segment)
