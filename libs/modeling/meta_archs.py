@@ -1301,8 +1301,8 @@ class PtTransformer(nn.Module):
 
 
             if i==5:
-                stride_i = 2  # 1 2 4 8 16 32
-                ref = out_refines[1].squeeze(1)
+                stride_i = 4  # 1 2 4 8 16 32
+                ref = out_refines[2].squeeze(1)
             
                 left_idx = (seg_left/stride_i).round().long()
                 
