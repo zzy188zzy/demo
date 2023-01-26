@@ -1310,10 +1310,10 @@ class PtTransformer(nn.Module):
 
 
             if i==5:
-                stride_i = 8
-                for j in range(4):
+                stride_i = 4
+                for j in range(3):
                     # 1 2 4 8 16 32
-                    ref = out_refines[3-j].squeeze(1)
+                    ref = out_refines[2-j].squeeze(1)
                 
                     left_idx = (seg_left/stride_i).round().long()
                     right_idx = (seg_right/stride_i).round().long()
