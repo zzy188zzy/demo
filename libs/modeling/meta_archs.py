@@ -1328,7 +1328,7 @@ class PtTransformer(nn.Module):
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     seg_right[right_mask] += (ref_right*stride_i)
                     stride_i //= 2
-            exit()
+                exit()
             # print(ref_left)
             # print(seg_left.shape)
             # print(seg_left[left_mask])
