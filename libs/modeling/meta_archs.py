@@ -1338,7 +1338,7 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
 
-            if i!=0 and i!=1:
+            if i!=0 and i!=1 and False:
                 # 2 3 4 5
                 a = [1,2,4,8]
                 stride_i = a[i-2]
