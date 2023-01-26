@@ -1355,12 +1355,12 @@ class PtTransformer(nn.Module):
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
                     prob_left = prob[left_idx[left_mask], 0]
-                    seg_left[left_mask] += (ref_left*stride_i) * (prob_left*1.5)
+                    seg_left[left_mask] += (ref_left*stride_i) * (prob_left*0.7)
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     prob_right = prob[right_idx[right_mask], 1]
-                    seg_right[right_mask] += (ref_right*stride_i) * (prob_right*1.5)
+                    seg_right[right_mask] += (ref_right*stride_i) * (prob_right*0.7)
                     stride_i //= 2
 
                     # print(prob_left)
