@@ -882,10 +882,10 @@ class PtTransformer(nn.Module):
 
         torch.set_printoptions(threshold=np.inf)
         print(reg_targets.shape)
-        print(reg_targets[10:])
+        print(reg_targets[:10])
         reg_targets /= concat_points[:, 3, None]
-        print(reg_targets[10:])
-        print(gt_refine[10:])
+        print(reg_targets[:10])
+        print(gt_refine[:10])
         # print(gt_segment)
         # print('====================779')
         exit()
