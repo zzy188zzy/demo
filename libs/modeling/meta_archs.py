@@ -1309,7 +1309,7 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
 
-            if i==5:
+            if i==50:
                 stride_i = 16  # 1 2 4 8 16 32
                 ref = out_refines[4].squeeze(1)
             
