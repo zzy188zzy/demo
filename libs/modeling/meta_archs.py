@@ -3,6 +3,7 @@ import math
 import torch
 from torch import nn
 from torch.nn import functional as F
+import numpy as np
 
 from .models import register_meta_arch, make_backbone, make_neck, make_generator
 from .blocks import MaskedConv1D, Scale, LayerNorm
@@ -878,6 +879,9 @@ class PtTransformer(nn.Module):
         reg_targets = reg_targets[range(num_pts), min_len_inds]
         # normalization based on stride
         # print(reg_targets.shape)
+
+        torch.set_printoptions(threshold=np.inf)
+        print(reg_targets.shape)
         print(reg_targets[10:])
         reg_targets /= concat_points[:, 3, None]
         print(reg_targets[10:])
