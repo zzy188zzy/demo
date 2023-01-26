@@ -782,9 +782,11 @@ class PtTransformer(nn.Module):
                 (dis_s >= concat_points[:, 1]),
                 (dis_s <= concat_points[:, 2])
             )
-            
+            print(concat_points[:, 1])
+            print(concat_points[:, 2])
             # gt_refine[to_left] *= -1
             dis_s /= concat_points[:, 3]
+            print(concat_points[:, 3])
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
         # print(dis0[182:214])
@@ -881,13 +883,13 @@ class PtTransformer(nn.Module):
         # print(reg_targets.shape)
 
         torch.set_printoptions(threshold=np.inf)
-        print(reg_targets.shape)
-        print(reg_targets[4450:])
+        # print(reg_targets.shape)
+        # print(reg_targets[4450:])
         reg_targets /= concat_points[:, 3, None]
-        print(reg_targets[4450:])
-        print(gt_refine[4450:])
+        # print(reg_targets[4450:])
+        # print(gt_refine[4450:])
         # print(gt_segment)
-        # print('====================779')
+        print('====================779')
         exit()
         return cls_targets, reg_targets, gt_refine
 
