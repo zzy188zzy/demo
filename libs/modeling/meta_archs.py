@@ -1338,7 +1338,7 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
 
-            if i!=0 and i!=1 and False:
+            if i!=0 and i!=1:
                 # 2 3 4 5
                 a = [1,2,4,8]
                 stride_i = a[i-2]
@@ -1355,12 +1355,12 @@ class PtTransformer(nn.Module):
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
                     prob_left = prob[left_idx[left_mask], 0]
-                    seg_left[left_mask] += (ref_left*stride_i) * prob_left
+                    seg_left[left_mask] += (ref_left*stride_i) * (1 - pred_prob[left_mask])
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     prob_right = prob[right_idx[right_mask], 1]
-                    seg_right[right_mask] += (ref_right*stride_i) * prob_right
+                    seg_right[right_mask] += (ref_right*stride_i) * (1 - pred_prob[right_mask])
                     stride_i //= 2
                 # exit()
             # print(ref_left)
