@@ -1309,13 +1309,13 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
 
-            if i!=0 :
-                # 1 2 3 4 5
-                a = [1,2,4,8,16]
-                stride_i = a[i-1]
-                for j in range(i):  # 1 2 3 4 5
+            if i!=0 and i!=1:
+                # 2 3 4 5
+                a = [1,2,4,8]
+                stride_i = a[i-2]
+                for j in range(i-1):  # 1 2 3 4
                     # 1 2 4 8 16 32
-                    ref = out_refines[(i-1)-j].squeeze(1)
+                    ref = out_refines[(i-2)-j].squeeze(1)
                 
                     left_idx = (seg_left/stride_i).round().long()
                     right_idx = (seg_right/stride_i).round().long()
@@ -1324,11 +1324,11 @@ class PtTransformer(nn.Module):
                     right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
-                    seg_left[left_mask] += (ref_left*stride_i) * (1 - pred_prob[left_mask])
+                    seg_left[left_mask] += (ref_left*stride_i)
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
-                    seg_right[right_mask] += (ref_right*stride_i) * (1 - pred_prob[right_mask])
+                    seg_right[right_mask] += (ref_right*stride_i) 
                     stride_i //= 2
                 # exit()
             # print(ref_left)
