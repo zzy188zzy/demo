@@ -1338,15 +1338,15 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
 
-            # if i!=0 and i!=1:
-            if True:
-                # 0 1 2 3 4 5
-                a = [1,2,4,8,16,32]
-                stride_i = a[i]
-                for j in range(i+1):  # 1 2 3 4 5 6
+            if i!=0 and i!=1:
+            # if True:
+                # 2 3 4 5
+                a = [1,2,4,8]
+                stride_i = a[i-2]
+                for j in range(i-1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
-                    ref = out_refines[(i)-j].squeeze(1)
-                    prob = out_probs[(i)-j].squeeze(1)
+                    ref = out_refines[(i-2)-j].squeeze(1)
+                    prob = out_probs[(i-2)-j].squeeze(1)
                 
                     left_idx = (seg_left/stride_i).round().long()
                     right_idx = (seg_right/stride_i).round().long()
