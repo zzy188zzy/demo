@@ -1340,13 +1340,13 @@ class PtTransformer(nn.Module):
 
             # if i!=0 :
             if True:
-                # 0 1 2 3 4 5
-                a = [1,2,4,8,16,32]
-                stride_i = a[i]
-                for j in range(i+1):  # 1 2 3 4 5 6
+                # 1 2 3 4 5
+                a = [1,2,4,8,16]
+                stride_i = a[i-1]
+                for j in range(i):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
-                    ref = out_refines[(i)-j].squeeze(1)
-                    prob = out_probs[(i)-j].squeeze(1)
+                    ref = out_refines[(i-1)-j].squeeze(1)
+                    prob = out_probs[(i-1)-j].squeeze(1)
                 
                     left_idx = (seg_left/stride_i).round().long()
                     right_idx = (seg_right/stride_i).round().long()
@@ -1356,12 +1356,12 @@ class PtTransformer(nn.Module):
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
                     prob_left = prob[left_idx[left_mask], 0]
-                    seg_left[left_mask] += (ref_left*stride_i/16) * prob_left
+                    seg_left[left_mask] += (ref_left*stride_i/4) * prob_left
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     prob_right = prob[right_idx[right_mask], 1]
-                    seg_right[right_mask] += (ref_right*stride_i/16) * prob_right
+                    seg_right[right_mask] += (ref_right*stride_i/4) * prob_right
                     stride_i //= 2
                     
 
