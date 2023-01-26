@@ -796,9 +796,10 @@ class PtTransformer(nn.Module):
         # exit()
         # print(gt_refine)
         # exit()
-        # print(gt_segment)
-        # print(gt_refine[182:214])
-        # exit()
+        print(gt_segment)
+        print(gt_refine[182:214])
+        print(gt_refine)
+        exit()
 
         # corner case where current sample does not have actions
         if num_gts == 0:
