@@ -586,7 +586,7 @@ class PtTransformer(nn.Module):
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
-            ref_loss = torch.stack(ref_loss).mean() / 4
+            ref_loss = torch.stack(ref_loss).mean()
             final_loss = cls_loss + reg_loss + ref_loss
 
             return {'cls_loss'   : cls_loss,
@@ -788,8 +788,8 @@ class PtTransformer(nn.Module):
             dis_s /= concat_points[:, 3]
             # print(concat_points[:, 3])
             # print(gt_refine)
-            # dis_s.masked_fill_(s==0, float('inf'))
-            dis_s.masked_fill_(s==0, float('0'))
+            dis_s.masked_fill_(s==0, float('inf'))
+            # dis_s.masked_fill_(s==0, float('0'))
         # print(dis0[182:214])
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         # print((idx==False).sum())
