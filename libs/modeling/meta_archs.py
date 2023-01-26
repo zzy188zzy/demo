@@ -1310,7 +1310,7 @@ class PtTransformer(nn.Module):
 
 
             if i==5:
-                stride_i = 1
+                stride_i = 32
                 for j in range(6):
                     # 1 2 4 8 16 32
                     ref = out_refines[5-j].squeeze(1)
@@ -1327,7 +1327,7 @@ class PtTransformer(nn.Module):
         
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     seg_right[right_mask] += (ref_right*stride_i)
-                    stride_i *= 2
+                    stride_i //= 2
             # exit()
             # print(ref_left)
             # print(seg_left.shape)
