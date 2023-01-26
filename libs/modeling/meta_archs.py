@@ -792,7 +792,7 @@ class PtTransformer(nn.Module):
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
         # print(dis0[:20])
-        gt_prob = torch.ones(dis0.shape, device=dis0.decice)
+        gt_prob = torch.ones(dis0.shape, device=dis0.device)
         for i in range(2):
             dis_s = dis0[:, i]
             prob_s = gt_prob[:, i]
