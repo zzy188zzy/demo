@@ -773,7 +773,7 @@ class PtTransformer(nn.Module):
 
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
-        print(dis0[182:214])
+        # print(dis0[182:214])
         for i in range(2):
             dis_s = dis0[:, i]
             # F T
@@ -786,7 +786,7 @@ class PtTransformer(nn.Module):
             dis_s /= concat_points[:, 3]
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
-        print(dis0[182:214])
+        # print(dis0[182:214])
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         # print((idx==False).sum())
         dis0[idx] *= -1
@@ -796,10 +796,10 @@ class PtTransformer(nn.Module):
         # exit()
         # print(gt_refine)
         # exit()
-        print(gt_segment)
-        print(gt_refine[182:214])
-        print(gt_refine)
-        exit()
+        # print(gt_segment)
+        # print(gt_refine[182:214])
+        # print(gt_refine)
+        # exit()
 
         # corner case where current sample does not have actions
         if num_gts == 0:
@@ -878,12 +878,13 @@ class PtTransformer(nn.Module):
         reg_targets = reg_targets[range(num_pts), min_len_inds]
         # normalization based on stride
         # print(reg_targets.shape)
-        # print(reg_targets)
+        print(reg_targets[100:])
         reg_targets /= concat_points[:, 3, None]
-        # print(reg_targets)
+        print(reg_targets[100:])
+        print(gt_refine[100:])
         # print(gt_segment)
         # print('====================779')
-        # exit()
+        exit()
         return cls_targets, reg_targets, gt_refine
 
     def dcp_loss(self, feats, masks):
