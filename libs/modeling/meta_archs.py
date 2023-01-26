@@ -511,13 +511,13 @@ class PtTransformer(nn.Module):
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(batched_inputs, batched_masks)
-        feats0, masks0 = self.backbone0(batched_inputs, batched_masks)
+        # feats0, masks0 = self.backbone0(batched_inputs, batched_masks)
 
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
         # for i in feats:
         #     i = i.detach()
-        fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
+        # fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
 
         # err = (fpn_feats[0]==fpn_feats0[0]).sum()
         # print(err)
@@ -544,7 +544,8 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            # out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -613,7 +614,8 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            # out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -1356,12 +1358,12 @@ class PtTransformer(nn.Module):
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
                     prob_left = prob[left_idx[left_mask], 0]
-                    seg_left[left_mask] += (ref_left*stride_i/8) * (1 - pred_prob[left_mask])
+                    seg_left[left_mask] += (ref_left*stride_i/4) * (1 - pred_prob[left_mask])
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     prob_right = prob[right_idx[right_mask], 1]
-                    seg_right[right_mask] += (ref_right*stride_i/8) * (1 - pred_prob[right_mask])
+                    seg_right[right_mask] += (ref_right*stride_i/4) * (1 - pred_prob[right_mask])
                     stride_i //= 2
                     
 
