@@ -630,7 +630,7 @@ class PtTransformer(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines
+                out_cls_logits, out_offsets, out_refines, out_probs
             )
             return results
 
@@ -1218,7 +1218,7 @@ class PtTransformer(nn.Module):
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets, out_refines
+        out_cls_logits, out_offsets, out_refines, out_probs
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -1241,6 +1241,7 @@ class PtTransformer(nn.Module):
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             offsets_per_vid = [x[idx] for x in out_offsets]
             refines_per_vid = [x[idx] for x in out_refines]
+            probs_per_vid = [x[idx] for x in out_probs]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
             # for i in range(len(offsets_per_vid)):
@@ -1250,7 +1251,7 @@ class PtTransformer(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid, refines_per_vid, stride, nframes
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -1273,8 +1274,7 @@ class PtTransformer(nn.Module):
         out_cls_logits,
         out_offsets,
         out_refines,
-        stride,
-        nframes,
+        out_probs,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -1290,10 +1290,11 @@ class PtTransformer(nn.Module):
 
 
         # loop over fpn levels
-        for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
-                out_cls_logits, out_offsets, out_refines, points, fpn_masks
+        for i, (cls_i, offsets_i, ref_i, prob_i, pts_i, mask_i) in enumerate(zip(
+                out_cls_logits, out_offsets, out_refines, out_probs, points, fpn_masks
             )):
             ref_i = ref_i.squeeze(1)
+            prob_i = prob_i.squeeze(1)
             # print(ref_i.shape)
             # exit()
             # sigmoid normalization for output logits
@@ -1344,6 +1345,7 @@ class PtTransformer(nn.Module):
                 for j in range(i-1):  # 1 2 3 4
                     # 1 2 4 8 16 32
                     ref = out_refines[(i-2)-j].squeeze(1)
+                    prob = out_probs[(i-2)-j].squeeze(1)
                 
                     left_idx = (seg_left/stride_i).round().long()
                     right_idx = (seg_right/stride_i).round().long()
@@ -1352,11 +1354,13 @@ class PtTransformer(nn.Module):
                     right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
-                    seg_left[left_mask] += (ref_left*stride_i) * (1 - pred_prob[left_mask])
+                    prob_left = prob[left_idx[left_mask], 0]
+                    seg_left[left_mask] += (ref_left*stride_i) * prob_left
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
-                    seg_right[right_mask] += (ref_right*stride_i) * (1 - pred_prob[right_mask]) 
+                    prob_right = prob[right_idx[right_mask], 1]
+                    seg_right[right_mask] += (ref_right*stride_i) * prob_right
                     stride_i //= 2
                 # exit()
             # print(ref_left)
