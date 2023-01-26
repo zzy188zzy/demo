@@ -511,13 +511,13 @@ class PtTransformer(nn.Module):
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(batched_inputs, batched_masks)
-        # feats0, masks0 = self.backbone0(batched_inputs, batched_masks)
+        feats0, masks0 = self.backbone0(batched_inputs, batched_masks)
 
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
         # for i in feats:
         #     i = i.detach()
-        # fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
+        fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
 
         # err = (fpn_feats[0]==fpn_feats0[0]).sum()
         # print(err)
@@ -544,8 +544,8 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            # out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-            out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            # out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -614,8 +614,8 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            # out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-            out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            # out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
