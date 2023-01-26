@@ -1310,8 +1310,8 @@ class PtTransformer(nn.Module):
 
 
             if i==5:
-                stride_i = 32
-                for j in range(6):
+                stride_i = 16
+                for j in range(5):
                     # 1 2 4 8 16 32
                     ref = out_refines[5-j].squeeze(1)
                 
