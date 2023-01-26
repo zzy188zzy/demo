@@ -1322,13 +1322,13 @@ class PtTransformer(nn.Module):
                     right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
-                    seg_left[left_mask] += (ref_left*stride_i)
+                    seg_left[left_mask] += (ref_left*stride_i) * (1 - pred_prob[left_mask])
                     # * (1 - pred_prob[left_mask])
-                    print(ref_left*stride_i)
+                    # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
-                    seg_right[right_mask] += (ref_right*stride_i)
+                    seg_right[right_mask] += (ref_right*stride_i) * (1 - pred_prob[right_mask])
                     stride_i //= 2
-                exit()
+                # exit()
             # print(ref_left)
             # print(seg_left.shape)
             # print(seg_left[left_mask])
