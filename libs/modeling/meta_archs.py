@@ -878,10 +878,10 @@ class PtTransformer(nn.Module):
         reg_targets = reg_targets[range(num_pts), min_len_inds]
         # normalization based on stride
         # print(reg_targets.shape)
-        print(reg_targets[100:])
+        print(reg_targets[72:])
         reg_targets /= concat_points[:, 3, None]
-        print(reg_targets[100:])
-        print(gt_refine[100:])
+        print(reg_targets[72:])
+        print(gt_refine[72:])
         # print(gt_segment)
         # print('====================779')
         exit()
