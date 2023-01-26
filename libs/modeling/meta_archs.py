@@ -774,7 +774,7 @@ class PtTransformer(nn.Module):
 
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
-        # print(dis0[182:214])
+        print(dis0[4526:])
         for i in range(2):
             dis_s = dis0[:, i]
             # F T
@@ -884,11 +884,11 @@ class PtTransformer(nn.Module):
 
         torch.set_printoptions(threshold=np.inf)
         # print(reg_targets.shape)
-        # print(reg_targets[4450:])
+        print(reg_targets[4526:])
         reg_targets /= concat_points[:, 3, None]
-        # print(reg_targets[4450:])
-        # print(gt_refine[4450:])
-        # print(gt_segment)
+        print(reg_targets[4526:])
+        print(gt_refine[4526:])
+        print(gt_segment)
         print('====================779')
         exit()
         return cls_targets, reg_targets, gt_refine
