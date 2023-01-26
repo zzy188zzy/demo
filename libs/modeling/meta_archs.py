@@ -252,6 +252,10 @@ class RefineHead(nn.Module):
                 feat_dim, 2, kernel_size,
                 stride=1, padding=kernel_size//2
             )
+        self.prob_head = MaskedConv1D(
+                feat_dim, 2, kernel_size,
+                stride=1, padding=kernel_size//2
+            )
 
     def forward(self, fpn_feats, fpn_masks):
         assert len(fpn_feats) == len(fpn_masks)
@@ -259,6 +263,7 @@ class RefineHead(nn.Module):
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
+        out_probs = tuple()
         for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
             cur_out = cur_feat
             for idx in range(len(self.head)):
@@ -266,9 +271,12 @@ class RefineHead(nn.Module):
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets), )
+            cur_probs, _ = self.prob_head(cur_out, cur_mask)
+            out_probs += (self.sigmoid(cur_probs), )
+
 
         # fpn_masks remains the same
-        return out_offsets
+        return out_offsets, out_probs
 
 
 
@@ -536,15 +544,17 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_refines = self.refineHead(fpn_feats0, fpn_masks0)
+            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-            # out_refine: F List[B, 1 (xC), T_i] -> F List[B, T_i, 1 (xC)]
+            # out_refine: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_refines = [x.permute(0, 2, 1) for x in out_refines]
+            # out_prob: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
+            out_probs = [x.permute(0, 2, 1) for x in out_probs]
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
@@ -559,40 +569,42 @@ class PtTransformer(nn.Module):
             
             time=1
 
-            a, b, c = self.label_points(
+            a, b, c, d = self.label_points(
                 points, gt_segments, gt_labels, time)
             
             cls_loss = []
             reg_loss = []
             ref_loss = []
-            final_loss = []
+            prob_loss = []
             for idx in range(time):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
                 gt_offsets = [b[i][idx] for i in range(len(b))]
                 gt_refines = [c[i][idx] for i in range(len(c))]
+                gt_probs = [d[i][idx] for i in range(len(d))]
 
                 # compute the loss and return
                 loss, norm = self.losses(
                     fpn_masks,
-                    out_cls_logits, out_offsets, out_refines,
-                    gt_cls_labels, gt_offsets, gt_refines, idx
+                    out_cls_logits, out_offsets, out_refines, out_probs,
+                    gt_cls_labels, gt_offsets, gt_refines, gt_probs, idx
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
                 ref_loss.append(loss['ref_loss'])
-                final_loss.append(loss['final_loss'])
+                prob_loss.append(loss['prob_loss'])
 
             # dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
-            final_loss = cls_loss + reg_loss + ref_loss
+            prob_loss = torch.stack(prob_loss).mean()
+            final_loss = cls_loss + reg_loss + ref_loss + prob_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
                     'ref_loss'   : ref_loss,
-                    # 'dcp_loss'   : dcp_loss,
+                    'prob_loss'   : prob_loss,
                     'final_loss' : final_loss}
         else:
             # refineHead
@@ -601,15 +613,17 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_refines = self.refineHead(fpn_feats0, fpn_masks0)
+            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-            # out_refine: F List[B, 1 (xC), T_i] -> F List[B, T_i, 1 (xC)]
+            # out_refine: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_refines = [x.permute(0, 2, 1) for x in out_refines]
+            # out_prob: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
+            out_probs = [x.permute(0, 2, 1) for x in out_probs]
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
@@ -709,7 +723,7 @@ class PtTransformer(nn.Module):
         # This is shared for all samples in the mini-batch
         num_levels = len(points)
         concat_points = torch.cat(points, dim=0)
-        gt_cls, gt_offset, gt_refine = [], [], []
+        gt_cls, gt_offset, gt_refine, gt_prob = [], [], [], []
 
         # loop over each video sample
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
@@ -720,22 +734,25 @@ class PtTransformer(nn.Module):
             aa = []
             bb = []
             cc = []
+            dd = []
             for i, (a, b) in enumerate(zip(coarse_segment, coarse_label)):
                 # print(a.shape)
                 # print(b.shape)
-                cls_targets, reg_targets, ref_targets = self.label_points_single_video(
+                cls_targets, reg_targets, ref_targets, prob_targets = self.label_points_single_video(
                     concat_points, a, b
                 )
                 # append to list (len = # images, each of size FT x C)
                 aa.append(cls_targets)
                 bb.append(reg_targets)
                 cc.append(ref_targets)
+                dd.append(prob_targets)
             gt_cls.append(aa)
             gt_offset.append(bb)
             gt_refine.append(cc)
+            gt_prob.append(dd)
 
 
-        return gt_cls, gt_offset, gt_refine
+        return gt_cls, gt_offset, gt_refine, gt_prob
 
     @torch.no_grad()
     def label_points_single_video(self, concat_points, gt_segment, gt_label):
@@ -775,8 +792,10 @@ class PtTransformer(nn.Module):
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
         # print(dis0[:20])
+        gt_prob = torch.ones(dis0.shape, device=dis0.decice)
         for i in range(2):
             dis_s = dis0[:, i]
+            prob_s = gt_prob[:, i]
             # F T
             s = torch.logical_and(
                 (dis_s >= concat_points[:, 1]),
@@ -789,7 +808,9 @@ class PtTransformer(nn.Module):
             # print(concat_points[:, 3])
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
-            # dis_s.masked_fill_(s==0, float('0'))
+            prob_s.masked_fill_(s==0, float('0'))
+
+
         # print(dis0[182:214])
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         # print((idx==False).sum())
@@ -892,7 +913,7 @@ class PtTransformer(nn.Module):
         # print(gt_segment)
         # print('====================779')
         # exit()
-        return cls_targets, reg_targets, gt_refine
+        return cls_targets, reg_targets, gt_refine, gt_prob
 
     def dcp_loss(self, feats, masks):
         B, dim, T = feats.shape
@@ -942,8 +963,8 @@ class PtTransformer(nn.Module):
 
     def losses(
         self, fpn_masks,
-        out_cls_logits, out_offsets, out_refines,
-        gt_cls_labels, gt_offsets, gt_refines, step
+        out_cls_logits, out_offsets, out_refines, out_probs,
+        gt_cls_labels, gt_offsets, gt_refines, gt_probs, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -1177,13 +1198,20 @@ class PtTransformer(nn.Module):
     
         # exit()
 
+        # 5.prob_loss
+        gt_prob = torch.stack(gt_probs)
+        out_prob = torch.cat(out_probs, dim=1).squeeze(2)  # [2, 4536, 2]
+        
+        mask = valid_mask[:, :, None].repeat(1, 1, 2)
+        prob_loss = F.smooth_l1_loss(out_prob[mask], gt_prob[mask], reduction='mean')
+
         # return a dict of losses
-        final_loss = cls_loss + reg_loss * loss_weight 
+        # final_loss = cls_loss + reg_loss * loss_weight 
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
                 'ref_loss'   : ref_loss,
-                'final_loss' : final_loss}, self.loss_normalizer / max(num_pos, 1)
+                'prob_loss' : prob_loss}, self.loss_normalizer / max(num_pos, 1)
 
     @torch.no_grad()
     def inference(
@@ -1324,11 +1352,11 @@ class PtTransformer(nn.Module):
                     right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
-                    seg_left[left_mask] += (ref_left*stride_i)
+                    seg_left[left_mask] += (ref_left*stride_i) * (1 - pred_prob[left_mask])
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
-                    seg_right[right_mask] += (ref_right*stride_i) 
+                    seg_right[right_mask] += (ref_right*stride_i) * (1 - pred_prob[right_mask]) 
                     stride_i //= 2
                 # exit()
             # print(ref_left)
