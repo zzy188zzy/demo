@@ -272,7 +272,7 @@ class RefineHead(nn.Module):
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets), )
             cur_probs, _ = self.prob_head(cur_out, cur_mask)
-            out_probs += (self.sigmoid(cur_probs), )
+            out_probs += (torch.sigmoid(cur_probs), )
 
 
         # fpn_masks remains the same
