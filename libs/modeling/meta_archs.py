@@ -272,7 +272,7 @@ class RefineHead(nn.Module):
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets), )
             cur_probs, _ = self.prob_head(cur_out, cur_mask)
-            out_probs += (torch.sigmoid(cur_probs), )
+            out_probs += (torch.sigmoid(cur_probs)*5, )
 
 
         # fpn_masks remains the same
@@ -792,7 +792,7 @@ class PtTransformer(nn.Module):
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
         # print(dis0[:20])
-        gt_prob = torch.ones(dis0.shape, device=dis0.device)
+        gt_prob = torch.ones(dis0.shape, device=dis0.device)*5
         for i in range(2):
             dis_s = dis0[:, i]
             prob_s = gt_prob[:, i]
@@ -1339,13 +1339,13 @@ class PtTransformer(nn.Module):
 
 
             if i!=0 and i!=1:
-                # 1 2 3 4 5
-                a = [1,2,4,8,16]
-                stride_i = a[i-1]
-                for j in range(i):  # 1 2 3 4 5
+                # 2 3 4 5
+                a = [1,2,4,8]
+                stride_i = a[i-2]
+                for j in range(i-1):  # 1 2 3 4
                     # 1 2 4 8 16 32
-                    ref = out_refines[(i-1)-j].squeeze(1)
-                    prob = out_probs[(i-1)-j].squeeze(1)
+                    ref = out_refines[(i-2)-j].squeeze(1)
+                    prob = out_probs[(i-2)-j].squeeze(1)
                 
                     left_idx = (seg_left/stride_i).round().long()
                     right_idx = (seg_right/stride_i).round().long()
@@ -1355,12 +1355,12 @@ class PtTransformer(nn.Module):
 
                     ref_left = ref[left_idx[left_mask], 0]  # todo
                     prob_left = prob[left_idx[left_mask], 0]
-                    seg_left[left_mask] += (ref_left*stride_i) * (prob_left)
+                    seg_left[left_mask] += (ref_left*stride_i) * (prob_left/5)
                     # * (1 - pred_prob[left_mask])
                     # print(ref_left*stride_i)
                     ref_right = ref[right_idx[right_mask], 1]  # todo 
                     prob_right = prob[right_idx[right_mask], 1]
-                    seg_right[right_mask] += (ref_right*stride_i) * (prob_right)
+                    seg_right[right_mask] += (ref_right*stride_i) * (prob_right/5)
                     stride_i //= 2
 
                     # print(prob_left)
