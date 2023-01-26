@@ -890,8 +890,8 @@ class PtTransformer(nn.Module):
         # print(reg_targets[:20])
         # print(gt_refine[:20])
         # print(gt_segment)
-        print('====================779')
-        exit()
+        # print('====================779')
+        # exit()
         return cls_targets, reg_targets, gt_refine
 
     def dcp_loss(self, feats, masks):
