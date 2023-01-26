@@ -773,7 +773,7 @@ class PtTransformer(nn.Module):
 
         # lens = gt_segment[:, 1] - gt_segment[:, 0]
         # lens = lens[None, :].repeat(num_pts, 1)
-
+        print(dis0[182:214])
         for i in range(2):
             dis_s = dis0[:, i]
             # F T
@@ -786,7 +786,7 @@ class PtTransformer(nn.Module):
             dis_s /= concat_points[:, 3]
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
-        # print(dis0[:100])
+        print(dis0[182:214])
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
         # print((idx==False).sum())
         dis0[idx] *= -1
