@@ -1362,6 +1362,7 @@ class PtTransformer(nn.Module):
                     prob_right = prob[right_idx[right_mask], 1]
                     seg_right[right_mask] += (ref_right*stride_i) * (prob_right)
                     stride_i //= 2
+                    break
 
                     # print(prob_left)
                     # print(prob_right)
