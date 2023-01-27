@@ -1345,15 +1345,18 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
             use_round = True
-            if i!=0 :
+            # if i!=0 :
             # if False:
-                # 1 2 3 4 5
-                a = [1,2,4,8,16]
-                stride_i = a[i-1]
-                for j in range(i):  # 1 2 3 4 5 6
+            if True:
+                # 0 1 2 3 4 5
+                a = [1,2,4,8,16,32]
+                b = 0
+                c = 8
+                stride_i = a[i+b]
+                for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
-                    ref = out_refines[(i-1)-j].squeeze(1)
-                    prob = out_probs[(i-1)-j].squeeze(1)
+                    ref = out_refines[(i+b)-j].squeeze(1)
+                    prob = out_probs[(i+b)-j].squeeze(1)
                 
                     if use_round:
                         left_idx = (seg_left/stride_i).round().long()
@@ -1364,7 +1367,7 @@ class PtTransformer(nn.Module):
 
                         ref_left = ref[left_idx[left_mask], 0]  # todo
                         prob_left = prob[left_idx[left_mask], 0]
-                        seg_left[left_mask] += (ref_left*stride_i/4) * (1 - pred_prob[left_mask]+prob_left)/2
+                        seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
                         # * (1 - pred_prob[left_mask])
                         # print(ref_left*stride_i)
                         # print(ref_left*stride_i/4)
@@ -1373,7 +1376,7 @@ class PtTransformer(nn.Module):
                         # exit()
                         ref_right = ref[right_idx[right_mask], 1]  # todo 
                         prob_right = prob[right_idx[right_mask], 1]
-                        seg_right[right_mask] += (ref_right*stride_i/4) * (1 - pred_prob[right_mask]+prob_right)/2
+                        seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
                     else:
                         left_idx0 = (seg_left/stride_i).floor().long()
                         left_idx1 = (seg_left/stride_i).ceil().long()
