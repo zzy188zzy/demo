@@ -575,6 +575,7 @@ class PtTransformer(nn.Module):
             
             cls_loss = []
             reg_loss = []
+            sco_loss = []
             ref_loss = []
             prob_loss = []
             for idx in range(time):
@@ -591,6 +592,7 @@ class PtTransformer(nn.Module):
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
+                sco_loss.append(loss['sco_loss'])
                 ref_loss.append(loss['ref_loss'])
                 prob_loss.append(loss['prob_loss'])
 
@@ -598,12 +600,14 @@ class PtTransformer(nn.Module):
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
+            sco_loss = sco_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
             prob_loss = torch.stack(prob_loss).mean()
-            final_loss = cls_loss + reg_loss + ref_loss + prob_loss
+            final_loss = cls_loss + reg_loss + ref_loss + prob_loss + sco_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
+                    'sco_loss'   : sco_loss,
                     'ref_loss'   : ref_loss,
                     'prob_loss'   : prob_loss,
                     'final_loss' : final_loss}
@@ -1212,6 +1216,7 @@ class PtTransformer(nn.Module):
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
+                'sco_loss'   : sco_loss,
                 'ref_loss'   : ref_loss,
                 'prob_loss' : prob_loss}, self.loss_normalizer / max(num_pos, 1)
 
@@ -1340,8 +1345,8 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
             use_round = True
-            # if i!=0 :
-            if False:
+            if i!=0 :
+            # if False:
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
                 stride_i = a[i-1]
