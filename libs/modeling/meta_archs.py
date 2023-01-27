@@ -1198,8 +1198,8 @@ class PtTransformer(nn.Module):
         # if err > 0:
         #     print(err)
         
-
-        ref_loss = F.smooth_l1_loss(out_ref[mask]/4, gt_ref[mask]/4, reduction='mean')
+        a = 1
+        ref_loss = F.smooth_l1_loss(out_ref[mask]/a, gt_ref[mask]/a, reduction='mean')
         # ref_loss /= self.loss_normalizer
         # print(out_ref[mask])
         # print(gt_ref[mask])
