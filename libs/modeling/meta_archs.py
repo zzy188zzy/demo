@@ -602,7 +602,7 @@ class PtTransformer(nn.Module):
             reg_loss = reg_loss[0]
             sco_loss = sco_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
-            prob_loss = torch.stack(prob_loss).mean()*0.4
+            prob_loss = torch.stack(prob_loss).mean()*0.3
             final_loss = cls_loss + reg_loss + ref_loss + prob_loss
 
             return {'cls_loss'   : cls_loss,
@@ -1348,8 +1348,8 @@ class PtTransformer(nn.Module):
 
             use_round = True
             # if i!=0 and i!=1 :
-            if i!=0 :
-            # if False:
+            # if i!=0 :
+            if False:
             # if True:
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
