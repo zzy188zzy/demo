@@ -526,7 +526,7 @@ class PtTransformer(nn.Module):
         # this is used for computing the GT or decode the final results
         # points: List[T x 4] with length = # fpn levels
         # (shared across all samples in the mini-batch)
-        points = self.point_generator(fpn_feats)
+        points = self.point_generator(fpn_feats0)
 
         # out_cls: List[B, #cls + 1, T_i]
         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
@@ -603,11 +603,11 @@ class PtTransformer(nn.Module):
             sco_loss = sco_loss[0]
             ref_loss = torch.stack(ref_loss).mean()
             prob_loss = torch.stack(prob_loss).mean()
-            final_loss = cls_loss + reg_loss + ref_loss + prob_loss + sco_loss
+            final_loss = cls_loss + reg_loss + ref_loss + prob_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
-                    'sco_loss'   : sco_loss,
+                    # 'sco_loss'   : sco_loss,
                     'ref_loss'   : ref_loss,
                     'prob_loss'   : prob_loss,
                     'final_loss' : final_loss}
@@ -1344,7 +1344,7 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            use_round = False
+            use_round = True
             if i!=0 :
             # if False:
                 # 1 2 3 4 5
