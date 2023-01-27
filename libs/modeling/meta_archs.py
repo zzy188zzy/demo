@@ -1386,6 +1386,8 @@ class PtTransformer(nn.Module):
                         
                         # prob_left = prob[left_idx[left_mask], 0]
                         ref_left = ref_left0 * (1 - w1) + ref_left1 * w1
+                        print(left_idx0[left_mask])
+                        print(left_idx1[left_mask])
                         print(ref_left0)
                         print(ref_left1)
                         print(w1)
