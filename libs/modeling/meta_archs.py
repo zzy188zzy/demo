@@ -601,15 +601,15 @@ class PtTransformer(nn.Module):
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
             sco_loss = sco_loss[0]
-            ref_loss = torch.stack(ref_loss).mean() / norm
-            prob_loss = torch.stack(prob_loss).mean() / norm
-            final_loss = cls_loss + reg_loss + ref_loss
+            ref_loss = torch.stack(ref_loss).mean()
+            prob_loss = torch.stack(prob_loss).mean() * 2
+            final_loss = cls_loss + reg_loss + ref_loss + prob_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
                     # 'sco_loss'   : sco_loss,
                     'ref_loss'   : ref_loss,
-                    # 'prob_loss'   : prob_loss,
+                    'prob_loss'   : prob_loss,
                     'final_loss' : final_loss}
         else:
             # refineHead
