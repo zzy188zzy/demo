@@ -1339,7 +1339,7 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-
+            use_round = False
             # if i!=0 :
             if True:
                 # 1 2 3 4 5
@@ -1350,20 +1350,52 @@ class PtTransformer(nn.Module):
                     ref = out_refines[(i-1)-j].squeeze(1)
                     prob = out_probs[(i-1)-j].squeeze(1)
                 
-                    left_idx = (seg_left/stride_i).round().long()
-                    right_idx = (seg_right/stride_i).round().long()
+                    if use_round:
+                        left_idx = (seg_left/stride_i).round().long()
+                        right_idx = (seg_right/stride_i).round().long()
 
-                    left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
-                    right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
+                        left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
+                        right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
-                    ref_left = ref[left_idx[left_mask], 0]  # todo
-                    prob_left = prob[left_idx[left_mask], 0]
-                    seg_left[left_mask] += (ref_left*stride_i/4) * (1 - pred_prob[left_mask])
-                    # * (1 - pred_prob[left_mask])
-                    # print(ref_left*stride_i)
-                    ref_right = ref[right_idx[right_mask], 1]  # todo 
-                    prob_right = prob[right_idx[right_mask], 1]
-                    seg_right[right_mask] += (ref_right*stride_i/4) * (1 - pred_prob[right_mask])
+                        ref_left = ref[left_idx[left_mask], 0]  # todo
+                        prob_left = prob[left_idx[left_mask], 0]
+                        seg_left[left_mask] += (ref_left*stride_i/4) * (1 - pred_prob[left_mask])
+                        # * (1 - pred_prob[left_mask])
+                        # print(ref_left*stride_i)
+                        ref_right = ref[right_idx[right_mask], 1]  # todo 
+                        prob_right = prob[right_idx[right_mask], 1]
+                        seg_right[right_mask] += (ref_right*stride_i/4) * (1 - pred_prob[right_mask])
+                    else:
+                        left_idx0 = (seg_left/stride_i).floor().long()
+                        left_idx1 = (seg_left/stride_i).ceil().long()
+                        left_w1 = (seg_left/stride_i).frac()
+                        right_idx0 = (seg_right/stride_i).floor().long()
+                        right_idx1 = (seg_right/stride_i).ceil().long()
+                        right_w1 = (seg_right/stride_i).frac()
+
+                        left_mask = torch.logical_and(
+                                        torch.logical_and(left_idx0 >= 0, left_idx0 < 2304//stride_i),
+                                        torch.logical_and(left_idx1 >= 0, left_idx1 < 2304//stride_i))
+                        right_mask = torch.logical_and(
+                                        torch.logical_and(right_idx0 >= 0, right_idx0 < 2304//stride_i),
+                                        torch.logical_and(right_idx1 >= 0, right_idx1 < 2304//stride_i))
+
+                        ref_left0 = ref[left_idx0[left_mask], 0] 
+                        ref_left1 = ref[left_idx1[left_mask], 0] 
+                        w1 = left_w1[left_idx0[left_mask], 0]
+                        
+                        prob_left = prob[left_idx[left_mask], 0]
+                        ref_left = ref_left0 * (1 - w1) + ref_left1 * w1
+                        seg_left[left_mask] += (ref_left * stride_i / 4) * (1 - pred_prob[left_mask])
+                        # * (1 - pred_prob[left_mask])
+                        # print(ref_left*stride_i)
+                        ref_right0 = ref[right_idx0[right_mask], 0] 
+                        ref_right1 = ref[right_idx1[right_mask], 0] 
+                        w1 = right_w1[right_idx0[right_mask], 0]
+                        prob_right = prob[right_idx[right_mask], 1]
+                        ref_right = ref_right0 * (1 - w1) + ref_right1 * w1
+                        seg_right[right_mask] += (ref_right * stride_i / 4) * (1 - pred_prob[right_mask])
+
                     stride_i //= 2
                     
 
