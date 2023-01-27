@@ -1201,10 +1201,10 @@ class PtTransformer(nn.Module):
 
         ref_loss = F.smooth_l1_loss(out_ref[mask]/4, gt_ref[mask]/4, reduction='mean')
         # ref_loss /= self.loss_normalizer
-        print(out_ref[mask])
-        print(gt_ref[mask])
+        # print(out_ref[mask])
+        # print(gt_ref[mask])
     
-        exit()
+        # exit()
 
         # 5.prob_loss
         gt_prob = torch.stack(gt_probs)
