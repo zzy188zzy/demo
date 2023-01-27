@@ -1345,13 +1345,14 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
             use_round = True
+            if i!=0 and i!=1 :
             # if i!=0 :
             # if False:
-            if True:
-                # 0 1 2 3 4 5
-                a = [1,2,4,8,16,32]
-                b = 0
-                c = 8
+            # if True:
+                # 2 3 4 5
+                a = [1,2,4,8]
+                b = -2
+                c = 2
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
