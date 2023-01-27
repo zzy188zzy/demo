@@ -1199,10 +1199,12 @@ class PtTransformer(nn.Module):
         #     print(err)
         
 
-        ref_loss = F.smooth_l1_loss(out_ref[mask], gt_ref[mask], reduction='mean')
+        ref_loss = F.smooth_l1_loss(out_ref[mask]/4, gt_ref[mask]/4, reduction='mean')
         # ref_loss /= self.loss_normalizer
+        print(out_ref[mask])
+        print(gt_ref[mask])
     
-        # exit()
+        exit()
 
         # 5.prob_loss
         gt_prob = torch.stack(gt_probs)
@@ -1352,7 +1354,7 @@ class PtTransformer(nn.Module):
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
                 b = -1
-                c = 3
+                c = 4
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
