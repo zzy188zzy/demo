@@ -22,7 +22,7 @@ model: {
 }
 opt: {
   learning_rate: 0.0001,  # 0.0001
-  epochs: 50,
+  epochs: 40,
   weight_decay: 0.04,  # 0.05
 }
 loader: {
