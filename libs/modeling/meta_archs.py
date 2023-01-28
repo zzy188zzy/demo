@@ -1348,13 +1348,14 @@ class PtTransformer(nn.Module):
 
             use_round = True
             # if i!=0 and i!=1 :
-            # if i!=0 :
-            if False:
+            if i!=0 :
+            # if False:
             # if True:
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
                 b = -1
                 c = 4
+                d = 100
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
@@ -1371,6 +1372,7 @@ class PtTransformer(nn.Module):
                         ref_left = ref[left_idx[left_mask], 0]  # todo
                         prob_left = prob[left_idx[left_mask], 0]
                         seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
+                        pred_prob[left_mask] *= 1+(prob_left-0.5)/d
                         # * (1 - pred_prob[left_mask])
                         # print(ref_left*stride_i)
                         # print(ref_left*stride_i/4)
@@ -1380,6 +1382,7 @@ class PtTransformer(nn.Module):
                         ref_right = ref[right_idx[right_mask], 1]  # todo 
                         prob_right = prob[right_idx[right_mask], 1]
                         seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
+                        pred_prob[right_mask] *= 1+(prob_right-0.5)/d
                     else:
                         left_idx0 = (seg_left/stride_i).floor().long()
                         left_idx1 = (seg_left/stride_i).ceil().long()
