@@ -1366,9 +1366,9 @@ class PtTransformer(nn.Module):
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
                 b = -1
-                c = 3
+                c = 4
                 d = 10
-                e = 3
+                e = 2
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
@@ -1385,7 +1385,7 @@ class PtTransformer(nn.Module):
 
                             ref_left = ref[left_idx[left_mask], 0]  # todo
                             prob_left = prob[left_idx[left_mask], 0]
-                            seg_left[left_mask] += (ref_left*stride_i/(c*e)) * (1 - pred_prob[left_mask])
+                            seg_left[left_mask] += (ref_left*stride_i/(c*(e_+1))) * (1 - pred_prob[left_mask])
                             # pred_prob[left_mask] += (prob_left-prob_left.mean())/d
                             # * (1 - pred_prob[left_mask])
                             # print(ref_left*stride_i)
@@ -1395,7 +1395,7 @@ class PtTransformer(nn.Module):
                             # exit()
                             ref_right = ref[right_idx[right_mask], 1]  # todo 
                             prob_right = prob[right_idx[right_mask], 1]
-                            seg_right[right_mask] += (ref_right*stride_i/(c*e)) * (1 - pred_prob[right_mask])
+                            seg_right[right_mask] += (ref_right*stride_i/(c*(e_+1))) * (1 - pred_prob[right_mask])
                             # pred_prob[right_mask] += (prob_right-prob_right.mean())/d
                     else:
                         left_idx0 = (seg_left/stride_i).floor().long()
