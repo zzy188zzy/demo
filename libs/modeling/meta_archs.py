@@ -1386,7 +1386,8 @@ class PtTransformer(nn.Module):
                             ref_left = ref[left_idx[left_mask], 0]  # todo
                             prob_left = prob[left_idx[left_mask], 0]
                             seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
-                            pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
+#                             pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
+                            pred_prob[left_mask] += (prob_left-0.5)/((i+b+1)*d)
                             # * (1 - pred_prob[left_mask])
                             # print(ref_left*stride_i)
                             # print(ref_left*stride_i/4)
@@ -1400,7 +1401,8 @@ class PtTransformer(nn.Module):
 #                             print(pred_prob[right_mask])
 #                             print(prob_right)
 #                             print((prob_right-prob_right.mean())/((i+b+1)*d))
-                            pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
+#                             pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
+                            pred_prob[right_mask] += (prob_right-0.5)/((i+b+1)*d)
 #                             print(pred_prob[right_mask])
 #                             exit()
                     else:
