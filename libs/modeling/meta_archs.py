@@ -519,11 +519,11 @@ class PtTransformer(nn.Module):
         #     i = i.detach()
         fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
 
-        cat_feats = tuple()
-        for a, b in zip(fpn_feats, fpn_feats0):
-            # print(a.shape)
+#         cat_feats = tuple()
+#         for a, b in zip(fpn_feats, fpn_feats0):
+#             # print(a.shape)
             
-            cat_feats+=(torch.cat((a, b), dim=1), )
+#             cat_feats+=(torch.cat((a, b), dim=1), )
         
 
         # err = (fpn_feats[0]==fpn_feats0[0]).sum()
@@ -539,8 +539,8 @@ class PtTransformer(nn.Module):
 #         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
         out_cls_logits = self.cls_head(cat_feats, fpn_masks)
         # out_offset: List[B, 2, T_i]
-        out_offsets = self.reg_head(fpn_feats, fpn_masks)
-#         out_offsets = self.reg_head(cat_feats, fpn_masks)
+#         out_offsets = self.reg_head(fpn_feats, fpn_masks)
+        out_offsets = self.reg_head(cat_feats, fpn_masks)
 
         # # permute the outputs
         # # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
