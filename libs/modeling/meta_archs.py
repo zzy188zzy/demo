@@ -447,7 +447,7 @@ class PtTransformer(nn.Module):
             fpn_type,
             **{
                 'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
-                'out_channel' : fpn_dim,
+                'out_channel' : fpn_dim//2,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
                 'with_ln' : fpn_with_ln
@@ -466,7 +466,7 @@ class PtTransformer(nn.Module):
 
         # classfication and regerssion heads
         self.cls_head = PtTransformerClsHead(
-            fpn_dim*2, head_dim, self.num_classes,
+            fpn_dim, head_dim, self.num_classes,
             kernel_size=head_kernel_size,
             prior_prob=self.train_cls_prior_prob,
             with_ln=head_with_ln,
@@ -489,7 +489,7 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
+            fpn_dim//2, head_dim, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -536,11 +536,11 @@ class PtTransformer(nn.Module):
         points = self.point_generator(fpn_feats)
 
         # out_cls: List[B, #cls + 1, T_i]
-#         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
-        out_cls_logits = self.cls_head(cat_feats, fpn_masks)
+        out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
+        # out_cls_logits = self.cls_head(cat_feats, fpn_masks)
         # out_offset: List[B, 2, T_i]
-#         out_offsets = self.reg_head(fpn_feats, fpn_masks)
-        out_offsets = self.reg_head(cat_feats, fpn_masks)
+        out_offsets = self.reg_head(fpn_feats, fpn_masks)
+        # out_offsets = self.reg_head(cat_feats, fpn_masks)
 
         # # permute the outputs
         # # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
