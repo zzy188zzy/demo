@@ -329,7 +329,7 @@ class PtTransformer(nn.Module):
         self.max_seq_len = max_seq_len
         if isinstance(n_mha_win_size, int):
             self.mha_win_size = [n_mha_win_size]*(1 + backbone_arch[-1])
-            self.mha_win_size0 = [9]*(1 + backbone_arch[-1])
+            # self.mha_win_size0 = [9]*(1 + backbone_arch[-1])
         else:
             assert len(n_mha_win_size) == (1 + backbone_arch[-1])
             self.mha_win_size = n_mha_win_size
@@ -396,7 +396,7 @@ class PtTransformer(nn.Module):
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
                     'arch' : backbone_arch,
-                    'mha_win_size': self.mha_win_size0,
+                    'mha_win_size': self.mha_win_size,
                     'scale_factor' : scale_factor,
                     'with_ln' : embd_with_ln,
                     'attn_pdrop' : 0.0,
@@ -558,7 +558,6 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -817,8 +816,8 @@ class PtTransformer(nn.Module):
             prob_s = gt_prob[:, i]
             # F T
             s = torch.logical_and(
-                (dis_s >= concat_points[:, 1]),
-                (dis_s <= concat_points[:, 2])
+                (dis_s >= concat_points[:, 1]//2),
+                (dis_s <= concat_points[:, 2]//2)
             )
             # print(concat_points[:, 1])
             # print(concat_points[:, 2])
