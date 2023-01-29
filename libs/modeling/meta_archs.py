@@ -390,7 +390,7 @@ class PtTransformer(nn.Module):
                 'convTransformer',
                 **{
                     'n_in' : input_dim,
-                    'n_embd' : embd_dim,
+                    'n_embd' : embd_dim//2,
                     'n_head': n_head,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
@@ -421,7 +421,7 @@ class PtTransformer(nn.Module):
                 'conv',
                 **{
                     'n_in': input_dim,
-                    'n_embd': embd_dim,
+                    'n_embd': embd_dim//2,
                     'n_embd_ks': embd_kernel_size,
                     'arch': backbone_arch,
                     'scale_factor': scale_factor,
@@ -443,14 +443,10 @@ class PtTransformer(nn.Module):
                 'with_ln' : fpn_with_ln
             }
         )
-        print([embd_dim] * (backbone_arch[-1] + 1))
-        print(fpn_dim)
-        print(input_dim)
-        exit()
         self.neck0 = make_neck(
             fpn_type,
             **{
-                'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
+                'in_channels' : [embd_dim//2] * (backbone_arch[-1] + 1),
                 'out_channel' : fpn_dim//2,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
