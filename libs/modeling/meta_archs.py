@@ -474,7 +474,7 @@ class PtTransformer(nn.Module):
             empty_cls=train_cfg['head_empty_cls']
         )
         self.reg_head = PtTransformerRegHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
+            fpn_dim*2, head_dim, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -489,7 +489,7 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
+            fpn_dim*2, head_dim, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -519,6 +519,13 @@ class PtTransformer(nn.Module):
         #     i = i.detach()
         fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
 
+        cat_feats = tuple()
+        for a, b in zip(fpn_feats, fpn_feats0):
+            print(a.shape)
+            
+            cat_feats.append(torch.cat(a, b, dim=1))
+        
+
         # err = (fpn_feats[0]==fpn_feats0[0]).sum()
         # print(err)
 
@@ -531,7 +538,7 @@ class PtTransformer(nn.Module):
         # out_cls: List[B, #cls + 1, T_i]
         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
         # out_offset: List[B, 2, T_i]
-        out_offsets = self.reg_head(fpn_feats, fpn_masks)
+        out_offsets = self.reg_head(cat_feats, fpn_masks)
 
         # # permute the outputs
         # # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -544,8 +551,8 @@ class PtTransformer(nn.Module):
         # return loss during training
         if self.training:
             # train refineHead
-            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-            # out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+            # out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            out_refines, out_probs = self.refineHead(cat_feats, fpn_masks)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -618,8 +625,8 @@ class PtTransformer(nn.Module):
             #     print(out_cls_logits[i].shape)
             # exit()
 
-            out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-            # out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+            # out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+            out_refines, out_probs = self.refineHead(cat_feats, fpn_masks)
 
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -1354,7 +1361,7 @@ class PtTransformer(nn.Module):
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
                 b = -1
-                c = 2
+                c = 4
                 d = 10
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
