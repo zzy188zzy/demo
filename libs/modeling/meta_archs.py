@@ -816,8 +816,8 @@ class PtTransformer(nn.Module):
             prob_s = gt_prob[:, i]
             # F T
             s = torch.logical_and(
-                (dis_s >= concat_points[:, 1]//2),
-                (dis_s <= concat_points[:, 2]//2)
+                (dis_s >= concat_points[:, 1]//4),
+                (dis_s <= concat_points[:, 2]//4)
             )
             # print(concat_points[:, 1])
             # print(concat_points[:, 2])
