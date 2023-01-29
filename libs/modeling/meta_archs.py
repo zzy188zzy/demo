@@ -390,7 +390,7 @@ class PtTransformer(nn.Module):
                 'convTransformer',
                 **{
                     'n_in' : input_dim,
-                    'n_embd' : embd_dim//2,
+                    'n_embd' : embd_dim,
                     'n_head': n_head,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
@@ -421,7 +421,7 @@ class PtTransformer(nn.Module):
                 'conv',
                 **{
                     'n_in': input_dim,
-                    'n_embd': embd_dim//2,
+                    'n_embd': embd_dim,
                     'n_embd_ks': embd_kernel_size,
                     'arch': backbone_arch,
                     'scale_factor': scale_factor,
@@ -446,8 +446,8 @@ class PtTransformer(nn.Module):
         self.neck0 = make_neck(
             fpn_type,
             **{
-                'in_channels' : [embd_dim//2] * (backbone_arch[-1] + 1),
-                'out_channel' : fpn_dim//2,
+                'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
+                'out_channel' : fpn_dim,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
                 'with_ln' : fpn_with_ln
@@ -489,7 +489,7 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim//2, head_dim, len(self.fpn_strides),
+            fpn_dim, head_dim, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -1368,6 +1368,7 @@ class PtTransformer(nn.Module):
                 b = -1
                 c = 4
                 d = 10
+                e = 1
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
@@ -1375,26 +1376,27 @@ class PtTransformer(nn.Module):
                     prob = out_probs[(i+b)-j].squeeze(1)
                 
                     if use_round:
-                        left_idx = (seg_left/stride_i).round().long()
-                        right_idx = (seg_right/stride_i).round().long()
+                        for e_ in range(e):
+                            left_idx = (seg_left/stride_i).round().long()
+                            right_idx = (seg_right/stride_i).round().long()
 
-                        left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
-                        right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
+                            left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
+                            right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
-                        ref_left = ref[left_idx[left_mask], 0]  # todo
-                        prob_left = prob[left_idx[left_mask], 0]
-                        seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
-                        # pred_prob[left_mask] += (prob_left-prob_left.mean())/d
-                        # * (1 - pred_prob[left_mask])
-                        # print(ref_left*stride_i)
-                        # print(ref_left*stride_i/4)
-                        # print((1 - pred_prob[left_mask]))
-                        # print((ref_left*stride_i/4) * (1 - pred_prob[left_mask]))
-                        # exit()
-                        ref_right = ref[right_idx[right_mask], 1]  # todo 
-                        prob_right = prob[right_idx[right_mask], 1]
-                        seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
-                        # pred_prob[right_mask] += (prob_right-prob_right.mean())/d
+                            ref_left = ref[left_idx[left_mask], 0]  # todo
+                            prob_left = prob[left_idx[left_mask], 0]
+                            seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
+                            # pred_prob[left_mask] += (prob_left-prob_left.mean())/d
+                            # * (1 - pred_prob[left_mask])
+                            # print(ref_left*stride_i)
+                            # print(ref_left*stride_i/4)
+                            # print((1 - pred_prob[left_mask]))
+                            # print((ref_left*stride_i/4) * (1 - pred_prob[left_mask]))
+                            # exit()
+                            ref_right = ref[right_idx[right_mask], 1]  # todo 
+                            prob_right = prob[right_idx[right_mask], 1]
+                            seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
+                            # pred_prob[right_mask] += (prob_right-prob_right.mean())/d
                     else:
                         left_idx0 = (seg_left/stride_i).floor().long()
                         left_idx1 = (seg_left/stride_i).ceil().long()
