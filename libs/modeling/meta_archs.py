@@ -1397,12 +1397,12 @@ class PtTransformer(nn.Module):
                             prob_right = prob[right_idx[right_mask], 1]
                             seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
                             
-                            print(pred_prob[right_mask])
-                            print(prob_right)
-                            print((prob_right-prob_right.mean())/((i+b+1)*d))
+#                             print(pred_prob[right_mask])
+#                             print(prob_right)
+#                             print((prob_right-prob_right.mean())/((i+b+1)*d))
                             pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
-                            print(pred_prob[right_mask])
-                            exit()
+#                             print(pred_prob[right_mask])
+#                             exit()
                     else:
                         left_idx0 = (seg_left/stride_i).floor().long()
                         left_idx1 = (seg_left/stride_i).ceil().long()
