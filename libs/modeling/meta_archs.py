@@ -539,7 +539,7 @@ class PtTransformer(nn.Module):
 #         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
         out_cls_logits = self.cls_head(cat_feats, fpn_masks)
         # out_offset: List[B, 2, T_i]
-#         out_offsets = self.reg_head(fpn_feats, fpn_masks)
+        out_offsets = self.reg_head(fpn_feats, fpn_masks)
 #         out_offsets = self.reg_head(cat_feats, fpn_masks)
 
         # # permute the outputs
