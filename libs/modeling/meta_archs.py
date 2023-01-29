@@ -329,6 +329,7 @@ class PtTransformer(nn.Module):
         self.max_seq_len = max_seq_len
         if isinstance(n_mha_win_size, int):
             self.mha_win_size = [n_mha_win_size]*(1 + backbone_arch[-1])
+            self.mha_win_size0 = [9]*(1 + backbone_arch[-1])
         else:
             assert len(n_mha_win_size) == (1 + backbone_arch[-1])
             self.mha_win_size = n_mha_win_size
@@ -395,7 +396,7 @@ class PtTransformer(nn.Module):
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
                     'arch' : backbone_arch,
-                    'mha_win_size': self.mha_win_size,
+                    'mha_win_size': self.mha_win_size0,
                     'scale_factor' : scale_factor,
                     'with_ln' : embd_with_ln,
                     'attn_pdrop' : 0.0,
@@ -1359,6 +1360,7 @@ class PtTransformer(nn.Module):
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
             use_round = True
+            use_prob = False
             # if i!=0 and i!=1 :
             if i!=0 :
 #             if False:
@@ -1367,7 +1369,7 @@ class PtTransformer(nn.Module):
                 a = [1,2,4,8,16]
                 b = -1
                 c = 4
-                d = 60
+                d = 80
                 e = 1
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
@@ -1386,8 +1388,7 @@ class PtTransformer(nn.Module):
                             ref_left = ref[left_idx[left_mask], 0]  # todo
                             prob_left = prob[left_idx[left_mask], 0]
                             seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
-                            pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
-#                             pred_prob[left_mask] += (prob_left-0.5)/((i+b+1)*d)
+                            
                             # * (1 - pred_prob[left_mask])
                             # print(ref_left*stride_i)
                             # print(ref_left*stride_i/4)
@@ -1401,8 +1402,11 @@ class PtTransformer(nn.Module):
 #                             print(pred_prob[right_mask])
 #                             print(prob_right)
 #                             print((prob_right-prob_right.mean())/((i+b+1)*d))
-                            pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
-#                             pred_prob[right_mask] += (prob_right-0.5)/((i+b+1)*d)
+                            if use_prob:
+                                pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
+    #                             pred_prob[left_mask] += (prob_left-0.5)/((i+b+1)*d)
+                                pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
+    #                             pred_prob[right_mask] += (prob_right-0.5)/((i+b+1)*d)
 #                             print(pred_prob[right_mask])
 #                             exit()
                     else:
