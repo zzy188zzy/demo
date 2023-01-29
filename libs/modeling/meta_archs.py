@@ -474,7 +474,7 @@ class PtTransformer(nn.Module):
             empty_cls=train_cfg['head_empty_cls']
         )
         self.reg_head = PtTransformerRegHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
+            fpn_dim*2, head_dim, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -489,7 +489,7 @@ class PtTransformer(nn.Module):
         self.relu = nn.ReLU()
 
         self.refineHead = RefineHead(
-            fpn_dim*2, head_dim, len(self.fpn_strides),
+            fpn_dim, head_dim, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
@@ -539,8 +539,8 @@ class PtTransformer(nn.Module):
         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
 #         out_cls_logits = self.cls_head(cat_feats, fpn_masks)
         # out_offset: List[B, 2, T_i]
-        out_offsets = self.reg_head(fpn_feats, fpn_masks)
-#         out_offsets = self.reg_head(cat_feats, fpn_masks)
+#         out_offsets = self.reg_head(fpn_feats, fpn_masks)
+        out_offsets = self.reg_head(cat_feats, fpn_masks)
 
         # # permute the outputs
         # # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -551,8 +551,8 @@ class PtTransformer(nn.Module):
         # fpn_masks = [x.squeeze(1) for x in fpn_masks]
         
         
-#         out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-        out_refines, out_probs = self.refineHead(cat_feats, fpn_masks)
+        out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
+#         out_refines, out_probs = self.refineHead(cat_feats, fpn_masks)
         
         # return loss during training
         if self.training:
