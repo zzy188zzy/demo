@@ -1367,7 +1367,7 @@ class PtTransformer(nn.Module):
                 a = [1,2,4,8,16]
                 b = -1
                 c = 4
-                d = 90
+                d = 70
                 e = 1
                 stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
