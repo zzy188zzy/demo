@@ -1348,8 +1348,8 @@ class PtTransformer(nn.Module):
 
             use_round = True
             # if i!=0 and i!=1 :
-#             if i!=0 :
-            if False:
+            if i!=0 :
+#             if False:
             # if True:
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
