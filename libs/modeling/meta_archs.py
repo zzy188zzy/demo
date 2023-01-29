@@ -329,7 +329,7 @@ class PtTransformer(nn.Module):
         self.max_seq_len = max_seq_len
         if isinstance(n_mha_win_size, int):
             self.mha_win_size = [n_mha_win_size]*(1 + backbone_arch[-1])
-            self.mha_win_size0 = [9]*(1 + backbone_arch[-1])
+            self.mha_win_size0 = [25]*(1 + backbone_arch[-1])
         else:
             assert len(n_mha_win_size) == (1 + backbone_arch[-1])
             self.mha_win_size = n_mha_win_size
