@@ -22,7 +22,11 @@ model: {
 }
 opt: {
   learning_rate: 0.0001,  # 0.0001
+<<<<<<< HEAD
   epochs: 50,
+=======
+  epochs: 70,
+>>>>>>> 94168c4e8650f866cf5beeccefb6b5e8f0cc6e4b
   weight_decay: 0.05,  # 0.05
 }
 loader: {
