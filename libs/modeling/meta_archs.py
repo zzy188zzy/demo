@@ -827,6 +827,7 @@ class PtTransformer(nn.Module):
             # print(gt_refine)
             dis_s.masked_fill_(s==0, float('inf'))
             prob_s.masked_fill_(s==0, float('0'))
+            dis_s.masked_fill_((dis_s <= concat_points[:, 1]), float('0'))
 
 
         # print(dis0[182:214])
