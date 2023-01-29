@@ -396,7 +396,7 @@ class PtTransformer(nn.Module):
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
                     'arch' : backbone_arch,
-                    'mha_win_size': self.mha_win_size0,
+                    'mha_win_size': self.mha_win_size,
                     'scale_factor' : scale_factor,
                     'with_ln' : embd_with_ln,
                     'attn_pdrop' : 0.0,
