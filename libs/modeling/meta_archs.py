@@ -521,9 +521,9 @@ class PtTransformer(nn.Module):
 
         cat_feats = tuple()
         for a, b in zip(fpn_feats, fpn_feats0):
-            print(a.shape)
+            # print(a.shape)
             
-            cat_feats.append(torch.cat(a, b, dim=1))
+            cat_feats+=(torch.cat((a, b), dim=1), )
         
 
         # err = (fpn_feats[0]==fpn_feats0[0]).sum()
