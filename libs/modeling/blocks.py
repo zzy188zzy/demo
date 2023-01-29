@@ -471,9 +471,9 @@ class LocalMaskedMHCA(nn.Module):
         # query / key: B*nh, T, hs
         bnh, seq_len, head_dim = query.size()
         batch_size = bnh // num_heads
-        print(seq_len)
-        print(window_overlap)
-        exit()
+#         print(seq_len)
+#         print(window_overlap)
+#         exit()
         assert seq_len % (window_overlap * 2) == 0
         assert query.size() == key.size()
 
