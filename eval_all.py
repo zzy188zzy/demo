@@ -80,7 +80,7 @@ def main(args):
     del checkpoint
     # load ckpt, reset epoch / best rmse
     checkpoint = torch.load(
-        '../ckpt/thumos_i3d_debug_af/epoch_035.pth.tar'.format(args.epoch),
+        '../ckpt/thumos_i3d_debug_af/epoch_035.pth.tar',
         map_location = lambda storage, loc: storage.cuda(cfg['devices'][0])
     )
     # load ema model instead

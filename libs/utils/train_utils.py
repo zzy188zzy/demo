@@ -470,7 +470,6 @@ def valid_one_epoch_all(
 
     # loop over validation set
     start = time.time()
-    print('-----------------------475----------------------------')
     for iter_idx, video_list in enumerate(val_loader, 0):
         # forward the model (wo. grad)
         with torch.no_grad():
