@@ -450,10 +450,10 @@ class PtTransformer(nn.Module):
         else:
             if ref_model != None:
                 out_refines, out_probs = ref_model(video_list)
-                print('eval_all')
+                # print('eval_all')
             else:
                 out_refines, out_probs = None, None
-                print('eval_af')
+                # print('eval_af')
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
