@@ -60,7 +60,7 @@ def main(args):
 
     """3. create model and evaluator"""
     # model
-    model = Refinement_module(cfg['model_name'], **cfg['model'])
+    model = Refinement_module(**cfg['model'])
     # not ideal for multi GPU training, ok for now
     model = nn.DataParallel(model, device_ids=cfg['devices'])
 
