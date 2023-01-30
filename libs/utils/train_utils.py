@@ -437,3 +437,86 @@ def valid_one_epoch(
         tb_writer.add_scalar('validation/mAP', mAP, curr_epoch)
 
     return mAP
+
+def valid_one_epoch_all(
+    val_loader,
+    model,
+    ref_model,
+    curr_epoch,
+    ext_score_file = None,
+    evaluator = None,
+    output_file = None,
+    tb_writer = None,
+    print_freq = 20
+):
+    """Test the model on the validation set"""
+    # either evaluate the results or save the results
+    assert (evaluator is not None) or (output_file is not None)
+
+    # set up meters
+    batch_time = AverageMeter()
+    # switch to evaluate mode
+    model.eval()
+    # dict for results (for our evaluation code)
+    results = {
+        'video-id': [],
+        't-start' : [],
+        't-end': [],
+        'label': [],
+        'score': []
+    }
+
+    # loop over validation set
+    start = time.time()
+    for iter_idx, video_list in enumerate(val_loader, 0):
+        # forward the model (wo. grad)
+        with torch.no_grad():
+            output = model(video_list)
+
+            # unpack the results into ANet format
+            num_vids = len(output)
+            for vid_idx in range(num_vids):
+                if output[vid_idx]['segments'].shape[0] > 0:
+                    results['video-id'].extend(
+                        [output[vid_idx]['video_id']] *
+                        output[vid_idx]['segments'].shape[0]
+                    )
+                    results['t-start'].append(output[vid_idx]['segments'][:, 0])
+                    results['t-end'].append(output[vid_idx]['segments'][:, 1])
+                    results['label'].append(output[vid_idx]['labels'])
+                    results['score'].append(output[vid_idx]['scores'])
+
+        # printing
+        if (iter_idx != 0) and iter_idx % (print_freq) == 0:
+            # measure elapsed time (sync all kernels)
+            torch.cuda.synchronize()
+            batch_time.update((time.time() - start) / print_freq)
+            start = time.time()
+
+            # print timing
+            print('Test: [{0:05d}/{1:05d}]\t'
+                  'Time {batch_time.val:.2f} ({batch_time.avg:.2f})'.format(
+                  iter_idx, len(val_loader), batch_time=batch_time))
+
+    # gather all stats and evaluate
+    results['t-start'] = torch.cat(results['t-start']).numpy()
+    results['t-end'] = torch.cat(results['t-end']).numpy()
+    results['label'] = torch.cat(results['label']).numpy()
+    results['score'] = torch.cat(results['score']).numpy()
+
+    if evaluator is not None:
+        if ext_score_file is not None and isinstance(ext_score_file, str):
+            results = postprocess_results(results, ext_score_file)
+        # call the evaluator
+        _, mAP, _ = evaluator.evaluate(results, verbose=True)
+    else:
+        # dump to a pickle file that can be directly used for evaluation
+        with open(output_file, "wb") as f:
+            pickle.dump(results, f)
+        mAP = 0.0
+
+    # log mAP to tb_writer
+    if tb_writer is not None:
+        tb_writer.add_scalar('validation/mAP', mAP, curr_epoch)
+
+    return mAP

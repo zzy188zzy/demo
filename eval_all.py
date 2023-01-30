@@ -15,7 +15,7 @@ import torch.utils.data
 from libs.core import load_config
 from libs.datasets import make_dataset, make_data_loader
 from libs.modeling import make_meta_arch
-from libs.utils import valid_one_epoch, ANETdetection, fix_random_seed
+from libs.utils import valid_one_epoch_all, ANETdetection, fix_random_seed
 from libs.modeling import Refinement_module
 
 ################################################################################
@@ -60,15 +60,26 @@ def main(args):
 
     """3. create model and evaluator"""
     # model
-    model = Refinement_module(**cfg['model'])
+    ref_model = Refinement_module(**cfg['model'])
+    model = make_meta_arch(cfg['model_name'], **cfg['model'])
     # not ideal for multi GPU training, ok for now
     model = nn.DataParallel(model, device_ids=cfg['devices'])
+    ref_model = nn.DataParallel(ref_model, device_ids=cfg['devices'])
 
     """4. load ckpt"""
     print("=> loading checkpoint '{}'".format(ckpt_file))
     # load ckpt, reset epoch / best rmse
     checkpoint = torch.load(
         ckpt_file,
+        map_location = lambda storage, loc: storage.cuda(cfg['devices'][0])
+    )
+    # load ema model instead
+    print("Loading from EMA model ...")
+    ref_model.load_state_dict(checkpoint['state_dict_ema'])
+    del checkpoint
+    # load ckpt, reset epoch / best rmse
+    checkpoint = torch.load(
+        '../ckpt/thumos_i3d_score',
         map_location = lambda storage, loc: storage.cuda(cfg['devices'][0])
     )
     # load ema model instead
@@ -91,9 +102,10 @@ def main(args):
     """5. Test the model"""
     print("\nStart testing model {:s} ...".format(cfg['model_name']))
     start = time.time()
-    mAP = valid_one_epoch(
+    mAP = valid_one_epoch_all(
         val_loader,
         model,
+        ref_model,
         -1,
         evaluator=det_eval,
         output_file=output_file,
