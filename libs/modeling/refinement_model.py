@@ -204,8 +204,8 @@ class Refinement_module(nn.Module):
                 ref_loss.append(loss['ref_loss'])
                 prob_loss.append(loss['prob_loss'])
 
-            ref_loss = torch.stack(ref_loss).mean()
-            prob_loss = torch.stack(prob_loss).mean() *2
+            ref_loss = torch.stack(ref_loss).mean() / 10
+            prob_loss = torch.stack(prob_loss).mean()
             final_loss = ref_loss + prob_loss
 
             return {
