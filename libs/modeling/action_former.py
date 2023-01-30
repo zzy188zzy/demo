@@ -202,84 +202,6 @@ class DecoupleNet(nn.Module):
         return torch.cat((a, b, c, d), dim=1)
 
 
-class RefineHead(nn.Module):
-    """
-    denoise
-    """
-    def __init__(
-        self,
-        input_dim,
-        feat_dim,
-        fpn_levels,
-        num_layers=3,
-        kernel_size=3,
-        act_layer=nn.ReLU,
-        with_ln=False
-    ):
-        super().__init__()
-        self.fpn_levels = fpn_levels
-        self.act = act_layer()
-
-        # build the conv head
-        self.head = nn.ModuleList()
-        self.norm = nn.ModuleList()
-        for idx in range(num_layers-1):
-            if idx == 0:
-                in_dim = input_dim
-                out_dim = feat_dim
-            else:
-                in_dim = feat_dim
-                out_dim = feat_dim
-            self.head.append(
-                MaskedConv1D(
-                    in_dim, out_dim, kernel_size,
-                    stride=1,
-                    padding=kernel_size//2,
-                    bias=(not with_ln)
-                )
-            )
-            if with_ln:
-                self.norm.append(LayerNorm(out_dim))
-            else:
-                self.norm.append(nn.Identity())
-
-        self.scale = nn.ModuleList()
-        for idx in range(fpn_levels):
-            self.scale.append(Scale())
-
-        # segment regression
-        self.offset_head = MaskedConv1D(
-                feat_dim, 2, kernel_size,
-                stride=1, padding=kernel_size//2
-            )
-        self.prob_head = MaskedConv1D(
-                feat_dim, 2, kernel_size,
-                stride=1, padding=kernel_size//2
-            )
-
-    def forward(self, fpn_feats, fpn_masks):
-        assert len(fpn_feats) == len(fpn_masks)
-        assert len(fpn_feats) == self.fpn_levels
-
-        # apply the classifier for each pyramid level
-        out_offsets = tuple()
-        out_probs = tuple()
-        for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
-            cur_out = cur_feat
-            for idx in range(len(self.head)):
-                cur_out, _ = self.head[idx](cur_out, cur_mask)
-                cur_out = self.act(self.norm[idx](cur_out))
-            cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            out_offsets += (self.scale[l](cur_offsets), )
-            cur_probs, _ = self.prob_head(cur_out, cur_mask)
-            out_probs += (torch.sigmoid(cur_probs), )
-
-
-        # fpn_masks remains the same
-        return out_offsets, out_probs
-
-
-
 @register_meta_arch("LocPointTransformer")
 class PtTransformer(nn.Module):
     """
@@ -387,38 +309,8 @@ class PtTransformer(nn.Module):
                     'use_rel_pe' : use_rel_pe
                 }
             )
-            self.backbone0 = make_backbone(
-                'convTransformer',
-                **{
-                    'n_in' : input_dim,
-                    'n_embd' : embd_dim,
-                    'n_head': n_head,
-                    'n_embd_ks': embd_kernel_size,
-                    'max_len': max_seq_len,
-                    'arch' : backbone_arch,
-                    'mha_win_size': self.mha_win_size,
-                    'scale_factor' : scale_factor,
-                    'with_ln' : embd_with_ln,
-                    'attn_pdrop' : 0.0,
-                    'proj_pdrop' : self.train_dropout,
-                    'path_pdrop' : self.train_droppath,
-                    'use_abs_pe' : use_abs_pe,
-                    'use_rel_pe' : use_rel_pe
-                }
-            )
         else:
             self.backbone = make_backbone(
-                'conv',
-                **{
-                    'n_in': input_dim,
-                    'n_embd': embd_dim,
-                    'n_embd_ks': embd_kernel_size,
-                    'arch': backbone_arch,
-                    'scale_factor': scale_factor,
-                    'with_ln' : embd_with_ln
-                }
-            )
-            self.backbone0 = make_backbone(
                 'conv',
                 **{
                     'n_in': input_dim,
@@ -435,16 +327,6 @@ class PtTransformer(nn.Module):
         # fpn network: convs
         assert fpn_type in ['fpn', 'identity']
         self.neck = make_neck(
-            fpn_type,
-            **{
-                'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
-                'out_channel' : fpn_dim,
-                'scale_factor' : scale_factor,
-                'start_level' : fpn_start_level,
-                'with_ln' : fpn_with_ln
-            }
-        )
-        self.neck0 = make_neck(
             fpn_type,
             **{
                 'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
@@ -489,13 +371,6 @@ class PtTransformer(nn.Module):
         # self.decouple = DecoupleNet(2048)
         self.relu = nn.ReLU()
 
-        self.refineHead = RefineHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
-            kernel_size=head_kernel_size,
-            num_layers=head_num_layers,
-            with_ln=head_with_ln
-        )
-
         self.scale = 1
 
     @property
@@ -512,13 +387,9 @@ class PtTransformer(nn.Module):
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(batched_inputs, batched_masks)
-        feats0, masks0 = self.backbone0(batched_inputs, batched_masks)
 
 
         fpn_feats, fpn_masks = self.neck(feats, masks)
-        # for i in feats:
-        #     i = i.detach()
-        fpn_feats0, fpn_masks0 = self.neck0(feats0, masks0)
 
 #         cat_feats = tuple()
 #         for a, b in zip(fpn_feats, fpn_feats0):
@@ -552,9 +423,6 @@ class PtTransformer(nn.Module):
         # fpn_masks = [x.squeeze(1) for x in fpn_masks]
         
         
-        out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-#         out_refines, out_probs = self.refineHead(cat_feats, fpn_masks)
-        
         # return loss during training
         if self.training:
             # train refineHead
@@ -564,10 +432,6 @@ class PtTransformer(nn.Module):
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-            # out_refine: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-            out_refines = [x.permute(0, 2, 1) for x in out_refines]
-            # out_prob: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-            out_probs = [x.permute(0, 2, 1) for x in out_probs]
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
@@ -588,40 +452,30 @@ class PtTransformer(nn.Module):
             cls_loss = []
             reg_loss = []
             sco_loss = []
-            ref_loss = []
-            prob_loss = []
             for idx in range(time):
                 gt_cls_labels = [a[i][idx] for i in range(len(a))]
                 gt_offsets = [b[i][idx] for i in range(len(b))]
-                gt_refines = [c[i][idx] for i in range(len(c))]
-                gt_probs = [d[i][idx] for i in range(len(d))]
 
                 # compute the loss and return
                 loss, norm = self.losses(
                     fpn_masks,
-                    out_cls_logits, out_offsets, out_refines, out_probs,
-                    gt_cls_labels, gt_offsets, gt_refines, gt_probs, idx
+                    out_cls_logits, out_offsets,
+                    gt_cls_labels, gt_offsets, idx
                 )
                 cls_loss.append(loss['cls_loss'])
                 reg_loss.append(loss['reg_loss'])
                 sco_loss.append(loss['sco_loss'])
-                ref_loss.append(loss['ref_loss'])
-                prob_loss.append(loss['prob_loss'])
 
             # dcp_loss = self.dcp_loss(batched_feats, batched_masks) / norm
 
             cls_loss = torch.stack(cls_loss).mean()
             reg_loss = reg_loss[0]
             sco_loss = sco_loss[0]
-            ref_loss = torch.stack(ref_loss).mean()
-            prob_loss = torch.stack(prob_loss).mean()*0.3
-            final_loss = cls_loss + reg_loss + ref_loss + prob_loss
+            final_loss = cls_loss + reg_loss
 
             return {'cls_loss'   : cls_loss,
                     'reg_loss'   : reg_loss,
                     # 'sco_loss'   : sco_loss,
-                    'ref_loss'   : ref_loss,
-                    'prob_loss'   : prob_loss,
                     'final_loss' : final_loss}
         else:
             # refineHead
@@ -638,17 +492,13 @@ class PtTransformer(nn.Module):
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-            # out_refine: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-            out_refines = [x.permute(0, 2, 1) for x in out_refines]
-            # out_prob: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-            out_probs = [x.permute(0, 2, 1) for x in out_probs]
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines, out_probs
+                out_cls_logits, out_offsets,
             )
             return results
 
@@ -751,26 +601,20 @@ class PtTransformer(nn.Module):
             # exit()
             aa = []
             bb = []
-            cc = []
-            dd = []
             for i, (a, b) in enumerate(zip(coarse_segment, coarse_label)):
                 # print(a.shape)
                 # print(b.shape)
-                cls_targets, reg_targets, ref_targets, prob_targets = self.label_points_single_video(
+                cls_targets, reg_targets = self.label_points_single_video(
                     concat_points, a, b
                 )
                 # append to list (len = # images, each of size FT x C)
                 aa.append(cls_targets)
                 bb.append(reg_targets)
-                cc.append(ref_targets)
-                dd.append(prob_targets)
             gt_cls.append(aa)
             gt_offset.append(bb)
-            gt_refine.append(cc)
-            gt_prob.append(dd)
 
 
-        return gt_cls, gt_offset, gt_refine, gt_prob
+        return gt_cls, gt_offset
 
     @torch.no_grad()
     def label_points_single_video(self, concat_points, gt_segment, gt_label):
@@ -779,71 +623,6 @@ class PtTransformer(nn.Module):
         # gt_label : N (#Events) x 1
         num_pts = concat_points.shape[0]
         num_gts = gt_segment.shape[0]
-
-        # refine gt [4536]
-        lis = concat_points[:, 0].long()
-        pt = concat_points[:, :1, None]  # [4536, 1, 1]
-        pt = pt.expand(num_pts, num_gts, 2)  # [4536, N, 2]
-        gt = gt_segment[None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
-        dis = gt - pt  # [4536, N, 2]  左：+, 右：-
-        abs_dis = torch.abs(dis)
-        dis0, dis_idx1 = torch.min(abs_dis, dim=1)  # [4536, N, 2] -> [4536, 2]
-        
-        # idx = dis_idx1[:,0]!=dis_idx1[:,1]
-        # print(idx.shape)
-        # print(idx.sum())
-
-        dis_idx0 = dis_idx1.long()  # [4536, 2]
-        # exit()
-        # s = (dis_idx1%2)==0
-        # t = (dis_idx1%2)==1
-        # # print((dis[:, :, 0] * dis[:, :, 1]).shape)
-        # tmp = (dis[:, :, 0] * dis[:, :, 1])[lis, dis_idx0]
-        
-        # # print(tmp.shape)
-        # i = tmp < 0
-        # o = tmp > 0
-
-        # to_left = torch.logical_or(torch.logical_and(o, t), torch.logical_and(i, s))
-        # # to_right = torch.logical_or(torch.logical_and(o, s), torch.logical_and(i, t))
-
-        # lens = gt_segment[:, 1] - gt_segment[:, 0]
-        # lens = lens[None, :].repeat(num_pts, 1)
-        # print(dis0[:20])
-        gt_prob = torch.ones(dis0.shape, device=dis0.device)
-        for i in range(2):
-            dis_s = dis0[:, i]
-            prob_s = gt_prob[:, i]
-            # F T
-            s = torch.logical_and(
-                (dis_s >= 0),
-                (dis_s <= concat_points[:, 2])
-            )
-            # print(concat_points[:, 1])
-            # print(concat_points[:, 2])
-            # gt_refine[to_left] *= -1
-            dis_s /= concat_points[:, 3]
-            # print(concat_points[:, 3])
-            # print(gt_refine)
-            dis_s.masked_fill_(s==0, float('inf'))
-            prob_s.masked_fill_(s==0, float('0'))
-            dis_s.masked_fill_((dis_s <= concat_points[:, 1]), float('0'))
-
-
-        # print(dis0[182:214])
-        idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2),lis[:2][None, :].repeat(num_pts, 1) , dis_idx0]<0
-        # print((idx==False).sum())
-        dis0[idx] *= -1
-
-        gt_refine = dis0
-        # print(dis0[:100])
-        # exit()
-        # print(gt_refine)
-        # exit()
-        # print(gt_segment)
-        # print(gt_refine[182:214])
-        # print(gt_refine)
-        # exit()
 
         # corner case where current sample does not have actions
         if num_gts == 0:
@@ -932,7 +711,7 @@ class PtTransformer(nn.Module):
         # print(gt_segment)
         # print('====================779')
         # exit()
-        return cls_targets, reg_targets, gt_refine, gt_prob
+        return cls_targets, reg_targets
 
     def dcp_loss(self, feats, masks):
         B, dim, T = feats.shape
@@ -982,8 +761,8 @@ class PtTransformer(nn.Module):
 
     def losses(
         self, fpn_masks,
-        out_cls_logits, out_offsets, out_refines, out_probs,
-        gt_cls_labels, gt_offsets, gt_refines, gt_probs, step
+        out_cls_logits, out_offsets,
+        gt_cls_labels, gt_offsets, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -1152,95 +931,19 @@ class PtTransformer(nn.Module):
 
         # sco_loss= sco_loss * max(num_pos, 1) / self.loss_normalizer
 
-        # 4 ref_loss
-        gt_ref = torch.stack(gt_refines)
-        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]
-        
-        outside = torch.isinf(gt_ref)
-        mask = torch.logical_and((outside==False), valid_mask[:, :, None].repeat(1, 1, 2))
-        # print(gt_ref[mask].shape)
-        # print(out_ref[mask].shape)
-        # print(gt_ref[mask])
-        # print(out_ref[mask])
-        # exit()
-        # for i in range(gt_ref.shape[0]):
-        #     pos = inside[i].sum()
-        #     neg = outside[i].sum()
-        #     if pos <= neg:
-        #         # print(pos)
-        #         # print(neg)
-        #         t=torch.arange(start=0, end=2304, device=gt_ref.device).long()[outside[i]]
-        #         # print(t)
-        #         # print(t.shape)
-        #         idx = torch.randperm(t.nelement())
-        #         t = t.view(-1)[idx].view(t.size())
-        #         # print(t)
-        #         t = t[:(neg-pos)]
-        #         # print(t.shape)
-        #         # print(outside[i].sum())
-        #         outside[i][t] = False
-        #         # print(outside[i].sum())
-        #         inside[i] = torch.logical_or(inside[i], outside[i])
-        #         # print('----')
-        # mask = inside
-        # exit()
-
-        # print(gt_ref[0])
-        # print(gt_ref[0, 182:214])
-
-        # gt_ref[gt_ref > 1] = 1
-        # gt_ref[gt_ref < -1] = -1
-        # pos = gt_ref > 0
-        # gt_ref[pos] = -1*(gt_ref[pos]-1)
-        # neg = gt_ref < 0
-        # gt_ref[neg] = -1*(gt_ref[neg]+1)
-
-        # print(gt_ref[0])
-        # print(gt_ref[0, 182:214])
-        # exit()
-        
-        # out_ref = out_refines[0].squeeze(2)
-
-        # print(gt_offsets)
-        # print(pred_offsets)
-
-        # print(gt_ref[mask])
-        # print(out_ref[mask])
-
-        # err = torch.logical_or(out_ref > 2, out_ref < -2).sum()
-        # if err > 0:
-        #     print(err)
-        
-        a = 1
-        ref_loss = F.smooth_l1_loss(out_ref[mask]/a, gt_ref[mask]/a, reduction='mean')
-        # ref_loss /= self.loss_normalizer
-        # print(out_ref[mask])
-        # print(gt_ref[mask])
-    
-        # exit()
-
-        # 5.prob_loss
-        gt_prob = torch.stack(gt_probs)
-        out_prob = torch.cat(out_probs, dim=1).squeeze(2)  # [2, 4536, 2]
-        
-        mask = valid_mask[:, :, None].repeat(1, 1, 2)
-        prob_loss = F.smooth_l1_loss(out_prob[mask], gt_prob[mask], reduction='mean')
-
         # return a dict of losses
         # final_loss = cls_loss + reg_loss * loss_weight 
 
         return {'cls_loss'   : cls_loss,
                 'reg_loss'   : reg_loss,
-                'sco_loss'   : sco_loss,
-                'ref_loss'   : ref_loss,
-                'prob_loss' : prob_loss}, self.loss_normalizer / max(num_pos, 1)
+                'sco_loss'   : sco_loss,}, self.loss_normalizer / max(num_pos, 1)
 
     @torch.no_grad()
     def inference(
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets, out_refines, out_probs
+        out_cls_logits, out_offsets,
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -1262,8 +965,6 @@ class PtTransformer(nn.Module):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             offsets_per_vid = [x[idx] for x in out_offsets]
-            refines_per_vid = [x[idx] for x in out_refines]
-            probs_per_vid = [x[idx] for x in out_probs]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
             # for i in range(len(offsets_per_vid)):
@@ -1273,7 +974,7 @@ class PtTransformer(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid
+                cls_logits_per_vid, offsets_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -1294,9 +995,7 @@ class PtTransformer(nn.Module):
         points,
         fpn_masks,
         out_cls_logits,
-        out_offsets,
-        out_refines,
-        out_probs,
+        out_offsets
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -1312,11 +1011,9 @@ class PtTransformer(nn.Module):
 
 
         # loop over fpn levels
-        for i, (cls_i, offsets_i, ref_i, prob_i, pts_i, mask_i) in enumerate(zip(
-                out_cls_logits, out_offsets, out_refines, out_probs, points, fpn_masks
+        for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
+                out_cls_logits, out_offsets, points, fpn_masks
             )):
-            ref_i = ref_i.squeeze(1)
-            prob_i = prob_i.squeeze(1)
             # print(ref_i.shape)
             # exit()
             # sigmoid normalization for output logits
@@ -1359,105 +1056,6 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            use_round = True
-            use_prob = False
-            # if i!=0 and i!=1 :
-            if i!=0 :
-#             if False:
-            # if True:
-                # 1 2 3 4 5
-                a = [1,2,4,8,16]
-                b = -1
-                c = 4
-                d = 80
-                e = 1
-                stride_i = a[i+b]
-                for j in range(i+b+1):  # 1 2 3 4 5 6
-                    # 1 2 4 8 16 32
-                    ref = out_refines[(i+b)-j].squeeze(1)
-                    prob = out_probs[(i+b)-j].squeeze(1)
-                
-                    if use_round:
-                        for e_ in range(e):
-                            left_idx = (seg_left/stride_i).round().long()
-                            right_idx = (seg_right/stride_i).round().long()
-
-                            left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
-                            right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
-
-                            ref_left = ref[left_idx[left_mask], 0]  # todo
-                            prob_left = prob[left_idx[left_mask], 0]
-                            seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
-                            
-                            # * (1 - pred_prob[left_mask])
-                            # print(ref_left*stride_i)
-                            # print(ref_left*stride_i/4)
-                            # print((1 - pred_prob[left_mask]))
-                            # print((ref_left*stride_i/4) * (1 - pred_prob[left_mask]))
-                            # exit()
-                            ref_right = ref[right_idx[right_mask], 1]  # todo 
-                            prob_right = prob[right_idx[right_mask], 1]
-                            seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
-                            
-#                             print(pred_prob[right_mask])
-#                             print(prob_right)
-#                             print((prob_right-prob_right.mean())/((i+b+1)*d))
-                            if use_prob:
-                                pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
-    #                             pred_prob[left_mask] += (prob_left-0.5)/((i+b+1)*d)
-                                pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
-    #                             pred_prob[right_mask] += (prob_right-0.5)/((i+b+1)*d)
-#                             print(pred_prob[right_mask])
-#                             exit()
-                    else:
-                        left_idx0 = (seg_left/stride_i).floor().long()
-                        left_idx1 = (seg_left/stride_i).ceil().long()
-                        left_w1 = (seg_left/stride_i).frac()
-                        right_idx0 = (seg_right/stride_i).floor().long()
-                        right_idx1 = (seg_right/stride_i).ceil().long()
-                        right_w1 = (seg_right/stride_i).frac()
-
-                        left_mask = torch.logical_and(
-                                        torch.logical_and(left_idx0 >= 0, left_idx0 < 2304//stride_i),
-                                        torch.logical_and(left_idx1 >= 0, left_idx1 < 2304//stride_i))
-                        right_mask = torch.logical_and(
-                                        torch.logical_and(right_idx0 >= 0, right_idx0 < 2304//stride_i),
-                                        torch.logical_and(right_idx1 >= 0, right_idx1 < 2304//stride_i))
-
-                        ref_left0 = ref[left_idx0[left_mask], 0] 
-                        ref_left1 = ref[left_idx1[left_mask], 0] 
-                        w1 = left_w1[left_mask]
-                        
-                        # prob_left = prob[left_idx[left_mask], 0]
-                        ref_left = ref_left0 * (1 - w1) + ref_left1 * w1
-                        # print(left_idx0[left_mask])
-                        # print(left_idx1[left_mask])
-                        # print(ref_left0)
-                        # print(ref_left1)
-                        # print(w1)
-                        # print(ref_left)
-                        # exit()
-                        seg_left[left_mask] += (ref_left * stride_i / 4) * (1 - pred_prob[left_mask])
-                        # * (1 - pred_prob[left_mask])
-                        # print(ref_left*stride_i)
-                        ref_right0 = ref[right_idx0[right_mask], 0] 
-                        ref_right1 = ref[right_idx1[right_mask], 0] 
-                        w1 = right_w1[right_mask]
-                        # prob_right = prob[right_idx[right_mask], 1]
-                        ref_right = ref_right0 * (1 - w1) + ref_right1 * w1
-                        seg_right[right_mask] += (ref_right * stride_i / 4) * (1 - pred_prob[right_mask])
-
-                    stride_i //= 2
-                    
-
-                    # print(prob_left)
-                    # print(prob_right)
-                    # exit()
-                # exit()
-            # print(ref_left)
-            # print(seg_left.shape)
-            # print(seg_left[left_mask])
-            # print('----')
             pred_segs = torch.stack((seg_left, seg_right), -1)
             # print(pred_segs.shape)
             # print(pred_prob.shape)
