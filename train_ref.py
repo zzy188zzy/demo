@@ -44,7 +44,7 @@ def main(args):
     else:
         ckpt_folder = os.path.join(
             cfg['output_folder'], cfg_filename + '_' + str(args.output))
-    ckpt_folder += "_for_refinement"
+    ckpt_folder += "_ref"
     if not os.path.exists(ckpt_folder):
         os.mkdir(ckpt_folder)
     # tensorboard writer
