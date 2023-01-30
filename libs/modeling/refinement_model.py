@@ -176,12 +176,12 @@ class Refinement_module(nn.Module):
         fpn_feats, fpn_masks = self.neck(feats, masks)
         points = self.point_generator(fpn_feats)
 
-        if self.training:
-            out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
-            out_refines = [x.permute(0, 2, 1) for x in out_refines]
-            out_probs = [x.permute(0, 2, 1) for x in out_probs]
-            fpn_masks = [x.squeeze(1) for x in fpn_masks]
+        out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+        out_refines = [x.permute(0, 2, 1) for x in out_refines]
+        out_probs = [x.permute(0, 2, 1) for x in out_probs]
+        fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
+        if self.training:
             gt_segments = [x['segments'].to(self.device) for x in video_list]
             gt_labels = [x['labels'].to(self.device) for x in video_list]
 
@@ -213,6 +213,8 @@ class Refinement_module(nn.Module):
                     'prob_loss': prob_loss,
                     'final_loss': final_loss
             }
+        else:
+            return out_refines, out_probs
 
     @torch.no_grad()
     def preprocessing(self, video_list, padding_val=0.0):

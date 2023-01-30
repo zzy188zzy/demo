@@ -379,7 +379,7 @@ class PtTransformer(nn.Module):
         # will throw an error if parameters are on different devices
         return list(set(p.device for p in self.parameters()))[0]
 
-    def forward(self, video_list):
+    def forward(self, video_list, ref_model=None):
         # batch the video list into feats (B, C, T) and masks (B, 1, T)
         batched_inputs, batched_masks = self.preprocessing(video_list)  # [2, 2048, 2304]
 
@@ -387,46 +387,16 @@ class PtTransformer(nn.Module):
 
         # forward the network (backbone -> neck -> heads)
         feats, masks = self.backbone(batched_inputs, batched_masks)
-
-
         fpn_feats, fpn_masks = self.neck(feats, masks)
-
-#         cat_feats = tuple()
-#         for a, b in zip(fpn_feats, fpn_feats0):
-#             # print(a.shape)
-            
-#             cat_feats+=(torch.cat((a, b), dim=1), )
-        
-
-        # err = (fpn_feats[0]==fpn_feats0[0]).sum()
-        # print(err)
-
-        # compute the point coordinate along the FPN
-        # this is used for computing the GT or decode the final results
-        # points: List[T x 4] with length = # fpn levels
-        # (shared across all samples in the mini-batch)
         points = self.point_generator(fpn_feats)
 
         # out_cls: List[B, #cls + 1, T_i]
         out_cls_logits = self.cls_head(fpn_feats, fpn_masks)
-        # out_cls_logits = self.cls_head(cat_feats, fpn_masks)
         # out_offset: List[B, 2, T_i]
         out_offsets = self.reg_head(fpn_feats, fpn_masks)
-        # out_offsets = self.reg_head(cat_feats, fpn_masks)
 
-        # # permute the outputs
-        # # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
-        # out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
-        # # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-        # out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-        # # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
-        # fpn_masks = [x.squeeze(1) for x in fpn_masks]
-        
-        
         # return loss during training
         if self.training:
-            # train refineHead
-
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
@@ -478,15 +448,10 @@ class PtTransformer(nn.Module):
                     # 'sco_loss'   : sco_loss,
                     'final_loss' : final_loss}
         else:
-            # refineHead
-            # for i in range(len(out_offsets)):
-            #     print(out_offsets[i].shape)
-            #     print(out_cls_logits[i].shape)
-            # exit()
-
-#             out_refines, out_probs = self.refineHead(fpn_feats0, fpn_masks0)
-#             out_refines, out_probs = self.refineHead(cat_feats, fpn_masks)
-
+            if ref_model != None:
+                out_refines, out_probs = ref_model(video_list)
+            else:
+                out_refines, out_probs = None, None
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
@@ -498,7 +463,7 @@ class PtTransformer(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets,
+                out_cls_logits, out_offsets, out_refines, out_probs
             )
             return results
 
@@ -943,7 +908,7 @@ class PtTransformer(nn.Module):
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets,
+        out_cls_logits, out_offsets, out_refines, out_probs
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -965,6 +930,8 @@ class PtTransformer(nn.Module):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             offsets_per_vid = [x[idx] for x in out_offsets]
+            refines_per_vid = [x[idx] for x in out_refines]
+            probs_per_vid = [x[idx] for x in out_probs]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
             # for i in range(len(offsets_per_vid)):
@@ -974,7 +941,7 @@ class PtTransformer(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -989,13 +956,14 @@ class PtTransformer(nn.Module):
 
         return results
 
-    @torch.no_grad()
     def inference_single_video(
         self,
         points,
         fpn_masks,
         out_cls_logits,
-        out_offsets
+        out_offsets,
+        out_refines,
+        out_probs,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -1011,67 +979,205 @@ class PtTransformer(nn.Module):
 
 
         # loop over fpn levels
-        for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
-                out_cls_logits, out_offsets, points, fpn_masks
-            )):
-            # print(ref_i.shape)
-            # exit()
-            # sigmoid normalization for output logits
-            pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
-            
-            # Apply filtering to make NMS faster following detectron2
-            # 1. Keep seg with confidence score > a threshold
-            keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
-            pred_prob = pred_prob[keep_idxs1]
-            
-            topk_idxs = keep_idxs1.nonzero(as_tuple=True)[0]
+        if out_refines != None:
+            for i, (cls_i, offsets_i, ref_i, prob_i, pts_i, mask_i) in enumerate(zip(
+                    out_cls_logits, out_offsets, out_refines, out_probs, points, fpn_masks
+                )):
+                ref_i = ref_i.squeeze(1)
+                prob_i = prob_i.squeeze(1)
+                # print(ref_i.shape)
+                # exit()
+                # sigmoid normalization for output logits
+                pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
+                
+                # Apply filtering to make NMS faster following detectron2
+                # 1. Keep seg with confidence score > a threshold
+                keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
+                pred_prob = pred_prob[keep_idxs1]
+                
+                topk_idxs = keep_idxs1.nonzero(as_tuple=True)[0]
 
-            # 2. Keep top k top scoring boxes only
-            num_topk = min(self.test_pre_nms_topk, topk_idxs.size(0))
-            pred_prob, idxs = pred_prob.sort(descending=True)
-            pred_prob = pred_prob[:num_topk].clone()
-            topk_idxs = topk_idxs[idxs[:num_topk]].clone()
+                # 2. Keep top k top scoring boxes only
+                num_topk = min(self.test_pre_nms_topk, topk_idxs.size(0))
+                pred_prob, idxs = pred_prob.sort(descending=True)
+                pred_prob = pred_prob[:num_topk].clone()
+                topk_idxs = topk_idxs[idxs[:num_topk]].clone()
 
-            # fix a warning in pytorch 1.9
-            pt_idxs =  torch.div(
-                topk_idxs, self.num_classes, rounding_mode='floor'
-            )
-            cls_idxs = torch.fmod(topk_idxs, self.num_classes)
+                # fix a warning in pytorch 1.9
+                pt_idxs =  torch.div(
+                    topk_idxs, self.num_classes, rounding_mode='floor'
+                )
+                cls_idxs = torch.fmod(topk_idxs, self.num_classes)
 
-            # 3. gather predicted offsets
-            # print(offsets_i.shape)
-            # print(refines_i.shape)
-            # print(offsets_i)
-            # print(refines_i)
-            # exit()
-            # print(offsets_i.shape)
-            offsets = offsets_i[pt_idxs]
-            # print(offsets.shape)
-            pts = pts_i[pt_idxs]
+                # 3. gather predicted offsets
+                # print(offsets_i.shape)
+                # print(refines_i.shape)
+                # print(offsets_i)
+                # print(refines_i)
+                # exit()
+                # print(offsets_i.shape)
+                offsets = offsets_i[pt_idxs]
+                # print(offsets.shape)
+                pts = pts_i[pt_idxs]
 
-            # print(pts[:, 0])
-            # print(offsets[:, 0])
-            # print(pts[:, 3])
-            # 4. compute predicted segments (denorm by stride for output offsets)
-            seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
-            seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
+                # print(pts[:, 0])
+                # print(offsets[:, 0])
+                # print(pts[:, 3])
+                # 4. compute predicted segments (denorm by stride for output offsets)
+                seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
+                seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            pred_segs = torch.stack((seg_left, seg_right), -1)
-            # print(pred_segs.shape)
-            # print(pred_prob.shape)
-            # print(cls_idxs.shape)
-            # print(pred_prob)
-            # print(cls_idxs)
-            
-            # 5. Keep seg with duration > a threshold (relative to feature grids)
-            seg_areas = seg_right - seg_left
-            keep_idxs2 = seg_areas > self.test_duration_thresh
+                use_round = True
+                use_prob = False
+                # if i!=0 and i!=1 :
+                if i!=0 :
+                # if True:
+                    # 1 2 3 4 5
+                    a = [1,2,4,8,16]
+                    b = -1
+                    c = 4
+                    d = 80
+                    e = 1
+                    stride_i = a[i+b]
+                    for j in range(i+b+1):  # 1 2 3 4 5 6
+                        # 1 2 4 8 16 32
+                        ref = out_refines[(i+b)-j].squeeze(1)
+                        prob = out_probs[(i+b)-j].squeeze(1)
+                    
+                        if use_round:
+                            for e_ in range(e):
+                                left_idx = (seg_left/stride_i).round().long()
+                                right_idx = (seg_right/stride_i).round().long()
 
-            # *_all : N (filtered # of segments) x 2 / 1
-            segs_all.append(pred_segs[keep_idxs2])
-            scores_all.append(pred_prob[keep_idxs2])
-            cls_idxs_all.append(cls_idxs[keep_idxs2])
+                                left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
+                                right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
+                                ref_left = ref[left_idx[left_mask], 0]  # todo
+                                prob_left = prob[left_idx[left_mask], 0]
+                                seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
+                                
+                                # * (1 - pred_prob[left_mask])
+                                # print(ref_left*stride_i)
+                                # print(ref_left*stride_i/4)
+                                # print((1 - pred_prob[left_mask]))
+                                # print((ref_left*stride_i/4) * (1 - pred_prob[left_mask]))
+                                # exit()
+                                ref_right = ref[right_idx[right_mask], 1]  # todo 
+                                prob_right = prob[right_idx[right_mask], 1]
+                                seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
+                                if use_prob:
+                                    pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
+                                    #  pred_prob[left_mask] += (prob_left-0.5)/((i+b+1)*d)
+                                    pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
+                                    #  pred_prob[right_mask] += (prob_right-0.5)/((i+b+1)*d)
+                        else:
+                            left_idx0 = (seg_left/stride_i).floor().long()
+                            left_idx1 = (seg_left/stride_i).ceil().long()
+                            left_w1 = (seg_left/stride_i).frac()
+                            right_idx0 = (seg_right/stride_i).floor().long()
+                            right_idx1 = (seg_right/stride_i).ceil().long()
+                            right_w1 = (seg_right/stride_i).frac()
+
+                            left_mask = torch.logical_and(
+                                            torch.logical_and(left_idx0 >= 0, left_idx0 < 2304//stride_i),
+                                            torch.logical_and(left_idx1 >= 0, left_idx1 < 2304//stride_i))
+                            right_mask = torch.logical_and(
+                                            torch.logical_and(right_idx0 >= 0, right_idx0 < 2304//stride_i),
+                                            torch.logical_and(right_idx1 >= 0, right_idx1 < 2304//stride_i))
+
+                            ref_left0 = ref[left_idx0[left_mask], 0] 
+                            ref_left1 = ref[left_idx1[left_mask], 0] 
+                            w1 = left_w1[left_mask]
+                            
+                            # prob_left = prob[left_idx[left_mask], 0]
+                            ref_left = ref_left0 * (1 - w1) + ref_left1 * w1
+                            # print(left_idx0[left_mask])
+                            # print(left_idx1[left_mask])
+                            # print(ref_left0)
+                            # print(ref_left1)
+                            # print(w1)
+                            # print(ref_left)
+                            # exit()
+                            seg_left[left_mask] += (ref_left * stride_i / 4) * (1 - pred_prob[left_mask])
+                            # * (1 - pred_prob[left_mask])
+                            # print(ref_left*stride_i)
+                            ref_right0 = ref[right_idx0[right_mask], 0] 
+                            ref_right1 = ref[right_idx1[right_mask], 0] 
+                            w1 = right_w1[right_mask]
+                            # prob_right = prob[right_idx[right_mask], 1]
+                            ref_right = ref_right0 * (1 - w1) + ref_right1 * w1
+                            seg_right[right_mask] += (ref_right * stride_i / 4) * (1 - pred_prob[right_mask])
+
+                        stride_i //= 2
+                        
+
+                        # print(prob_left)
+                        # print(prob_right)
+                        # exit()
+                    # exit()
+                # print(ref_left)
+                # print(seg_left.shape)
+                # print(seg_left[left_mask])
+                # print('----')
+                pred_segs = torch.stack((seg_left, seg_right), -1)
+                # print(pred_segs.shape)
+                # print(pred_prob.shape)
+                # print(cls_idxs.shape)
+                # print(pred_prob)
+                # print(cls_idxs)
+                
+                # 5. Keep seg with duration > a threshold (relative to feature grids)
+                seg_areas = seg_right - seg_left
+                keep_idxs2 = seg_areas > self.test_duration_thresh
+
+                # *_all : N (filtered # of segments) x 2 / 1
+                segs_all.append(pred_segs[keep_idxs2])
+                scores_all.append(pred_prob[keep_idxs2])
+                cls_idxs_all.append(cls_idxs[keep_idxs2])
+        else:
+            for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
+                    out_cls_logits, out_offsets, points, fpn_masks
+                )):
+                # sigmoid normalization for output logits
+                pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
+                
+                # Apply filtering to make NMS faster following detectron2
+                # 1. Keep seg with confidence score > a threshold
+                keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
+                pred_prob = pred_prob[keep_idxs1]
+                
+                topk_idxs = keep_idxs1.nonzero(as_tuple=True)[0]
+
+                # 2. Keep top k top scoring boxes only
+                num_topk = min(self.test_pre_nms_topk, topk_idxs.size(0))
+                pred_prob, idxs = pred_prob.sort(descending=True)
+                pred_prob = pred_prob[:num_topk].clone()
+                topk_idxs = topk_idxs[idxs[:num_topk]].clone()
+
+                # fix a warning in pytorch 1.9
+                pt_idxs =  torch.div(
+                    topk_idxs, self.num_classes, rounding_mode='floor'
+                )
+                cls_idxs = torch.fmod(topk_idxs, self.num_classes)
+
+                # 3. gather predicted offsets
+                offsets = offsets_i[pt_idxs]
+                pts = pts_i[pt_idxs]
+
+                # 4. compute predicted segments (denorm by stride for output offsets)
+                seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
+                seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
+
+                pred_segs = torch.stack((seg_left, seg_right), -1)
+                
+                # 5. Keep seg with duration > a threshold (relative to feature grids)
+                seg_areas = seg_right - seg_left
+                keep_idxs2 = seg_areas > self.test_duration_thresh
+
+                # *_all : N (filtered # of segments) x 2 / 1
+                segs_all.append(pred_segs[keep_idxs2])
+                scores_all.append(pred_prob[keep_idxs2])
+                cls_idxs_all.append(cls_idxs[keep_idxs2])
         # cat along the FPN levels (F N_i, C)
         segs_all, scores_all, cls_idxs_all = [
             torch.cat(x) for x in [segs_all, scores_all, cls_idxs_all]

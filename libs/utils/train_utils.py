@@ -447,7 +447,8 @@ def valid_one_epoch_all(
     evaluator = None,
     output_file = None,
     tb_writer = None,
-    print_freq = 20
+    print_freq = 20,
+    refine = True
 ):
     """Test the model on the validation set"""
     # either evaluate the results or save the results
@@ -473,7 +474,10 @@ def valid_one_epoch_all(
     for iter_idx, video_list in enumerate(val_loader, 0):
         # forward the model (wo. grad)
         with torch.no_grad():
-            output = af_model(video_list)
+            if refine:
+                output = af_model(video_list, ref_model)
+            else:
+                output = af_model(video_list)
 
             # unpack the results into ANet format
             num_vids = len(output)
@@ -517,8 +521,6 @@ def valid_one_epoch_all(
             pickle.dump(results, f)
         mAP = 0.0
 
-    # log mAP to tb_writer
-    if tb_writer is not None:
-        tb_writer.add_scalar('validation/mAP', mAP, curr_epoch)
+    
 
     return mAP
