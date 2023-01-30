@@ -450,8 +450,10 @@ class PtTransformer(nn.Module):
         else:
             if ref_model != None:
                 out_refines, out_probs = ref_model(video_list)
+                print('eval_all')
             else:
                 out_refines, out_probs = None, None
+                print('eval_af')
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
@@ -929,9 +931,12 @@ class PtTransformer(nn.Module):
         ):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
+            if out_refines == None:
+                refines_per_vid, probs_per_vid = None, None
+            else:
+                refines_per_vid = [x[idx] for x in out_refines]
+                probs_per_vid = [x[idx] for x in out_probs]
             offsets_per_vid = [x[idx] for x in out_offsets]
-            refines_per_vid = [x[idx] for x in out_refines]
-            probs_per_vid = [x[idx] for x in out_probs]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
             # for i in range(len(offsets_per_vid)):
