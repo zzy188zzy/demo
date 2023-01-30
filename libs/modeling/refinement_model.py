@@ -333,9 +333,6 @@ class Refinement_module(nn.Module):
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
 
         a = 1
-        print(out_ref[mask])
-        print(gt_ref[mask])
-        exit()
         ref_loss = F.smooth_l1_loss(out_ref[mask] / a, gt_ref[mask] / a, reduction='mean')
 
 
