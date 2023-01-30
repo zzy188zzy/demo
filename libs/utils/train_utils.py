@@ -440,7 +440,7 @@ def valid_one_epoch(
 
 def valid_one_epoch_all(
     val_loader,
-    model,
+    af_model,
     ref_model,
     curr_epoch,
     ext_score_file = None,
@@ -456,7 +456,8 @@ def valid_one_epoch_all(
     # set up meters
     batch_time = AverageMeter()
     # switch to evaluate mode
-    model.eval()
+    af_model.eval()
+    ref_model.eval()
     # dict for results (for our evaluation code)
     results = {
         'video-id': [],
@@ -468,10 +469,11 @@ def valid_one_epoch_all(
 
     # loop over validation set
     start = time.time()
+    print('-----------------------475----------------------------')
     for iter_idx, video_list in enumerate(val_loader, 0):
         # forward the model (wo. grad)
         with torch.no_grad():
-            output = model(video_list)
+            output = af_model(video_list)
 
             # unpack the results into ANet format
             num_vids = len(output)

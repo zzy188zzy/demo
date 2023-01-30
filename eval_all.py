@@ -15,6 +15,7 @@ import torch.utils.data
 from libs.core import load_config
 from libs.datasets import make_dataset, make_data_loader
 from libs.modeling import make_meta_arch
+from libs.modeling import PtTransformer
 from libs.utils import valid_one_epoch_all, ANETdetection, fix_random_seed
 from libs.modeling import Refinement_module
 
@@ -61,9 +62,9 @@ def main(args):
     """3. create model and evaluator"""
     # model
     ref_model = Refinement_module(**cfg['model'])
-    model = make_meta_arch(cfg['model_name'], **cfg['model'])
+    af_model = PtTransformer(**cfg['model'])
     # not ideal for multi GPU training, ok for now
-    model = nn.DataParallel(model, device_ids=cfg['devices'])
+    af_model = nn.DataParallel(af_model, device_ids=cfg['devices'])
     ref_model = nn.DataParallel(ref_model, device_ids=cfg['devices'])
 
     """4. load ckpt"""
@@ -79,12 +80,12 @@ def main(args):
     del checkpoint
     # load ckpt, reset epoch / best rmse
     checkpoint = torch.load(
-        '../ckpt/thumos_i3d_score',
+        '../ckpt/thumos_i3d_debug_af/epoch_20.pth.tar',
         map_location = lambda storage, loc: storage.cuda(cfg['devices'][0])
     )
     # load ema model instead
     print("Loading from EMA model ...")
-    model.load_state_dict(checkpoint['state_dict_ema'])
+    af_model.load_state_dict(checkpoint['state_dict_ema'])
     del checkpoint
 
     # set up evaluator
@@ -104,7 +105,7 @@ def main(args):
     start = time.time()
     mAP = valid_one_epoch_all(
         val_loader,
-        model,
+        af_model,
         ref_model,
         -1,
         evaluator=det_eval,
