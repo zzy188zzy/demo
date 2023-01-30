@@ -446,7 +446,7 @@ class PtTransformer(nn.Module):
             
             time=1
 
-            a, b, c, d = self.label_points(
+            a, b = self.label_points(
                 points, gt_segments, gt_labels, time)
             
             cls_loss = []
