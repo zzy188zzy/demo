@@ -204,7 +204,7 @@ class Refinement_module(nn.Module):
                 ref_loss.append(loss['ref_loss'])
                 prob_loss.append(loss['prob_loss'])
 
-            ref_loss = torch.stack(ref_loss).mean() / 10
+            ref_loss = torch.stack(ref_loss).mean()
             prob_loss = torch.stack(prob_loss).mean()
             final_loss = ref_loss + prob_loss
 
@@ -307,7 +307,7 @@ class Refinement_module(nn.Module):
             )
             dis_s /= concat_points[:, 3]
             dis_s.masked_fill_(s == 0, float('inf'))
-            prob_s.masked_fill_(s == 0, float('0'))
+            prob_s.masked_fill_((dis_s > concat_points[:, 2]), float('0'))
 
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0] < 0
         dis0[idx] *= -1
@@ -500,6 +500,7 @@ class RefineHead(nn.Module):
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets),)
+            # out_offsets += (self.scale[l](cur_offsets),)
             cur_probs, _ = self.prob_head(cur_out, cur_mask)
             out_probs += (torch.sigmoid(cur_probs),)
 
