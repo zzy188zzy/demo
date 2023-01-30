@@ -18,7 +18,7 @@ from libs.modeling import make_meta_arch
 from libs.utils import (train_one_epoch, valid_one_epoch, ANETdetection,
                         save_checkpoint, make_optimizer, make_scheduler,
                         fix_random_seed, ModelEma)
-from libs.modeling.refinement_model import Refinement_module
+from libs.modeling import Refinement_module
 
 ################################################################################
 def main(args):
