@@ -326,7 +326,7 @@ class Refinement_module(nn.Module):
         # 1 ref_loss
         gt_ref = torch.stack(gt_refines)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]
-        gt_mask = torch.cat(gt_masks, dim=1).squeeze(2)  # [2, 4536, 2]
+        gt_mask = torch.stack(gt_masks)
 
         outside = torch.isinf(gt_ref)
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
