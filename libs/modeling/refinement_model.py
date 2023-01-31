@@ -176,9 +176,8 @@ class Refinement_module(nn.Module):
         fpn_feats, fpn_masks = self.neck(feats, masks)
         points = self.point_generator(fpn_feats)
 
-        out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+        out_refines = self.refineHead(fpn_feats, fpn_masks)
         out_refines = [x.permute(0, 2, 1) for x in out_refines]
-        out_probs = [x.permute(0, 2, 1) for x in out_probs]
         fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
         if self.training:
@@ -186,35 +185,31 @@ class Refinement_module(nn.Module):
             gt_labels = [x['labels'].to(self.device) for x in video_list]
 
             time_ = 1
-            gt_refine, gt_prob = self.label_points(
+            gt_refine, gt_mask = self.label_points(
                 points, gt_segments, gt_labels, time_
             )
             ref_loss = []
-            prob_loss = []
             for idx in range(time_):
                 gt_refines = [gt_refine[i][idx] for i in range(len(gt_refine))]
-                gt_probs = [gt_prob[i][idx] for i in range(len(gt_prob))]
+                gt_masks = [gt_mask[i][idx] for i in range(len(gt_mask))]
 
                 # compute the loss and return
                 loss = self.losses(
                     fpn_masks,
-                    out_refines, out_probs,
-                    gt_refines, gt_probs, idx
+                    out_refines,
+                    gt_refines, gt_masks, idx
                 )
                 ref_loss.append(loss['ref_loss'])
-                prob_loss.append(loss['prob_loss'])
 
             ref_loss = torch.stack(ref_loss).mean()
-            prob_loss = torch.stack(prob_loss).mean()
-            final_loss = ref_loss + prob_loss
+            final_loss = ref_loss 
 
             return {
                     'ref_loss': ref_loss,
-                    'prob_loss': prob_loss,
                     'final_loss': final_loss
             }
         else:
-            return out_refines, out_probs
+            return out_refines
 
     @torch.no_grad()
     def preprocessing(self, video_list, padding_val=0.0):
@@ -259,25 +254,25 @@ class Refinement_module(nn.Module):
     @torch.no_grad()
     def label_points(self, points, gt_segments, gt_labels, time_):
         concat_points = torch.cat(points, dim=0)
-        gt_refine, gt_prob = [], []
+        gt_refine, gt_mask = [], []
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
             coarse_segments, coarse_labels = self.coarse_gt_single_video(
                 gt_segment, gt_label, time=time_ - 1, mode='list'
             )
             gt_refine_single = []
-            gt_prob_single = []
+            gt_mask_single = []
             for i, (coarse_segment, coarse_label) in enumerate(zip(coarse_segments, coarse_labels)):
-                ref_targets, prob_targets = \
+                ref_targets, mask_targets = \
                     self.label_points_single_video(
                         concat_points, coarse_segment, coarse_label
                     )
                 # append to list (len = # images, each of size FT x C)
                 gt_refine_single.append(ref_targets)
-                gt_prob_single.append(prob_targets)
+                gt_mask_single.append(mask_targets)
             gt_refine.append(gt_refine_single)
-            gt_prob.append(gt_prob_single)
+            gt_mask.append(gt_mask_single)
 
-        return gt_refine, gt_prob
+        return gt_refine, gt_mask
 
     @torch.no_grad()
     def label_points_single_video(self, concat_points, gt_segment, gt_label):
@@ -296,29 +291,32 @@ class Refinement_module(nn.Module):
         abs_dis = torch.abs(dis)
         dis0, dis_idx1 = torch.min(abs_dis, dim=1)  # [4536, N, 2] -> [4536, 2]
         dis_idx0 = dis_idx1.long()  # [4536, 2]
-        gt_prob = torch.ones(dis0.shape, device=dis0.device)
+        gt_mask = torch.ones(dis0.shape, device=dis0.device)
         for i in range(2):
             dis_s = dis0[:, i]
-            prob_s = gt_prob[:, i]
+            mask_s = gt_mask[:, i]
             # F T
-            s = torch.logical_and(
+            range_out = torch.logical_and(
                 (dis_s >= concat_points[:, 1]),
                 (dis_s <= concat_points[:, 2])
             )
+            # range_in = (dis_s < concat_points[:, 1])
+
             dis_s /= concat_points[:, 3]
-            dis_s.masked_fill_(s == 0, float('inf'))
-            prob_s.masked_fill_((dis_s > concat_points[:, 2]), float('0'))
+            dis_s.masked_fill_((dis_s > concat_points[:, 2]), float('inf'))
+            mask_s.masked_fill_((dis_s > concat_points[:, 2]), float('3'))
+            mask_s.masked_fill_(range_out, float('2'))
 
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0] < 0
         dis0[idx] *= -1
         gt_refine = dis0
 
-        return gt_refine, gt_prob
+        return gt_refine, gt_mask
 
     def losses(
             self, fpn_masks,
-            out_refines, out_probs,
-            gt_refines, gt_probs, step
+            out_refines,
+            gt_refines, gt_masks, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -328,24 +326,23 @@ class Refinement_module(nn.Module):
         # 1 ref_loss
         gt_ref = torch.stack(gt_refines)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]
+        gt_mask = torch.cat(gt_masks, dim=1).squeeze(2)  # [2, 4536, 2]
 
         outside = torch.isinf(gt_ref)
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
+        gt_mask = gt_mask[mask]
+        out_ref = out_ref[mask]
+        gt_ref = gt_ref[mask]
 
-        a = 1
-        ref_loss = F.smooth_l1_loss(out_ref[mask] / a, gt_ref[mask] / a, reduction='mean')
-
-
-        # 2.prob_loss
-        gt_prob = torch.stack(gt_probs)
-        out_prob = torch.cat(out_probs, dim=1).squeeze(2)  # [2, 4536, 2]
-
-        mask = valid_mask[:, :, None].repeat(1, 1, 2)
-        prob_loss = F.smooth_l1_loss(out_prob[mask], gt_prob[mask], reduction='mean')
+        print(gt_ref)
+        print(out_ref)
+        print(gt_mask)
+        exit()
+        
+        ref_loss = 0
 
         return {
-                'ref_loss': ref_loss,
-                'prob_loss': prob_loss
+                'ref_loss': ref_loss
         }
 
 
@@ -481,10 +478,6 @@ class RefineHead(nn.Module):
             feat_dim, 2, kernel_size,
             stride=1, padding=kernel_size // 2
         )
-        self.prob_head = MaskedConv1D(
-            feat_dim, 2, kernel_size,
-            stride=1, padding=kernel_size // 2
-        )
 
     def forward(self, fpn_feats, fpn_masks):
         assert len(fpn_feats) == len(fpn_masks)
@@ -492,17 +485,14 @@ class RefineHead(nn.Module):
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
-        out_probs = tuple()
         for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
             cur_out = cur_feat
             for idx in range(len(self.head)):
                 cur_out, _ = self.head[idx](cur_out, cur_mask)
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            out_offsets += (self.scale[l](cur_offsets),)
             # out_offsets += (self.scale[l](cur_offsets),)
-            cur_probs, _ = self.prob_head(cur_out, cur_mask)
-            out_probs += (torch.sigmoid(cur_probs),)
+            out_offsets += (self.scale[l](cur_offsets),)
 
         # fpn_masks remains the same
-        return out_offsets, out_probs
+        return out_offsets
