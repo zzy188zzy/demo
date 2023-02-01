@@ -1041,7 +1041,8 @@ class PtTransformer(nn.Module):
                                 right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
-                                seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
+                                # seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
+                                seg_left[left_mask] += (ref_left*stride_i/c)
                                 
                                 # * (1 - pred_prob[left_mask])
                                 # print(ref_left*stride_i)
@@ -1050,7 +1051,8 @@ class PtTransformer(nn.Module):
                                 # print((ref_left*stride_i/4) * (1 - pred_prob[left_mask]))
                                 # exit()
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
-                                seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
+                                # seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
+                                seg_right[right_mask] += (ref_right*stride_i/c)
                                 
                         else:
                             left_idx0 = (seg_left/stride_i).floor().long()
