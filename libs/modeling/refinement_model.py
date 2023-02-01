@@ -309,11 +309,8 @@ class Refinement_module(nn.Module):
             range_in = (dis_l < concat_points[:, 1])
             range_inf = (dis_l > concat_points[:, 3])
 
-            print(dis_l)
             dis_l /= concat_points[:, 3]  # 0 ~ 4
-            print(dis_l)
             dis_h /= concat_points[:, 3]
-            print(dis_l)
 
             dis_h[range_in] = dis_h[range_in] * (1 + high_p)
             dis_l[range_in] = dis_l[range_in] * (1 - low_p)
@@ -357,9 +354,18 @@ class Refinement_module(nn.Module):
         print(gt_low)
         print(gt_high)
         print(out_ref)
-        exit()
         
-        ref_loss = 0
+
+        a = out_ref - gt_low
+        b = out_ref - gt_high
+        mask_out = (a * b) > 0
+        dis, _= torch.min(torch.abs(a), torch.abs(b))
+        print(dis)
+        print(mask_out)
+
+        ref_loss = dis[mask_out].mean()
+        print(ref_loss)
+        exit()
 
         return {
                 'ref_loss': ref_loss
