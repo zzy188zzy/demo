@@ -185,19 +185,19 @@ class Refinement_module(nn.Module):
             gt_labels = [x['labels'].to(self.device) for x in video_list]
 
             time_ = 1
-            gt_refine, gt_mask = self.label_points(
+            gt_ref_low, gt_ref_high = self.label_points(
                 points, gt_segments, gt_labels, time_
             )
             ref_loss = []
             for idx in range(time_):
-                gt_refines = [gt_refine[i][idx] for i in range(len(gt_refine))]
-                gt_masks = [gt_mask[i][idx] for i in range(len(gt_mask))]
+                gt_ref_low = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
+                gt_ref_high = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
 
                 # compute the loss and return
                 loss = self.losses(
                     fpn_masks,
                     out_refines,
-                    gt_refines, gt_masks, idx
+                    gt_ref_low, gt_ref_high, idx
                 )
                 ref_loss.append(loss['ref_loss'])
 
@@ -254,25 +254,25 @@ class Refinement_module(nn.Module):
     @torch.no_grad()
     def label_points(self, points, gt_segments, gt_labels, time_):
         concat_points = torch.cat(points, dim=0)
-        gt_refine, gt_mask = [], []
+        gt_ref_low, gt_ref_high = [], []
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
             coarse_segments, coarse_labels = self.coarse_gt_single_video(
                 gt_segment, gt_label, time=time_ - 1, mode='list'
             )
-            gt_refine_single = []
-            gt_mask_single = []
+            gt_ref_low_single = []
+            gt_ref_high_single = []
             for i, (coarse_segment, coarse_label) in enumerate(zip(coarse_segments, coarse_labels)):
-                ref_targets, mask_targets = \
+                low_targets, high_targets = \
                     self.label_points_single_video(
                         concat_points, coarse_segment, coarse_label
                     )
                 # append to list (len = # images, each of size FT x C)
-                gt_refine_single.append(ref_targets)
-                gt_mask_single.append(mask_targets)
-            gt_refine.append(gt_refine_single)
-            gt_mask.append(gt_mask_single)
+                gt_ref_low_single.append(low_targets)
+                gt_ref_high_single.append(high_targets)
+            gt_ref_low.append(gt_ref_low_single)
+            gt_ref_high.append(gt_ref_high_single)
 
-        return gt_refine, gt_mask
+        return gt_ref_low, gt_ref_high
 
     @torch.no_grad()
     def label_points_single_video(self, concat_points, gt_segment, gt_label):
@@ -322,26 +322,18 @@ class Refinement_module(nn.Module):
             dis_h[range_out] += 2 * (1 + high_p)
             dis_l[range_out] -= 2 * (1 - low_p)
 
-
-
-            
-
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0] < 0
         gt_ref_low[idx] *= -1
         gt_ref_high[idx] *= -1
-        
 
-        print(gt_ref_low)
-        print(gt_ref_high)
+        # exit()
 
-        exit()
-
-        return gt_refine, gt_mask
+        return gt_ref_low, gt_ref_high
 
     def losses(
             self, fpn_masks,
             out_refines,
-            gt_refines, gt_masks, step
+            gt_ref_low, gt_ref_high, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -349,25 +341,20 @@ class Refinement_module(nn.Module):
         valid_mask = torch.cat(fpn_masks, dim=1)
 
         # 1 ref_loss
-        gt_ref = torch.stack(gt_refines)
+        gt_low = torch.stack(gt_ref_low)
+        gt_high = torch.stack(gt_ref_high)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]
-        gt_mask = torch.stack(gt_masks)
-
-        outside = torch.isinf(gt_ref)
-        mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
-        gt_mask = gt_mask[mask]
-
-        out_ref = out_ref[mask]
-        gt_ref = gt_ref[mask]
-
-        same = (out_ref*gt_ref) >= 0
-        diff = same == False
-
-        in_mask = gt_mask == 1
-
         
 
-        out_mask = gt_mask == 2
+        outside = torch.isinf(gt_low)
+        mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
+        gt_low = gt_low[mask]
+        out_ref = out_ref[mask]
+        gt_high = gt_high[mask]
+
+        print(gt_low)
+        print(gt_high)
+        print(out_ref)
         exit()
         
         ref_loss = 0
