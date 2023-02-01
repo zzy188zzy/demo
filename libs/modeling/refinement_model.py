@@ -189,6 +189,7 @@ class Refinement_module(nn.Module):
                 points, gt_segments, gt_labels, time_
             )
             ref_loss = []
+            inf_loss = []
             for idx in range(time_):
                 gt_ref_low = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
                 gt_ref_high = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
@@ -200,12 +201,15 @@ class Refinement_module(nn.Module):
                     gt_ref_low, gt_ref_high, idx
                 )
                 ref_loss.append(loss['ref_loss'])
+                inf_loss.append(loss['inf_loss'])
 
             ref_loss = torch.stack(ref_loss).mean()
-            final_loss = ref_loss 
+            inf_loss = torch.stack(inf_loss).mean()
+            final_loss = ref_loss + inf_loss
 
             return {
                     'ref_loss': ref_loss,
+                    'inf_loss': inf_loss,
                     'final_loss': final_loss
             }
         else:
@@ -295,8 +299,8 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 1  # 0 ~ 1
-        high_p = 0.5
+        low_p = 0.5  # 0 ~ 1
+        high_p = 0.1
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
@@ -364,6 +368,10 @@ class Refinement_module(nn.Module):
 
         outside = torch.isinf(gt_low)
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
+        out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
+
+        inf_loss = out_ref[out_mask].mean()
+
         gt_low = gt_low[mask]
         out_ref = out_ref[mask]
         gt_high = gt_high[mask]
@@ -375,16 +383,16 @@ class Refinement_module(nn.Module):
         mask_out = (a * b) > 0
 
         c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
-        dis, _= torch.min(c, dim=-1)
-        # print(dis)
-        # print(mask_out)
+        dis = torch.mean(c, dim=-1)
+
 
         ref_loss = dis[mask_out].mean()
         # print(ref_loss)
         # exit()
 
         return {
-                'ref_loss': ref_loss
+                'ref_loss': ref_loss,
+                'inf_loss': inf_loss,
         }
 
 
