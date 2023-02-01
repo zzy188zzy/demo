@@ -314,25 +314,25 @@ class Refinement_module(nn.Module):
 
             dis_l /= concat_points[:, 3]  # 0 ~ 4
             dis_h /= concat_points[:, 3]
-            # print(dis_l)
-            # print(dis_h)
+            print(dis_l)
+            print(dis_h)
 
             dis_h[range_in] = dis_h[range_in] * (1 + high_p)
             dis_l[range_in] = dis_l[range_in] * (1 - low_p)
-            # print(dis_l)
-            # print(dis_h)
+            print(dis_l)
+            print(dis_h)
 
             dis_h[range_out] += 2 * high_p
             dis_l[range_out] -= 2 * low_p
-            # print(dis_l)
-            # print(dis_h)
+            print(dis_l)
+            print(dis_h)
 
             dis_l.masked_fill_(range_inf==1, float('inf'))
             dis_h.masked_fill_(range_inf==1, float('inf'))
-            # print(dis_l)
-            # print(dis_h)
-            # print('-------------')
-        # exit()
+            print(dis_l)
+            print(dis_h)
+            print('-------------')
+        exit()
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0] < 0
         gt_ref_low[idx] *= -1
         gt_ref_high[idx] *= -1
@@ -506,6 +506,10 @@ class RefineHead(nn.Module):
             else:
                 self.norm.append(nn.Identity())
 
+        self.scale = nn.ModuleList()
+        for idx in range(fpn_levels):
+            self.scale.append(Scale())
+
         # segment regression
         self.offset_head = MaskedConv1D(
             feat_dim, 2, kernel_size,
@@ -525,7 +529,7 @@ class RefineHead(nn.Module):
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             # out_offsets += (self.scale[l](cur_offsets),)
-            out_offsets += (8*(torch.sigmoid(cur_offsets)-0.5),)
+            out_offsets += (self.scale[l](cur_offsets),)
 
         # fpn_masks remains the same
         return out_offsets
