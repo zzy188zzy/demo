@@ -1021,41 +1021,42 @@ class PtTransformer(nn.Module):
                 if i!=0 :
                 # if True:
                     # 1 2 3 4 5
-                    a = [1,2,4,8,16]
+                    a = [1,2,4,8,16,32]
                     b = -1
                     c = 1
                     e = 1
-                    stride_i = a[i+b]
+                    stride_i = a[i]
                     for j in range(i+b+1):  # 1 2 3 4 5 6
                         # 1 2 4 8 16 32
                         ref = out_refines[(i+b)-j].squeeze(1)
+                        stride_j = a[(i+b)-j]
                     
                         if use_round:
                             for e_ in range(e):
-                                left_idx = (seg_left/stride_i).round().long()
-                                right_idx = (seg_right/stride_i).round().long()
+                                left_idx = (seg_left/stride_j).round().long()
+                                right_idx = (seg_right/stride_j).round().long()
 
-                                left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
-                                right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
+                                left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_j)
+                                right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_j)
 
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
 
-                                print(seg_left[left_mask])
-                                seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
+                                # print(seg_left[left_mask])
+                                seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
                                 # * (1 - pred_prob[left_mask])
 
 
-                                print(ref_left*stride_i/c)
-                                print((1 - pred_prob[left_mask]))
-                                print((ref_left*stride_i/c) * (1 - pred_prob[left_mask]))
+                                # print(ref_left*stride_i/c)
+                                # print((1 - pred_prob[left_mask]))
+                                # print((ref_left*stride_i/c) * (1 - pred_prob[left_mask]))
 
-                                print(seg_left[left_mask])
-                                exit()
+                                # print(seg_left[left_mask])
+                                # exit()
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
-                                seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
+                                seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
                                 # seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
