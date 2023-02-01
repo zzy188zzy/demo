@@ -204,7 +204,7 @@ class Refinement_module(nn.Module):
                 inf_loss.append(loss['inf_loss'])
 
             ref_loss = torch.stack(ref_loss).mean()
-            inf_loss = torch.stack(inf_loss).mean()
+            inf_loss = torch.stack(inf_loss).mean() * 0.3
             final_loss = ref_loss + inf_loss
 
             return {
@@ -299,8 +299,8 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 0  # 0 ~ 1
-        high_p = 0
+        low_p = 1  # 0 ~ 1
+        high_p = 1
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
@@ -376,15 +376,15 @@ class Refinement_module(nn.Module):
         out_ref = out_ref[mask]
         gt_high = gt_high[mask]
 
-        # a = out_ref - gt_low
-        # b = out_ref - gt_high
-        # mask_out = (a * b) >= 0
+        a = out_ref - gt_low
+        b = out_ref - gt_high
+        mask_out = (a * b) >= 0
 
-        # c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
-        # dis = torch.mean(c, dim=-1)
-        # ref_loss = dis[mask_out].mean()
+        c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
+        dis = torch.mean(c, dim=-1)
+        ref_loss = dis[mask_out].mean()
         
-        ref_loss = F.smooth_l1_loss(out_ref, gt_low, reduction='mean')
+        # ref_loss = F.smooth_l1_loss(out_ref, gt_low, reduction='mean')
 
         return {
                 'ref_loss': ref_loss,
