@@ -301,7 +301,7 @@ class Refinement_module(nn.Module):
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
 
-        print(gt_segment)
+        # print(gt_segment)
 
         for i in range(2):
             dis_l = gt_ref_low[:, i]
