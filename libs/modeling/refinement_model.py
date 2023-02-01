@@ -295,7 +295,7 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 0.5  # 0 ~ 1
+        low_p = 1  # 0 ~ 1
         high_p = 0.5
 
         ra = concat_points[:, 1]
@@ -506,10 +506,6 @@ class RefineHead(nn.Module):
             else:
                 self.norm.append(nn.Identity())
 
-        self.scale = nn.ModuleList()
-        for idx in range(fpn_levels):
-            self.scale.append(Scale())
-
         # segment regression
         self.offset_head = MaskedConv1D(
             feat_dim, 2, kernel_size,
@@ -529,7 +525,7 @@ class RefineHead(nn.Module):
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             # out_offsets += (self.scale[l](cur_offsets),)
-            out_offsets += (self.scale[l](cur_offsets),)
+            out_offsets += (8*(torch.sigmoid(cur_offsets)-0.5),)
 
         # fpn_masks remains the same
         return out_offsets
