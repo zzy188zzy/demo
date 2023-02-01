@@ -1022,11 +1022,11 @@ class PtTransformer(nn.Module):
                 if True:
                     # 1 2 3 4 5
                     a = [1,2,4,8,16,32]
-                    b = 0
+                    b = 1
                     c = 1
-                    e = 2
+                    e = 1
                     stride_i = a[i+b]
-                    for j in range(i+b+1):  # 1 2 3 4 5 6
+                    for j in range(max(i+b+1), 5):  # 1 2 3 4 5 6
                         # 1 2 4 8 16 32
                         ref = out_refines[(i+b)-j].squeeze(1)
                         stride_j = a[(i+b)-j]
