@@ -1485,7 +1485,7 @@ class PtTransformer(nn.Module):
                    'scores'   : scores_all,
                    'labels'   : cls_idxs_all}
         # print('===================1115')
-        exit()
+        # exit()
         return results
 
     @torch.no_grad()
