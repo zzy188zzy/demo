@@ -298,16 +298,19 @@ class Refinement_module(nn.Module):
         low_p = 0.5  # 0 ~ 1
         high_p = 0.5
 
+        ra = concat_points[:, 1]
+        rb = concat_points[:, 2]
+
         for i in range(2):
             dis_l = gt_ref_low[:, i]
             dis_h = gt_ref_high[:, i]
             # F T
-            range_out = torch.logical_and(
-                (dis_l >= concat_points[:, 1]),
-                (dis_l <= concat_points[:, 2])
-            )
-            range_in = (dis_l < concat_points[:, 1])
-            range_inf = (dis_l > concat_points[:, 2])
+            range_out = torch.logical_and(torch.logical_and(
+                (dis_l >= ra),
+                (dis_l <= rb)
+            ), dis_l <= 128)
+            range_in = (dis_l < ra)
+            range_inf = torch.logical_or((dis_l > rb), (dis_l > 128))
 
             dis_l /= concat_points[:, 3]  # 0 ~ 4
             dis_h /= concat_points[:, 3]
