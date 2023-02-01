@@ -350,24 +350,21 @@ class Refinement_module(nn.Module):
         gt_low = gt_low[mask]
         out_ref = out_ref[mask]
         gt_high = gt_high[mask]
-
-        print(gt_low)
-        print(gt_high)
-        print(out_ref)
-        
-
+        # print(gt_low)
+        # print(gt_high)
+        # print(out_ref)
         a = out_ref - gt_low
         b = out_ref - gt_high
         mask_out = (a * b) > 0
 
         c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
         dis, _= torch.min(c, dim=-1)
-        print(dis)
-        print(mask_out)
+        # print(dis)
+        # print(mask_out)
 
         ref_loss = dis[mask_out].mean()
-        print(ref_loss)
-        exit()
+        # print(ref_loss)
+        # exit()
 
         return {
                 'ref_loss': ref_loss
