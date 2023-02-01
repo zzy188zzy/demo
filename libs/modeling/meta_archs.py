@@ -1363,6 +1363,8 @@ class PtTransformer(nn.Module):
             use_prob = False
             # if i!=0 and i!=1 :
             if i!=0 :
+                print(i)
+                print(seg_left.shape)
 #             if False:
             # if True:
                 # 1 2 3 4 5
@@ -1375,13 +1377,14 @@ class PtTransformer(nn.Module):
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
                     ref = out_refines[(i+b)-j].squeeze(1)
+                    print(ref)
                     prob = out_probs[(i+b)-j].squeeze(1)
                     stride_i = a[i+b-j]
                     if use_round:
                         for e_ in range(e):
                             left_idx = (seg_left/stride_i).round().long()
                             right_idx = (seg_right/stride_i).round().long()
-
+                            print(2304//stride_i)
                             left_mask = torch.logical_and(left_idx >= 0, left_idx < 2304//stride_i)
                             right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
@@ -1482,7 +1485,7 @@ class PtTransformer(nn.Module):
                    'scores'   : scores_all,
                    'labels'   : cls_idxs_all}
         # print('===================1115')
-        # exit()
+        exit()
         return results
 
     @torch.no_grad()
