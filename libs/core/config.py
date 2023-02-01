@@ -48,7 +48,8 @@ DEFAULTS = {
         # scale factor between pyramid levels
         "scale_factor": 2,
         # regression range for pyramid levels
-        "regression_range": [(0, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 10000)],
+        # "regression_range": [(0, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 10000)],
+        "regression_range": [(0, 1), (1, 2), (2, 4), (4, 8), (8, 16), (16, 32)],
         # number of heads in self-attention
         "n_head": 4,
         # window size for self attention; <=1 to use full seq (ie global attention)

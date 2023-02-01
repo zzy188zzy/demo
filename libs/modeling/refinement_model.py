@@ -311,14 +311,14 @@ class Refinement_module(nn.Module):
             dis_l = gt_ref_low[:, i]
             dis_h = gt_ref_high[:, i]
             # F T
-            range_out = torch.logical_and(torch.logical_and(torch.logical_and(
+            range_out = torch.logical_and(torch.logical_and(
                 (dis_l >= ra),
                 (dis_l <= rb)
-            ), dis_l <= 128), (dis_l > 4))
-            range_in = torch.logical_or((dis_l < ra), (dis_l <= 4))
-            range_inf = torch.logical_or((dis_l > rb), (dis_l > 128))
+            ), (dis_l > 1))
+            range_in = torch.logical_or((dis_l < ra), (dis_l <= 1))
+            range_inf = (dis_l > rb)
 
-            dis_l /= concat_points[:, 3]  # 0 ~ 4
+            dis_l /= concat_points[:, 3]  # 0 ~ 1
             dis_h /= concat_points[:, 3]
             # print(dis_l[2303:2323])
             # print(dis_h[2303:2323])
@@ -328,13 +328,13 @@ class Refinement_module(nn.Module):
             # print(dis_l[2303:2323])
             # print(dis_h[2303:2323])
 
-            dis_h[range_out] += 2 * high_p
-            dis_l[range_out] -= 2 * low_p
+            dis_h[range_out] += 0.5 * high_p
+            dis_l[range_out] -= 0.5 * low_p
             # print(dis_l[2303:2323])
             # print(dis_h[2303:2323])
 
-            dis_l[dis_l>4] = 4
-            dis_h[dis_h>4] = 4
+            # dis_l[dis_l>1] = 1
+            # dis_h[dis_h>1] = 1
 
             dis_l.masked_fill_(range_inf==1, float('inf'))
             dis_h.masked_fill_(range_inf==1, float('inf'))
