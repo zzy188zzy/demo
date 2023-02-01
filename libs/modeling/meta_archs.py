@@ -1368,15 +1368,15 @@ class PtTransformer(nn.Module):
                 # 1 2 3 4 5
                 a = [1,2,4,8,16]
                 b = -1
-                c = 4
+                c = 1
                 d = 80
                 e = 1
-                stride_i = a[i+b]
+                # stride_i = a[i+b]
                 for j in range(i+b+1):  # 1 2 3 4 5 6
                     # 1 2 4 8 16 32
                     ref = out_refines[(i+b)-j].squeeze(1)
                     prob = out_probs[(i+b)-j].squeeze(1)
-                
+                    stride_i = a[i+b-j]
                     if use_round:
                         for e_ in range(e):
                             left_idx = (seg_left/stride_i).round().long()
