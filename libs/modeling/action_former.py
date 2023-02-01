@@ -449,10 +449,10 @@ class PtTransformer(nn.Module):
                     'final_loss' : final_loss}
         else:
             if ref_model != None:
-                out_refines, out_probs = ref_model(video_list)
+                out_refines = ref_model(video_list)
                 # print('eval_all')
             else:
-                out_refines, out_probs = None, None
+                out_refines = None
                 # print('eval_af')
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -465,7 +465,7 @@ class PtTransformer(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines, out_probs
+                out_cls_logits, out_offsets, out_refines
             )
             return results
 
@@ -968,7 +968,6 @@ class PtTransformer(nn.Module):
         out_cls_logits,
         out_offsets,
         out_refines,
-        out_probs,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -976,20 +975,12 @@ class PtTransformer(nn.Module):
         scores_all = []
         cls_idxs_all = []
 
-        # pos = out_refines > 0
-        # out_refines[pos] = -1 * out_refines[pos] + 1
-        # neg = out_refines < 0
-        # out_refines[neg] = -1 * out_refines[neg] - 1
-       
-
-
         # loop over fpn levels
         if out_refines != None:
-            for i, (cls_i, offsets_i, ref_i, prob_i, pts_i, mask_i) in enumerate(zip(
-                    out_cls_logits, out_offsets, out_refines, out_probs, points, fpn_masks
+            for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
+                    out_cls_logits, out_offsets, out_refines, points, fpn_masks
                 )):
                 ref_i = ref_i.squeeze(1)
-                prob_i = prob_i.squeeze(1)
                 # print(ref_i.shape)
                 # exit()
                 # sigmoid normalization for output logits
@@ -1015,11 +1006,7 @@ class PtTransformer(nn.Module):
                 cls_idxs = torch.fmod(topk_idxs, self.num_classes)
 
                 # 3. gather predicted offsets
-                # print(offsets_i.shape)
-                # print(refines_i.shape)
-                # print(offsets_i)
-                # print(refines_i)
-                # exit()
+  
                 # print(offsets_i.shape)
                 offsets = offsets_i[pt_idxs]
                 # print(offsets.shape)
@@ -1033,21 +1020,18 @@ class PtTransformer(nn.Module):
                 seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
                 use_round = True
-                use_prob = False
                 # if i!=0 and i!=1 :
                 if i!=0 :
                 # if True:
                     # 1 2 3 4 5
                     a = [1,2,4,8,16]
                     b = -1
-                    c = 4
-                    d = 80
+                    c = 1
                     e = 1
                     stride_i = a[i+b]
                     for j in range(i+b+1):  # 1 2 3 4 5 6
                         # 1 2 4 8 16 32
                         ref = out_refines[(i+b)-j].squeeze(1)
-                        prob = out_probs[(i+b)-j].squeeze(1)
                     
                         if use_round:
                             for e_ in range(e):
@@ -1058,7 +1042,6 @@ class PtTransformer(nn.Module):
                                 right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_i)
 
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
-                                prob_left = prob[left_idx[left_mask], 0]
                                 seg_left[left_mask] += (ref_left*stride_i/c) * (1 - pred_prob[left_mask])
                                 
                                 # * (1 - pred_prob[left_mask])
@@ -1068,13 +1051,8 @@ class PtTransformer(nn.Module):
                                 # print((ref_left*stride_i/4) * (1 - pred_prob[left_mask]))
                                 # exit()
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
-                                prob_right = prob[right_idx[right_mask], 1]
                                 seg_right[right_mask] += (ref_right*stride_i/c) * (1 - pred_prob[right_mask])
-                                if use_prob:
-                                    pred_prob[left_mask] += (prob_left-prob_left.mean())/((i+b+1)*d)
-                                    #  pred_prob[left_mask] += (prob_left-0.5)/((i+b+1)*d)
-                                    pred_prob[right_mask] += (prob_right-prob_right.mean())/((i+b+1)*d)
-                                    #  pred_prob[right_mask] += (prob_right-0.5)/((i+b+1)*d)
+                                
                         else:
                             left_idx0 = (seg_left/stride_i).floor().long()
                             left_idx1 = (seg_left/stride_i).ceil().long()
