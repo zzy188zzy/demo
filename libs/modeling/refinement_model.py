@@ -310,8 +310,8 @@ class Refinement_module(nn.Module):
             range_out = torch.logical_and(torch.logical_and(torch.logical_and(
                 (dis_l >= ra),
                 (dis_l <= rb)
-            ), dis_l <= 128), (dis_l >= 4))
-            range_in = torch.logical_or((dis_l < ra), (dis_l < 4))
+            ), dis_l <= 128), (dis_l > 4))
+            range_in = torch.logical_or((dis_l < ra), (dis_l <= 4))
             range_inf = torch.logical_or((dis_l > rb), (dis_l > 128))
 
             dis_l /= concat_points[:, 3]  # 0 ~ 4
