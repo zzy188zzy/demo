@@ -1359,7 +1359,7 @@ class PtTransformer(nn.Module):
             seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
             seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-            use_round = False
+            use_round = True
             use_prob = False
             # if i!=0 and i!=1 :
             if i!=0 :
