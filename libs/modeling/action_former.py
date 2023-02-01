@@ -1016,7 +1016,7 @@ class PtTransformer(nn.Module):
                 seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
                 seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-                use_round = True
+                use_round = False
                 # if i!=0 and i!=1 :
                 # if i!=0 :
                 if True:
@@ -1044,8 +1044,8 @@ class PtTransformer(nn.Module):
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
 
                                 # print(seg_left[left_mask])
-                                # seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])
-                                seg_left[left_mask] += (ref_left*stride_i/c)
+                                seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])
+                                # seg_left[left_mask] += (ref_left*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
                                 # * (1 - pred_prob[left_mask])
@@ -1058,8 +1058,8 @@ class PtTransformer(nn.Module):
                                 # print(seg_left[left_mask])
                                 # exit()
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
-                                # seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
-                                seg_right[right_mask] += (ref_right*stride_i/c)
+                                seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
+                                # seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
                         else:
