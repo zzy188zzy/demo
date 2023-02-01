@@ -291,25 +291,50 @@ class Refinement_module(nn.Module):
         abs_dis = torch.abs(dis)
         dis0, dis_idx1 = torch.min(abs_dis, dim=1)  # [4536, N, 2] -> [4536, 2]
         dis_idx0 = dis_idx1.long()  # [4536, 2]
-        gt_mask = torch.ones(dis0.shape, device=dis0.device)
+        
+        gt_ref_low = dis0.clone()
+        gt_ref_high = dis0.clone()
+
+        low_p = 1  # 0 ~ 1
+        high_p = 1
+
         for i in range(2):
-            dis_s = dis0[:, i]
-            mask_s = gt_mask[:, i]
+            dis_l = gt_ref_low[:, i]
+            dis_h = gt_ref_high[:, i]
             # F T
             range_out = torch.logical_and(
-                (dis_s >= concat_points[:, 1]),
-                (dis_s <= concat_points[:, 2])
+                (dis_l >= concat_points[:, 1]),
+                (dis_l <= concat_points[:, 2])
             )
-            # range_in = (dis_s < concat_points[:, 1])
+            range_in = (dis_l < concat_points[:, 1])
+            range_inf = (dis_l > concat_points[:, 3])
 
-            dis_s /= concat_points[:, 3]
-            dis_s.masked_fill_((dis_s > concat_points[:, 2]), float('inf'))
-            mask_s.masked_fill_((dis_s > concat_points[:, 2]), float('3'))
-            mask_s.masked_fill_(range_out, float('2'))
+            dis_l /= concat_points[:, 3]  # 0 ~ 4
+            dis_h /= concat_points[:, 3]
+            dis_l.masked_fill_(range_inf, float('inf'))
+            dis_h.masked_fill_(range_inf, float('inf'))
+
+
+
+            dis_h[range_in] = dis_h[range_in] * (1 + high_p)
+            dis_l[range_in] = dis_l[range_in] * (1 - low_p)
+
+            dis_h[range_out] += 2 * (1 + high_p)
+            dis_l[range_out] -= 2 * (1 - low_p)
+
+
+
+            
 
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0] < 0
-        dis0[idx] *= -1
-        gt_refine = dis0
+        gt_ref_low[idx] *= -1
+        gt_ref_high[idx] *= -1
+        
+
+        print(gt_ref_low)
+        print(gt_ref_high)
+
+        exit()
 
         return gt_refine, gt_mask
 
@@ -331,12 +356,18 @@ class Refinement_module(nn.Module):
         outside = torch.isinf(gt_ref)
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         gt_mask = gt_mask[mask]
+
         out_ref = out_ref[mask]
         gt_ref = gt_ref[mask]
 
-        print(gt_ref)
-        print(out_ref)
-        print(gt_mask)
+        same = (out_ref*gt_ref) >= 0
+        diff = same == False
+
+        in_mask = gt_mask == 1
+
+        
+
+        out_mask = gt_mask == 2
         exit()
         
         ref_loss = 0
