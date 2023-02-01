@@ -299,8 +299,8 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 0.1  # 0 ~ 1
-        high_p = 0.1
+        low_p = 0  # 0 ~ 1
+        high_p = 0
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
@@ -370,25 +370,21 @@ class Refinement_module(nn.Module):
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
 
-        inf_loss = torch.abs(out_ref[out_mask]).mean()
+        inf_loss = F.smooth_l1_loss(out_ref[out_mask], out_ref[out_mask]*0, reduction='mean')
 
         gt_low = gt_low[mask]
         out_ref = out_ref[mask]
         gt_high = gt_high[mask]
-        # print(gt_low)
-        # print(gt_high)
-        # print(out_ref)
-        a = out_ref - gt_low
-        b = out_ref - gt_high
-        mask_out = (a * b) > 0
 
-        c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
-        dis = torch.mean(c, dim=-1)
+        # a = out_ref - gt_low
+        # b = out_ref - gt_high
+        # mask_out = (a * b) >= 0
 
-
-        ref_loss = dis[mask_out].mean()
-        # print(ref_loss)
-        # exit()
+        # c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
+        # dis = torch.mean(c, dim=-1)
+        # ref_loss = dis[mask_out].mean()
+        
+        ref_loss = F.smooth_l1_loss(out_ref, gt_low, reduction='mean')
 
         return {
                 'ref_loss': ref_loss,
@@ -528,6 +524,10 @@ class RefineHead(nn.Module):
             feat_dim, 2, kernel_size,
             stride=1, padding=kernel_size // 2
         )
+        # self.prob_head = MaskedConv1D(
+        #     feat_dim, 2, kernel_size,
+        #     stride=1, padding=kernel_size // 2
+        # )
 
     def forward(self, fpn_feats, fpn_masks):
         assert len(fpn_feats) == len(fpn_masks)
@@ -535,14 +535,16 @@ class RefineHead(nn.Module):
 
         # apply the classifier for each pyramid level
         out_offsets = tuple()
+        # out_probs = tuple()
         for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
             cur_out = cur_feat
             for idx in range(len(self.head)):
                 cur_out, _ = self.head[idx](cur_out, cur_mask)
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            # out_offsets += (self.scale[l](cur_offsets),)
+            # cur_probs, _ = self.prob_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets),)
+            # out_probs += (self.scale[l](cur_probs),)
 
         # fpn_masks remains the same
         return out_offsets
