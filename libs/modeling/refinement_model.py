@@ -359,7 +359,8 @@ class Refinement_module(nn.Module):
         a = out_ref - gt_low
         b = out_ref - gt_high
         mask_out = (a * b) > 0
-        dis, _= torch.min(torch.abs(a), torch.abs(b))
+        c = torch.cat((torch.abs(a)[:,:,:,None], torch.abs(b)[:,:,:,None]), dim=3)
+        dis, _= torch.min(c, dim=3)
         print(dis)
         print(mask_out)
 
