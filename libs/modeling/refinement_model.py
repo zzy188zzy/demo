@@ -307,7 +307,7 @@ class Refinement_module(nn.Module):
                 (dis_l <= concat_points[:, 2])
             )
             range_in = (dis_l < concat_points[:, 1])
-            range_inf = (dis_l > concat_points[:, 3])
+            range_inf = (dis_l > concat_points[:, 2])
 
             dis_l /= concat_points[:, 3]  # 0 ~ 4
             dis_h /= concat_points[:, 3]
@@ -319,14 +319,16 @@ class Refinement_module(nn.Module):
             print(dis_l)
             print(dis_h)
 
-            dis_h[range_out] += 2 * (1 + high_p)
-            dis_l[range_out] -= 2 * (1 - low_p)
+            dis_h[range_out] += 2 * high_p
+            dis_l[range_out] -= 2 * low_p
             print(dis_l)
             print(dis_h)
-            print('-------------')
 
             dis_l.masked_fill_(range_inf==1, float('inf'))
             dis_h.masked_fill_(range_inf==1, float('inf'))
+            print(dis_l)
+            print(dis_h)
+            print('-------------')
         exit()
         idx = dis.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0] < 0
         gt_ref_low[idx] *= -1
