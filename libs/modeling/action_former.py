@@ -910,7 +910,7 @@ class PtTransformer(nn.Module):
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets, out_refines, out_probs
+        out_cls_logits, out_offsets, out_refines
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -932,10 +932,9 @@ class PtTransformer(nn.Module):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             if out_refines == None:
-                refines_per_vid, probs_per_vid = None, None
+                refines_per_vid = None
             else:
                 refines_per_vid = [x[idx] for x in out_refines]
-                probs_per_vid = [x[idx] for x in out_probs]
             offsets_per_vid = [x[idx] for x in out_offsets]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
@@ -946,7 +945,7 @@ class PtTransformer(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
