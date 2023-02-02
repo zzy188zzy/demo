@@ -287,7 +287,7 @@ class PtTransformer(nn.Module):
         # we will need a better way to dispatch the params to backbones / necks
         # backbone network: conv + transformer
         assert backbone_type in ['convTransformer', 'conv']
-        if backbone_type == 'convTransformer':
+        if backbone_type == 'convTransformer0':
             self.backbone = make_backbone(
                 'convTransformer',
                 **{
