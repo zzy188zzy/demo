@@ -400,7 +400,7 @@ class Refinement_module(nn.Module):
 
         print(outside.shape)
         print(valid_mask.shape)
-        exit()
+        # exit()
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
 
