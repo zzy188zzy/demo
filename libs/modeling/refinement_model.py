@@ -205,8 +205,8 @@ class Refinement_module(nn.Module):
                 inf_loss.append(loss['inf_loss'])
                 # c_loss.append(loss['c_loss'])
 
-            ref_loss = torch.stack(ref_loss).mean()
-            inf_loss = torch.stack(inf_loss).mean()
+            ref_loss = torch.stack(ref_loss).min()
+            inf_loss = torch.stack(inf_loss).min()
             # c_loss = torch.stack(c_loss).mean()
             final_loss = ref_loss + inf_loss
 
@@ -397,6 +397,10 @@ class Refinement_module(nn.Module):
           
 
         outside = torch.isinf(gt_low)
+
+        print(outside.shape)
+        print(valid_mask.shape)
+        exit()
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
 
