@@ -287,7 +287,7 @@ class PtTransformer(nn.Module):
         # we will need a better way to dispatch the params to backbones / necks
         # backbone network: conv + transformer
         assert backbone_type in ['convTransformer', 'conv']
-        if backbone_type == 'convTransformer0':
+        if backbone_type == 'convTransformer':
             self.backbone = make_backbone(
                 'convTransformer',
                 **{
@@ -309,7 +309,7 @@ class PtTransformer(nn.Module):
             )
         else:
             self.backbone = make_backbone(
-                'conv',
+                'conv0',
                 **{
                     'n_in': input_dim,
                     'n_embd': embd_dim,
@@ -325,7 +325,7 @@ class PtTransformer(nn.Module):
         # fpn network: convs
         assert fpn_type in ['fpn', 'identity']
         self.neck = make_neck(
-            fpn_type,
+            'identity',
             **{
                 'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
                 'out_channel' : fpn_dim,
