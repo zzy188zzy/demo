@@ -203,11 +203,11 @@ class Refinement_module(nn.Module):
                 )
                 ref_loss.append(loss['ref_loss'])
                 inf_loss.append(loss['inf_loss'])
-                c_loss.append(loss['c_loss'])
+                # c_loss.append(loss['c_loss'])
 
             ref_loss = torch.stack(ref_loss).mean()
             inf_loss = torch.stack(inf_loss).mean() * 0.3
-            c_loss = torch.stack(c_loss).mean()
+            # c_loss = torch.stack(c_loss).mean()
             final_loss = ref_loss + inf_loss
 
             return {
