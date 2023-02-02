@@ -1044,9 +1044,9 @@ class PtTransformer(nn.Module):
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
 
                                 # print(seg_left[left_mask])
-                                seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])
+                                # seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
-                                # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
+                                seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
                                 # * (1 - pred_prob[left_mask])
 
@@ -1058,9 +1058,9 @@ class PtTransformer(nn.Module):
                                 # print(seg_left[left_mask])
                                 # exit()
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
-                                seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
+                                # seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
                                 # seg_right[right_mask] += (ref_right*stride_i/c)
-                                # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
+                                seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
                         else:
                             left_idx0 = (seg_left/stride_j).floor().long()

@@ -3,7 +3,7 @@ import yaml
 
 DEFAULTS = {
     # random seed for reproducibility, a large number is preferred
-    "init_rand_seed": 987654321,  # 1234567891
+    "init_rand_seed": 1234567891,  # 1234567891
     # dataset loader, specify the dataset here
     "dataset_name": "epic",
     "devices": ['cuda:0'], # default: single gpu
