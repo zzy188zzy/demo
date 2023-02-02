@@ -106,7 +106,7 @@ DEFAULTS = {
     },
     "test_cfg": {
         "pre_nms_thresh": 0.001,
-        "pre_nms_topk": 10000,  # 5000
+        "pre_nms_topk": 5000,  # 5000
         "iou_threshold": 0.1,
         "min_score": 0.01,
         "max_seg_num": 1000,
