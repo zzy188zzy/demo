@@ -987,17 +987,17 @@ class PtTransformer0(nn.Module):
                 # 1. Keep seg with confidence score > a threshold
                 keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
                 pred_prob = pred_prob[keep_idxs1]
-                print(pred_prob.shape)
-                print(pred_prob)
+                # print(pred_prob.shape)
+                # print(pred_prob)
                 topk_idxs = keep_idxs1.nonzero(as_tuple=True)[0]
 
                 # 2. Keep top k top scoring boxes only
                 num_topk = min(self.test_pre_nms_topk, topk_idxs.size(0))
                 pred_prob, idxs = pred_prob.sort(descending=True)
                 pred_prob = pred_prob[:num_topk].clone()
-                print(pred_prob.shape)
-                print(pred_prob)
-                exit()
+                # print(pred_prob.shape)
+                # print(pred_prob)
+                # exit()
                 topk_idxs = topk_idxs[idxs[:num_topk]].clone()
 
                 # fix a warning in pytorch 1.9
