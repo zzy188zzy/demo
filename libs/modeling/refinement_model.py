@@ -385,7 +385,11 @@ class Refinement_module(nn.Module):
 
         
         # ref_loss = dis[mask_out].mean()
-        ref_loss = F.smooth_l1_loss( dis[mask_out],  dis[mask_out]*0, reduction='mean')
+        tmp = dis[mask_out]
+        if (mask_out==True).sum() == 0:
+            ref_loss = inf_loss*0
+        else:
+            ref_loss = F.smooth_l1_loss(tmp, tmp*0, reduction='mean')
         
         # ref_loss = F.smooth_l1_loss(out_ref, gt_low, reduction='mean')
 
