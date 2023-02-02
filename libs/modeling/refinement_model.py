@@ -363,7 +363,15 @@ class Refinement_module(nn.Module):
         # 1 ref_loss
         gt_low = torch.stack(gt_ref_low)
         gt_high = torch.stack(gt_ref_high)
-        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]        
+        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]      
+
+        for (ref_i, low_i, high_i) in zip(out_refines, gt_ref_low, gt_ref_high):
+            print(ref_i.shape)
+            print(low_i.shape)
+            print(high_i.shape)
+        exit()    
+
+          
 
         outside = torch.isinf(gt_low)
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
