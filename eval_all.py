@@ -15,7 +15,7 @@ import torch.utils.data
 from libs.core import load_config
 from libs.datasets import make_dataset, make_data_loader
 from libs.modeling import make_meta_arch
-from libs.modeling import PtTransformer
+from libs.modeling import PtTransformer0
 from libs.utils import valid_one_epoch_all, ANETdetection, fix_random_seed
 from libs.modeling import Refinement_module
 
@@ -62,7 +62,7 @@ def main(args):
     """3. create model and evaluator"""
     # model
     ref_model = Refinement_module(**cfg['model'])
-    af_model = PtTransformer(**cfg['model'])
+    af_model = PtTransformer0(**cfg['model'])
     # not ideal for multi GPU training, ok for now
     af_model = nn.DataParallel(af_model, device_ids=cfg['devices'])
     ref_model = nn.DataParallel(ref_model, device_ids=cfg['devices'])
