@@ -1022,7 +1022,7 @@ class PtTransformer(nn.Module):
                 if True:
                     # 1 2 3 4 5
                     a = [1,2,4,8,16,32]
-                    b = 0
+                    b = 1
                     c = 1
                     e = 1
                     stride_i = a[min(i+b, 5)]
@@ -1034,7 +1034,7 @@ class PtTransformer(nn.Module):
 
                         assert stride_i == stride_j
 
-                        # c = max(s_i, stride_i)/s_i
+                        c = max(s_i, stride_i)/s_i
                     
                         if use_round:
                             for e_ in range(e):
