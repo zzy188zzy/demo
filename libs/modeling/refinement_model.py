@@ -366,7 +366,7 @@ class Refinement_module(nn.Module):
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]      
 
         t = 0
-        for (ref_i) in zip(out_refines):
+        for ref_i in out_refines:
             B, T, C = ref_i.shape
             gt_i = gt_ref_low[:, t:t+T, :]
 
