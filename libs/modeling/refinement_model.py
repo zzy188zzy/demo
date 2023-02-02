@@ -184,7 +184,7 @@ class Refinement_module(nn.Module):
             gt_segments = [x['segments'].to(self.device) for x in video_list]
             gt_labels = [x['labels'].to(self.device) for x in video_list]
 
-            time_ = 1
+            time_ = 10
             gt_ref_low, gt_ref_high = self.label_points(
                 points, gt_segments, gt_labels, time_
             )
