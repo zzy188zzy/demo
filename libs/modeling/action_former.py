@@ -293,7 +293,7 @@ class PtTransformer(nn.Module):
                 **{
                     'n_in' : input_dim,
                     'n_embd' : embd_dim,
-                    'n_head': n_head,
+                    'n_head': 4,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
                     'arch' : backbone_arch,
