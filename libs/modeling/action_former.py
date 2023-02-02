@@ -993,7 +993,7 @@ class PtTransformer0(nn.Module):
                 # 2. Keep top k top scoring boxes only
                 num_topk = min(self.test_pre_nms_topk, topk_idxs.size(0))
                 pred_prob, idxs = pred_prob.sort(descending=True)
-                pred_prob = pred_prob[:num_topk].clone()
+                pred_prob = pred_prob[:num_topk]
                 topk_idxs = topk_idxs[idxs[:num_topk]].clone()
 
                 # fix a warning in pytorch 1.9
