@@ -370,6 +370,7 @@ class Refinement_module(nn.Module):
             # ref_i = ref_i[:]
             print(ref_i.shape)
             B, T, C = ref_i.shape
+            print(T)
             gt_i = gt_ref_low[:, t:t+T, :]
 
             print(ref_i.shape)
