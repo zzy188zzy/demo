@@ -190,6 +190,7 @@ class Refinement_module(nn.Module):
             )
             ref_loss = []
             inf_loss = []
+            c_loss = []
             for idx in range(time_):
                 gt_ref_low = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
                 gt_ref_high = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
@@ -202,14 +203,17 @@ class Refinement_module(nn.Module):
                 )
                 ref_loss.append(loss['ref_loss'])
                 inf_loss.append(loss['inf_loss'])
+                c_loss.append(loss['c_loss'])
 
             ref_loss = torch.stack(ref_loss).mean()
             inf_loss = torch.stack(inf_loss).mean() * 0.3
-            final_loss = ref_loss + inf_loss
+            c_loss = torch.stack(c_loss).mean()
+            final_loss = ref_loss + inf_loss + c_loss
 
             return {
                     'ref_loss': ref_loss,
                     'inf_loss': inf_loss,
+                    'c_loss': c_loss,
                     'final_loss': final_loss
             }
         else:
@@ -382,9 +386,9 @@ class Refinement_module(nn.Module):
         refs[masks==False] = 0
         mean = refs.mean(dim=1)[:, None, :, :].repeat(1, 6, 1, 1)
         c_loss = torch.abs(refs[masks]-mean[masks]).mean()
-        print(c_loss)
+        # print(c_loss)
 
-        exit()
+        # exit()
           
 
         outside = torch.isinf(gt_low)
@@ -418,6 +422,7 @@ class Refinement_module(nn.Module):
         return {
                 'ref_loss': ref_loss,
                 'inf_loss': inf_loss,
+                'c_loss'  : c_loss
         }
 
 
