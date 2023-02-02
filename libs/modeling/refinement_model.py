@@ -192,14 +192,16 @@ class Refinement_module(nn.Module):
             inf_loss = []
             c_loss = []
             for idx in range(time_):
-                gt_ref_low = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
-                gt_ref_high = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
+                a = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
+                b = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
+
+
 
                 # compute the loss and return
                 loss = self.losses(
                     fpn_masks,
                     out_refines,
-                    gt_ref_low, gt_ref_high, idx
+                    a, b, idx
                 )
                 ref_loss.append(loss['ref_loss'])
                 inf_loss.append(loss['inf_loss'])
@@ -270,9 +272,7 @@ class Refinement_module(nn.Module):
             gt_ref_low_single = []
             gt_ref_high_single = []
             for i, (coarse_segment, coarse_label) in enumerate(zip(coarse_segments, coarse_labels)):
-                print(coarse_segment)
-                print(coarse_label)
-                print('-----')
+                
                 low_targets, high_targets = \
                     self.label_points_single_video(
                         concat_points, coarse_segment, coarse_label
