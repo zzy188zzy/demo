@@ -1362,10 +1362,10 @@ class PtTransformer(nn.Module):
             use_round = True
             use_prob = False
             # if i!=0 and i!=1 :
-            if i!=0 :
+            # if i!=0 :
                 # print(i)
                 # print(seg_right.max())
-#             if False:
+            if False:
             # if True:
                 # 1 2 3 4 5
                 a = [1,2,4,8,16,32]
