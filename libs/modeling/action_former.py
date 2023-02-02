@@ -1026,12 +1026,15 @@ class PtTransformer(nn.Module):
                     c = 1
                     e = 1
                     stride_i = a[min(i+b, 5)]
+                    s_i = a[i]
                     for j in range(min(i+b+1, 6)):  # 1 2 3 4 5 6
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, 5)-j].squeeze(1)
                         stride_j = a[min(i+b, 5)-j]
 
                         assert stride_i == stride_j
+
+                        c = max(s_i, stride_i)/s_i
                     
                         if use_round:
                             for e_ in range(e):
