@@ -366,7 +366,7 @@ class TSNet(nn.Module):
         # we will need a better way to dispatch the params to backbones / necks
         # backbone network: conv + transformer
         assert backbone_type in ['convTransformer', 'conv']
-        if backbone_type == 'convTransformer':
+        if True:
             self.backbone = make_backbone(
                 'convTransformer',
                 **{
@@ -375,7 +375,7 @@ class TSNet(nn.Module):
                     'n_head': n_head,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
-                    'arch' : backbone_arch,
+                    'arch' : (2, 2, 5),
                     'mha_win_size': self.mha_win_size,
                     'scale_factor' : scale_factor,
                     'with_ln' : embd_with_ln,
@@ -394,7 +394,7 @@ class TSNet(nn.Module):
                     'n_head': n_head,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
-                    'arch' : backbone_arch,
+                    'arch' : (2, 2, 5),
                     'mha_win_size': self.mha_win_size,
                     'scale_factor' : scale_factor,
                     'with_ln' : embd_with_ln,
@@ -412,7 +412,7 @@ class TSNet(nn.Module):
                     'n_in': input_dim,
                     'n_embd': embd_dim,
                     'n_embd_ks': embd_kernel_size,
-                    'arch': backbone_arch,
+                    'arch': (2, 2, 5),
                     'scale_factor': scale_factor,
                     'with_ln' : embd_with_ln
                 }
@@ -423,7 +423,7 @@ class TSNet(nn.Module):
                     'n_in': input_dim,
                     'n_embd': embd_dim,
                     'n_embd_ks': embd_kernel_size,
-                    'arch': backbone_arch,
+                    'arch': (2, 2, 5),
                     'scale_factor': scale_factor,
                     'with_ln' : embd_with_ln
                 }
@@ -434,7 +434,7 @@ class TSNet(nn.Module):
         # fpn network: convs
         assert fpn_type in ['fpn', 'identity']
         self.neck = make_neck(
-            fpn_type,
+            'identity',
             **{
                 'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
                 'out_channel' : fpn_dim,
@@ -444,7 +444,7 @@ class TSNet(nn.Module):
             }
         )
         self.neck0 = make_neck(
-            fpn_type,
+            'identity',
             **{
                 'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
                 'out_channel' : fpn_dim,
