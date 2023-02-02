@@ -1022,8 +1022,8 @@ class PtTransformer(nn.Module):
                 if True:
                     # 1 2 3 4 5
                     a = [1,2,4,8,16,32]
-                    b = 1
-                    c = 2
+                    b = 2
+                    c = 4
                     e = 1
                     stride_i = a[min(i+b, 5)]
                     for j in range(min(i+b+1, 6)):  # 1 2 3 4 5 6
