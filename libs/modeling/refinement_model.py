@@ -208,12 +208,12 @@ class Refinement_module(nn.Module):
             ref_loss = torch.stack(ref_loss).mean()
             inf_loss = torch.stack(inf_loss).mean() * 0.3
             c_loss = torch.stack(c_loss).mean()
-            final_loss = ref_loss + inf_loss + c_loss
+            final_loss = ref_loss + inf_loss
 
             return {
                     'ref_loss': ref_loss,
                     'inf_loss': inf_loss,
-                    'c_loss': c_loss,
+                    # 'c_loss': c_loss,
                     'final_loss': final_loss
             }
         else:
@@ -304,7 +304,7 @@ class Refinement_module(nn.Module):
         gt_ref_high = dis0.clone()
 
         low_p = 1  # 0 ~ 1
-        high_p = 1
+        high_p = 0.5
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
@@ -369,32 +369,31 @@ class Refinement_module(nn.Module):
         gt_high = torch.stack(gt_ref_high)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]      
 
-        t = 0
-        refs = []
-        masks = []
-        a = [1, 2, 4, 8, 16, 32]
-        for i, ref_i in enumerate(out_refines):
-            B, T, C = ref_i.shape
-            mask = torch.isinf(gt_low[:, t:t+T, :])==False
-            v_mask = valid_mask[:, t:t+T, None].repeat(1, 1, 2)
-            mask = torch.logical_and(mask, v_mask)
-            ref = (ref_i*a[i])[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
-            mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
-            refs.append(ref)
-            masks.append(mask)
-            t += T
-        refs = torch.cat(refs, dim=1)
-        masks = torch.cat(masks, dim=1)
-        print(refs[0,:,:10,0])
-        refs[masks==False] = 0
-        print(refs[0,:,:10,0])
-        cnt = masks.sum(dim=1)
-        # print(cnt)
-        mean = (refs.sum(dim=1)/cnt)[:, None, :, :].repeat(1, 6, 1, 1)
-        c_loss = torch.abs(refs[masks]-mean[masks]).mean()
-        print(c_loss)
-
-        exit()
+        # t = 0
+        # refs = []
+        # masks = []
+        # a = [1, 2, 4, 8, 16, 32]
+        # for i, ref_i in enumerate(out_refines):
+        #     B, T, C = ref_i.shape
+        #     mask = torch.isinf(gt_low[:, t:t+T, :])==False
+        #     v_mask = valid_mask[:, t:t+T, None].repeat(1, 1, 2)
+        #     mask = torch.logical_and(mask, v_mask)
+        #     ref = (ref_i*a[i])[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
+        #     mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
+        #     refs.append(ref)
+        #     masks.append(mask)
+        #     t += T
+        # refs = torch.cat(refs, dim=1)
+        # masks = torch.cat(masks, dim=1)
+        # print(refs[0,:,:10,0])
+        # refs[masks==False] = 0
+        # print(refs[0,:,:10,0])
+        # cnt = masks.sum(dim=1)
+        # # print(cnt)
+        # mean = (refs.sum(dim=1)/cnt)[:, None, :, :].repeat(1, 6, 1, 1)
+        # c_loss = torch.abs(refs[masks]-mean[masks]).mean()
+        # print(c_loss)
+        # exit()
           
 
         outside = torch.isinf(gt_low)
@@ -428,7 +427,7 @@ class Refinement_module(nn.Module):
         return {
                 'ref_loss': ref_loss,
                 'inf_loss': inf_loss,
-                'c_loss'  : c_loss
+                # 'c_loss'  : c_loss
         }
 
 
@@ -489,8 +488,8 @@ class Refinement_module(nn.Module):
         gt_segment = gt_segment.repeat(time, 1)
         gt_label = gt_label.repeat(time, 1)
 
-        p_ctr = 0.4
-        p_len = 0.4
+        p_ctr = 0.1
+        p_len = 0.1
 
         len = gt_segment[:, 1:] - gt_segment[:, :1]
         ctr = 0.5 * (gt_segment[:, :1] + gt_segment[:, 1:])
