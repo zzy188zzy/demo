@@ -299,11 +299,12 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 0.5  # 0 ~ 1
-        high_p = 0.5
+        low_p = 1  # 0 ~ 1
+        high_p = 1
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
+        r = concat_points[0, 2]
 
         # print(gt_segment)
 
@@ -314,8 +315,8 @@ class Refinement_module(nn.Module):
             range_out = torch.logical_and(torch.logical_and(
                 (dis_l >= ra),
                 (dis_l <= rb)
-            ), (dis_l > 1))
-            range_in = torch.logical_or((dis_l < ra), (dis_l <= 1))
+            ), (dis_l > r))
+            range_in = torch.logical_or((dis_l < ra), (dis_l <= r))
             range_inf = (dis_l > rb)
 
             dis_l /= concat_points[:, 3]  # 0 ~ 1
@@ -328,8 +329,8 @@ class Refinement_module(nn.Module):
             # print(dis_l[2303:2323])
             # print(dis_h[2303:2323])
 
-            dis_h[range_out] += 0.5 * high_p
-            dis_l[range_out] -= 0.5 * low_p
+            dis_h[range_out] += (r/2) * high_p
+            dis_l[range_out] -= (r/2) * low_p
             # print(dis_l[2303:2323])
             # print(dis_h[2303:2323])
 
