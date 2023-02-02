@@ -206,7 +206,7 @@ class Refinement_module(nn.Module):
                 # c_loss.append(loss['c_loss'])
 
             ref_loss = torch.stack(ref_loss).min()
-            inf_loss = torch.stack(inf_loss).min() * 10
+            inf_loss = torch.stack(inf_loss).min() * 0.3
             # c_loss = torch.stack(c_loss).mean()
             final_loss = ref_loss + inf_loss
 
