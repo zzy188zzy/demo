@@ -376,7 +376,7 @@ class Refinement_module(nn.Module):
         for i, ref_i in enumerate(out_refines):
             B, T, C = ref_i.shape
             mask = torch.isinf(gt_low[:, t:t+T, :])==False
-            ref = ref_i[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
+            ref = (ref_i*a[i])[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
             mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
             refs.append(ref)
             masks.append(mask)
@@ -385,6 +385,7 @@ class Refinement_module(nn.Module):
         masks = torch.cat(masks, dim=1)
         refs[masks==False] = 0
         cnt = masks.sum(dim=1)
+        # print(cnt)
         mean = (refs.sum(dim=1)/cnt)[:, None, :, :].repeat(1, 6, 1, 1)
         c_loss = torch.abs(refs[masks]-mean[masks]).mean()
         # print(c_loss)
