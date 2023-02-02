@@ -379,11 +379,9 @@ class Refinement_module(nn.Module):
             t += T
         refs = torch.cat(refs, dim=1)
         masks = torch.cat(masks, dim=1)
-        print(refs.shape)
-        print(masks.shape)
         refs[masks==False] = 0
         mean = refs.mean(dim=1)[:, None, :, :].repeat(1, 6, 1, 1)
-        c_loss = torch.abs(refs[mask]-mean[mask]).mean()
+        c_loss = torch.abs(refs[masks]-mean[masks]).mean()
         print(c_loss)
 
         exit()
