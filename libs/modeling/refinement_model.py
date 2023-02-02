@@ -365,10 +365,18 @@ class Refinement_module(nn.Module):
         gt_high = torch.stack(gt_ref_high)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]      
 
-        for (ref_i, low_i, high_i) in zip(out_refines, gt_ref_low, gt_ref_high):
+        t = 0
+        for (ref_i) in zip(out_refines):
+            B, T, C = ref_i.shape
+            gt_i = gt_ref_low[:, t:t+T, :]
+
             print(ref_i.shape)
-            print(low_i.shape)
-            print(high_i.shape)
+            print(gt_i.shape)
+            print(ref_i[0,:,0])
+            print(gt_i[0,:,0])
+
+
+            t += T
         exit()    
 
           
