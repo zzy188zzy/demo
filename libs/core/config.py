@@ -56,7 +56,7 @@ DEFAULTS = {
         # "regression_range": [(0, 0.5), (0.5, 1), (1, 2), (2, 4), (4, 8), (8, 16)],
         # "regression_range": [(0, 0.25), (0.25, 0.5), (0.5, 1), (1, 2), (2, 4), (4, 8)],
         # number of heads in self-attention
-        "n_head": 2,  # 4
+        "n_head": 1,  # 4
         # window size for self attention; <=1 to use full seq (ie global attention)
         "n_mha_win_size": -1,
         # kernel size for embedding network
