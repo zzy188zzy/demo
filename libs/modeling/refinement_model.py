@@ -204,7 +204,7 @@ class Refinement_module(nn.Module):
                 inf_loss.append(loss['inf_loss'])
 
             ref_loss = torch.stack(ref_loss).mean()
-            inf_loss = torch.stack(inf_loss).mean() * 0.3
+            inf_loss = torch.stack(inf_loss).mean()
             final_loss = ref_loss + inf_loss
 
             return {
@@ -369,8 +369,8 @@ class Refinement_module(nn.Module):
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
 
-        # inf_loss = F.smooth_l1_loss(out_ref[out_mask], out_ref[out_mask]*0, reduction='mean')
-        inf_loss = torch.abs(out_ref[out_mask]).mean()
+        inf_loss = F.smooth_l1_loss(out_ref[out_mask], out_ref[out_mask]*0, reduction='mean')
+        # inf_loss = torch.abs(out_ref[out_mask]).mean()
 
         gt_low = gt_low[mask]
         out_ref = out_ref[mask]
