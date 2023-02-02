@@ -610,9 +610,6 @@ class TSNet(nn.Module):
             out_cls_logits = [x.permute(0, 2, 1) for x in out_cls_logits]
             # out_offset: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_offsets = [x.permute(0, 2, 1) for x in out_offsets]
-            # out_refine: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
-            out_refines = [x.permute(0, 2, 1) for x in out_refines]
-            # out_prob: F List[B, 2 (xC), T_i] -> F List[B, T_i, 2 (xC)]
             out_probs = None
             # fpn_masks: F list[B, 1, T_i] -> F List[B, T_i]
             fpn_masks = [x.squeeze(1) for x in fpn_masks]
@@ -1287,7 +1284,7 @@ class TSNet(nn.Module):
 
 
         # loop over fpn levels
-        if out_refines == None:
+        if out_refines != None:
             
             for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
                     out_cls_logits, out_offsets, out_refines, points, fpn_masks
