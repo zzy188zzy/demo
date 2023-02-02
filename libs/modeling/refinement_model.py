@@ -378,8 +378,8 @@ class Refinement_module(nn.Module):
             print(ref_i[0, :, 0])
             ref = ref_i[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)
             mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)
-            print(ref.shape)
-            print(mask.shape)
+            
+            print(ref[0, :, 0])
 
             t += T
         exit()    
