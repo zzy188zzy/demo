@@ -370,19 +370,17 @@ class Refinement_module(nn.Module):
         masks = []
         a = [1, 2, 4, 8, 16, 32]
         for i, ref_i in enumerate(out_refines):
-            # ref_i = ref_i[:]
-            print(ref_i.shape)
             B, T, C = ref_i.shape
-
             mask = torch.isinf(gt_low[:, t:t+T, :])==False
-            print(ref_i[0, :, 0])
-            ref = ref_i[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)
-            mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)
-            
-            print(ref[0, :, 0])
-
+            ref = ref_i[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
+            mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
+            refs.append(ref)
+            masks.append(mask)
             t += T
-        exit()    
+        refs = torch.cat(refs, dim=1)
+        masks = torch.cat(masks, dim=1)
+        print(refs.shape)
+        print(masks.shape)
 
           
 
