@@ -402,8 +402,7 @@ class Refinement_module(nn.Module):
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
 
-        # inf_loss = F.smooth_l1_loss(out_ref[out_mask], out_ref[out_mask]*0, reduction='mean')
-        inf_loss = torch.abs(out_ref[out_mask]).mean()
+        inf_loss = F.smooth_l1_loss(out_ref[out_mask], out_ref[out_mask]*0, reduction='mean')
 
         gt_low = gt_low[mask]
         out_ref = out_ref[mask]
@@ -417,9 +416,8 @@ class Refinement_module(nn.Module):
         dis = torch.mean(c, dim=-1)
 
         dis[mask_in] = 0
-        # ref_loss = dis.mean()
+        ref_loss = dis.mean()
         
-        ref_loss = F.smooth_l1_loss(dis, dis*0, reduction='mean')
 
         return {
                 'ref_loss': ref_loss,
