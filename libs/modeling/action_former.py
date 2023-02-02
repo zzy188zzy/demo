@@ -1032,6 +1032,8 @@ class PtTransformer0(nn.Module):
                         ref = out_refines[min(i+b, 5)-j].squeeze(1)
                         stride_j = a[min(i+b, 5)-j]
 
+                        t = min(i+b+1, 6)
+
                         assert stride_i == stride_j
 
                         # c = max(s_i, stride_i)/s_i
@@ -1051,19 +1053,16 @@ class PtTransformer0(nn.Module):
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
-                                # * (1 - pred_prob[left_mask])
+                                pred_prob[left_mask] *= torch.max((1.5 - pred_prob[left_mask]), 
+                                        torch.ones(shape=pred_prob[left_mask], device=pred_prob[left_mask].device))
 
-
-                                # print(ref_left*stride_i/c)
-                                # print((1 - pred_prob[left_mask]))
-                                # print((ref_left*stride_i/c) * (1 - pred_prob[left_mask]))
-
-                                # print(seg_left[left_mask])
-                                # exit()
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
                                 seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
                                 # seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
+
+                                pred_prob[right_mask] *= torch.max((1.5 - pred_prob[right_mask]), 
+                                        torch.ones(shape=pred_prob[right_mask], device=pred_prob[right_mask].device))
                                 
                         else:
                             left_idx0 = (seg_left/stride_j).floor().long()
