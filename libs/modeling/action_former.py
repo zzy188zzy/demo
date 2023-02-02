@@ -296,7 +296,7 @@ class PtTransformer(nn.Module):
                     'n_head': 4,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
-                    'arch' : backbone_arch,
+                    'arch' : (2, 2, 5),
                     'mha_win_size': self.mha_win_size,
                     'scale_factor' : scale_factor,
                     'with_ln' : embd_with_ln,
@@ -314,7 +314,7 @@ class PtTransformer(nn.Module):
                     'n_in': input_dim,
                     'n_embd': embd_dim,
                     'n_embd_ks': embd_kernel_size,
-                    'arch': backbone_arch,
+                    'arch': (2, 2, 5),
                     'scale_factor': scale_factor,
                     'with_ln' : embd_with_ln
                 }
