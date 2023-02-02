@@ -1034,7 +1034,7 @@ class PtTransformer(nn.Module):
 
                         assert stride_i == stride_j
 
-                        c = max(s_i, stride_i)/s_i
+                        # c = max(s_i, stride_i)/s_i
                     
                         if use_round:
                             for e_ in range(e):
