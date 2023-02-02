@@ -384,7 +384,8 @@ class Refinement_module(nn.Module):
         refs = torch.cat(refs, dim=1)
         masks = torch.cat(masks, dim=1)
         refs[masks==False] = 0
-        mean = refs.mean(dim=1)[:, None, :, :].repeat(1, 6, 1, 1)
+        cnt = masks.sum(dim=1)
+        mean = (refs.sum(dim=1)/cnt)[:, None, :, :].repeat(1, 6, 1, 1)
         c_loss = torch.abs(refs[masks]-mean[masks]).mean()
         # print(c_loss)
 
