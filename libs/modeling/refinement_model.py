@@ -376,8 +376,8 @@ class Refinement_module(nn.Module):
 
             mask = torch.isinf(gt_low[:, t:t+T, :])==False
             print(ref_i[0, :, 0])
-            ref = ref_i[:, :, None, :].repeat(1, 1, a[i], 1).resize(B, -1, C)
-            mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).resize(B, -1, C)
+            ref = ref_i[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)
+            mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)
             print(ref.shape)
             print(mask.shape)
 
