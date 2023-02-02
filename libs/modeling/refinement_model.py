@@ -208,12 +208,12 @@ class Refinement_module(nn.Module):
             ref_loss = torch.stack(ref_loss).mean()
             inf_loss = torch.stack(inf_loss).mean() * 0.3
             c_loss = torch.stack(c_loss).mean()
-            final_loss = ref_loss + inf_loss
+            final_loss = ref_loss + inf_loss + c_loss
 
             return {
                     'ref_loss': ref_loss,
                     'inf_loss': inf_loss,
-                    # 'c_loss': c_loss,
+                    'c_loss': c_loss,
                     'final_loss': final_loss
             }
         else:
@@ -376,6 +376,8 @@ class Refinement_module(nn.Module):
         for i, ref_i in enumerate(out_refines):
             B, T, C = ref_i.shape
             mask = torch.isinf(gt_low[:, t:t+T, :])==False
+            v_mask = valid_mask[:, t:t+T, None].repeat(1, 1, 2)
+            mask = torch.logical_and(mask, v_mask)
             ref = (ref_i*a[i])[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
             mask = mask[:, :, None, :].repeat(1, 1, a[i], 1).reshape(B, -1, C)[:, None, :, :]
             refs.append(ref)
