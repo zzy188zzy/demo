@@ -1053,7 +1053,7 @@ class PtTransformer0(nn.Module):
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
-                                pred_prob[left_mask] *= torch.max((1.2 - pred_prob[left_mask]), 
+                                pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
                                         torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
 
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
@@ -1061,7 +1061,7 @@ class PtTransformer0(nn.Module):
                                 # seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
 
-                                pred_prob[right_mask] *= torch.max((1.2 - pred_prob[right_mask]), 
+                                pred_prob[right_mask] *= torch.max((1.05 - pred_prob[right_mask]), 
                                         torch.ones(pred_prob[right_mask].shape, device=pred_prob[right_mask].device))
                                 
                         else:
