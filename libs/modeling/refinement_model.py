@@ -382,7 +382,10 @@ class Refinement_module(nn.Module):
 
         c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
         dis = torch.mean(c, dim=-1)
-        ref_loss = dis[mask_out].mean()
+
+        
+        # ref_loss = dis[mask_out].mean()
+        ref_loss = F.smooth_l1_loss( dis[mask_out],  dis[mask_out]*0, reduction='mean')
         
         # ref_loss = F.smooth_l1_loss(out_ref, gt_low, reduction='mean')
 
