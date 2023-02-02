@@ -201,7 +201,7 @@ class DecoupleNet(nn.Module):
 
         return torch.cat((a, b, c, d), dim=1)
 
-class PtTransformer(nn.Module):
+class PtTransformer0(nn.Module):
     """
         Transformer based model for single stage action localization
     """

@@ -8,8 +8,8 @@ from . import meta_archs     # full models
 
 from .refinement_model import Refinement_module
 from .ts_net import TSNet
-from .action_former import PtTransformer
+from .action_former import PtTransformer0
 
 __all__ = ['MaskedConv1D', 'MaskedMHCA', 'MaskedMHA', 'LayerNorm', 
            'TransformerBlock', 'ConvBlock', 'Scale', 'AffineDropPath',
-           'make_backbone', 'make_neck', 'make_meta_arch', 'make_generator', 'Refinement_module', 'PtTransformer', 'TSNet']
+           'make_backbone', 'make_neck', 'make_meta_arch', 'make_generator', 'Refinement_module', 'PtTransformer0', 'TSNet']
