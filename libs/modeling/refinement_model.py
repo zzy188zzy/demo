@@ -270,6 +270,9 @@ class Refinement_module(nn.Module):
             gt_ref_low_single = []
             gt_ref_high_single = []
             for i, (coarse_segment, coarse_label) in enumerate(zip(coarse_segments, coarse_labels)):
+                print(coarse_segment)
+                print(coarse_label)
+                print('-----')
                 low_targets, high_targets = \
                     self.label_points_single_video(
                         concat_points, coarse_segment, coarse_label
@@ -398,9 +401,6 @@ class Refinement_module(nn.Module):
 
         outside = torch.isinf(gt_low)
 
-        print(outside.shape)
-        print(valid_mask.shape)
-        # exit()
         mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
         out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
 
