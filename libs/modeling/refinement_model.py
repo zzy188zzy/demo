@@ -195,8 +195,6 @@ class Refinement_module(nn.Module):
                 a = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
                 b = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
 
-
-
                 # compute the loss and return
                 loss = self.losses(
                     fpn_masks,
