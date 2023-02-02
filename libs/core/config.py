@@ -44,7 +44,7 @@ DEFAULTS = {
         "backbone_type": 'conv',
         # type of FPN (fpn | identity)
         "fpn_type": "identity",
-        "backbone_arch": (2, 3, 5),  # (2, 2, 5)
+        "backbone_arch": (2, 2, 5),  # (2, 2, 5)
         # scale factor between pyramid levels
         "scale_factor": 2,
         # regression range for pyramid levels
