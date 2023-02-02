@@ -1287,7 +1287,8 @@ class TSNet(nn.Module):
 
 
         # loop over fpn levels
-        if out_refines != None:
+        if out_refines == None:
+            
             for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
                     out_cls_logits, out_offsets, out_refines, points, fpn_masks
                 )):
