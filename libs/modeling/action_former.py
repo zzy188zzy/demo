@@ -1027,10 +1027,13 @@ class PtTransformer0(nn.Module):
                 seg_areas = seg_right - seg_left
                 keep_idxs20 = seg_areas > self.test_duration_thresh
 
+                seg_left = seg_left
+
                 use_round = False
                 # if i!=0 and i!=1 :
                 # if i!=0 :
-                if True:
+                # if True:
+                if False:
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 0
@@ -1232,8 +1235,8 @@ class PtTransformer0(nn.Module):
             # 3: convert from feature grids to seconds
             if segs.shape[0] > 0:
                 # print(segs)
-                # print(stride)
-                # print(nframes)
+                print(stride)
+                print(nframes)
                 segs = (segs * stride + 0.5 * nframes) / fps
                 # print(segs*fps)
                 # exit()
