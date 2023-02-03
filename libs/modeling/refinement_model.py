@@ -219,7 +219,7 @@ class Refinement_module(nn.Module):
                     'final_loss': final_loss
             }
         else:
-            return out_refines
+            return out_refines, out_probs
 
     @torch.no_grad()
     def preprocessing(self, video_list, padding_val=0.0):
