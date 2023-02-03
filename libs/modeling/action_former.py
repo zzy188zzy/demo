@@ -1033,17 +1033,18 @@ class PtTransformer0(nn.Module):
                 if True:
                     # 1 2 3 4 5
                     a = [1,2,4,8,16,32,64]
-                    b = 0
+                    b = 1
                     c = 1
                     e = 1
-                    stride_i = a[min(i+b, 5)]
+                    L = 6
+                    stride_i = a[min(i+b, L)]
                     s_i = a[i]
-                    for j in range(min(i+b+1, 6)):  # 1 2 3 4 5 6
+                    for j in range(min(i+b+1, L+1)):  # 1 2 3 4 5 6
                         # 1 2 4 8 16 32
-                        ref = out_refines[min(i+b, 5)-j].squeeze(1)
-                        stride_j = a[min(i+b, 5)-j]
+                        ref = out_refines[min(i+b, L)-j].squeeze(1)
+                        stride_j = a[min(i+b, L)-j]
 
-                        t = min(i+b+1, 6)
+                        t = min(i+b+1, L+1)
 
                         assert stride_i == stride_j
 
