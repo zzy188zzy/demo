@@ -428,9 +428,9 @@ class Refinement_module(nn.Module):
 
         dis, _ = torch.min(c, dim=-1)
 
-        # dis[mask_in] = 0
-        # ref_loss = dis.mean()
-        ref_loss = dis[mask_in==False].mean()
+        dis[mask_in] = 0
+        ref_loss = dis.mean()
+        # ref_loss = dis[mask_in==False].mean()
 
         # ref_loss /= self.loss_normalizer
         # inf_loss /= self.loss_normalizer
