@@ -1033,7 +1033,7 @@ class PtTransformer0(nn.Module):
                 # if i!=0 :
                 if True:
                     # 1 2 3 4 5
-                    a = [1,2,4,8,16,32]
+                    a = [1,2,4,8,16,32,64]
                     b = 0
                     c = 1
                     e = 1
