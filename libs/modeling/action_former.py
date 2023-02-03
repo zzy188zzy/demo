@@ -1027,7 +1027,8 @@ class PtTransformer0(nn.Module):
                 seg_areas = seg_right - seg_left
                 keep_idxs20 = seg_areas > self.test_duration_thresh
 
-                seg_left = seg_left
+                seg_left = (seg_left*4).round()/4
+                seg_right = (seg_right*4).round()/4
 
                 use_round = False
                 # if i!=0 and i!=1 :
