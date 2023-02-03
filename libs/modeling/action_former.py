@@ -1073,6 +1073,9 @@ class PtTransformer0(nn.Module):
                                 # print(seg_left[left_mask])
                                 # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])*(prob_left)
                                 seg_left[left_mask] += (ref_left*stride_i/c)*(prob_left/lr)
+                                print(prob_left)
+                                print(prob_left/lr)
+                                exit()
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (1-pred_prob[left_mask]/pred_prob_len)
                                 
                                 # pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
