@@ -176,8 +176,9 @@ class Refinement_module(nn.Module):
         fpn_feats, fpn_masks = self.neck(feats, masks)
         points = self.point_generator(fpn_feats)
 
-        out_refines = self.refineHead(fpn_feats, fpn_masks)
+        out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
         out_refines = [x.permute(0, 2, 1) for x in out_refines]
+        out_probs = [x.permute(0, 2, 1) for x in out_probs]
         fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
         if self.training:
@@ -190,7 +191,7 @@ class Refinement_module(nn.Module):
             )
             ref_loss = []
             inf_loss = []
-            c_loss = []
+            prob_loss = []
             for idx in range(time_):
                 a = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
                 b = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
@@ -199,21 +200,22 @@ class Refinement_module(nn.Module):
                 loss = self.losses(
                     fpn_masks,
                     out_refines,
+                    out_probs,
                     a, b, idx
                 )
                 ref_loss.append(loss['ref_loss'])
                 inf_loss.append(loss['inf_loss'])
-                # c_loss.append(loss['c_loss'])
+                prob_loss.append(loss['prob_loss'])
 
             ref_loss = torch.stack(ref_loss).min()
             inf_loss = torch.stack(inf_loss).min()
-            # c_loss = torch.stack(c_loss).mean()
-            final_loss = ref_loss + inf_loss
+            prob_loss = torch.stack(prob_loss).min()
+            final_loss = ref_loss + inf_loss + prob_loss
 
             return {
                     'ref_loss': ref_loss,
                     'inf_loss': inf_loss,
-                    # 'c_loss': c_loss,
+                    'prob_loss': prob_loss,
                     'final_loss': final_loss
             }
         else:
@@ -357,7 +359,7 @@ class Refinement_module(nn.Module):
 
     def losses(
             self, fpn_masks,
-            out_refines,
+            out_refines, out_probs,
             gt_ref_low, gt_ref_high, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
@@ -368,7 +370,8 @@ class Refinement_module(nn.Module):
         # 1 ref_loss
         gt_low = torch.stack(gt_ref_low)
         gt_high = torch.stack(gt_ref_high)
-        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]      
+        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]   
+        out_prob = torch.cat(out_probs, dim=1).squeeze(2)   
 
         if step == 0:
             self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
@@ -403,11 +406,14 @@ class Refinement_module(nn.Module):
           
 
         outside = torch.isinf(gt_low)
-
-        mask = torch.logical_and((outside == False), valid_mask[:, :, None].repeat(1, 1, 2))
-        out_mask = torch.logical_and((outside == True), valid_mask[:, :, None].repeat(1, 1, 2))
+        valid = valid_mask[:, :, None].repeat(1, 1, 2)
+        mask = torch.logical_and((outside == False), valid)
+        out_mask = torch.logical_and((outside == True), valid)
 
         inf_loss = F.smooth_l1_loss(out_ref[out_mask], out_ref[out_mask]*0, reduction='mean')
+        gt_prob = torch.ones(outside.shape, device=outside.device)
+        gt_prob[outside] = 0
+        prob_loss = F.smooth_l1_loss(out_prob[valid], gt_prob[valid], reduction='mean')
 
         gt_low = gt_low[mask]
         out_ref = out_ref[mask]
@@ -423,14 +429,14 @@ class Refinement_module(nn.Module):
         dis[mask_in] = 0
         ref_loss = dis.mean()
 
-        ref_loss /= self.loss_normalizer
-        inf_loss /= self.loss_normalizer
+        # ref_loss /= self.loss_normalizer
+        # inf_loss /= self.loss_normalizer
         
 
         return {
                 'ref_loss': ref_loss,
                 'inf_loss': inf_loss,
-                # 'c_loss'  : c_loss
+                'prob_loss'  : prob_loss,
         }
 
     @torch.no_grad()
@@ -565,10 +571,10 @@ class RefineHead(nn.Module):
             feat_dim, 2, kernel_size,
             stride=1, padding=kernel_size // 2
         )
-        # self.prob_head = MaskedConv1D(
-        #     feat_dim, 2, kernel_size,
-        #     stride=1, padding=kernel_size // 2
-        # )
+        self.prob_head = MaskedConv1D(
+            feat_dim, 2, kernel_size,
+            stride=1, padding=kernel_size // 2
+        )
 
     def forward(self, fpn_feats, fpn_masks):
         assert len(fpn_feats) == len(fpn_masks)
@@ -583,9 +589,9 @@ class RefineHead(nn.Module):
                 cur_out, _ = self.head[idx](cur_out, cur_mask)
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
-            # cur_probs, _ = self.prob_head(cur_out, cur_mask)
+            cur_probs, _ = self.prob_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets),)
-            # out_probs += (self.scale[l](cur_probs),)
+            out_probs += (torch.sigmoid(cur_probs),)
 
         # fpn_masks remains the same
-        return out_offsets
+        return out_offsets, out_probs
