@@ -238,7 +238,7 @@ class PtTransformer0(nn.Module):
         self.fpn_strides = [scale_factor**i for i in range(
             fpn_start_level, 6
         )]
-        self.reg_range = regression_range
+        self.reg_range = [(0, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 10000)]
         assert len(self.fpn_strides) == len(self.reg_range)
         self.scale_factor = scale_factor
         # #classes = num_classes + 1 (background) with last category as background
