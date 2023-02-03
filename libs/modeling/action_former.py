@@ -1022,19 +1022,16 @@ class PtTransformer0(nn.Module):
                 seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
                 seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
 
-                pred_segs0 = torch.stack((seg_left, seg_right), -1)
-                # 5. Keep seg with duration > a threshold (relative to feature grids)
-                seg_areas = seg_right - seg_left
-                keep_idxs20 = seg_areas > self.test_duration_thresh
-
-                seg_left = (seg_left*4).round()/4
-                seg_right = (seg_right*4).round()/4
+                # pred_segs0 = torch.stack((seg_left, seg_right), -1)
+                # # 5. Keep seg with duration > a threshold (relative to feature grids)
+                # seg_areas = seg_right - seg_left
+                # keep_idxs20 = seg_areas > self.test_duration_thresh
 
                 use_round = False
                 # if i!=0 and i!=1 :
                 # if i!=0 :
-                # if True:
-                if False:
+                if True:
+                # if False:
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 0
