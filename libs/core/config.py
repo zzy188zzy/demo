@@ -44,7 +44,7 @@ DEFAULTS = {
         "backbone_type": 'conv',
         # type of FPN (fpn | identity)
         "fpn_type": "identity",
-        "backbone_arch": (2, 2, 7),  # (2, 2, 5)
+        "backbone_arch": (2, 2, 5),  # (2, 2, 5)
         # scale factor between pyramid levels
         "scale_factor": 2,
         # regression range for pyramid levels
@@ -52,7 +52,8 @@ DEFAULTS = {
         # "regression_range": [(0, 8), (8, 16), (16, 32), (32, 64), (64, 128), (128, 256)],
         # "regression_range": [(0, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 128)],
         # "regression_range": [(0, 2), (2, 4), (4, 8), (8, 16), (16, 32), (32, 64)],
-        "regression_range": [(0, 1), (1, 2), (2, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 128)],
+        # "regression_range": [(0, 1), (1, 2), (2, 4), (4, 8), (8, 16), (16, 32), (32, 64), (64, 128)],
+        "regression_range": [(0, 1), (1, 2), (2, 4), (4, 8), (8, 16), (16, 32)],
         # "regression_range": [(0, 0.5), (0.5, 1), (1, 2), (2, 4), (4, 8), (8, 16)],
         # "regression_range": [(0, 0.25), (0.25, 0.5), (0.5, 1), (1, 2), (2, 4), (4, 8)],
         # number of heads in self-attention
