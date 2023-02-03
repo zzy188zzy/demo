@@ -446,10 +446,10 @@ class PtTransformer0(nn.Module):
                     'final_loss' : final_loss}
         else:
             if ref_model != None:
-                out_refines = ref_model(video_list)
+                out_refines, out_probs = ref_model(video_list)
                 # print('eval_all')
             else:
-                out_refines = None
+                out_refines, out_probs = None, None
                 # print('eval_af')
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -462,7 +462,7 @@ class PtTransformer0(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines
+                out_cls_logits, out_offsets, out_refines, out_probs
             )
             return results
 
@@ -907,7 +907,7 @@ class PtTransformer0(nn.Module):
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets, out_refines
+        out_cls_logits, out_offsets, out_refines, out_probs
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -929,9 +929,10 @@ class PtTransformer0(nn.Module):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             if out_refines == None:
-                refines_per_vid = None
+                refines_per_vid, probs_per_vid = None, None
             else:
                 refines_per_vid = [x[idx] for x in out_refines]
+                probs_per_vid = [x[idx] for x in out_probs]
             offsets_per_vid = [x[idx] for x in out_offsets]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
@@ -942,7 +943,7 @@ class PtTransformer0(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid, refines_per_vid
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -964,6 +965,7 @@ class PtTransformer0(nn.Module):
         out_cls_logits,
         out_offsets,
         out_refines,
+        out_probs,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -973,10 +975,11 @@ class PtTransformer0(nn.Module):
 
         # loop over fpn levels
         if out_refines != None:
-            for i, (cls_i, offsets_i, ref_i, pts_i, mask_i) in enumerate(zip(
-                    out_cls_logits, out_offsets, out_refines, points, fpn_masks
+            for i, (cls_i, offsets_i, ref_i, prob_i, pts_i, mask_i) in enumerate(zip(
+                    out_cls_logits, out_offsets, out_refines, out_probs, points, fpn_masks
                 )):
                 ref_i = ref_i.squeeze(1)
+                prob_i = prob_i.squeeze(1)
                 # print(ref_i.shape)
                 # exit()
                 # sigmoid normalization for output logits
@@ -1043,6 +1046,7 @@ class PtTransformer0(nn.Module):
                     for j in range(min(i+b+1, L+1)):  # 1 2 3 4 5 6
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
+                        prob = out_probs[min(i+b, L)-j].squeeze(1)
                         stride_j = a[min(i+b, L)-j]
 
                         t = min(i+b+1, L+1)
@@ -1060,17 +1064,18 @@ class PtTransformer0(nn.Module):
                                 right_mask = torch.logical_and(right_idx >= 0, right_idx < 2304//stride_j)
 
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
-
+                                prob_left = prob[left_idx[left_mask], 0]
                                 # print(seg_left[left_mask])
-                                seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])
+                                seg_left[left_mask] += (ref_left*stride_j/c) * (1 - pred_prob[left_mask])*prob_left
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
                                 pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
                                         torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
 
-                                ref_right = ref[right_idx[right_mask], 1]  # todo 
-                                seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
+                                ref_right = ref[right_idx[right_mask], 1]  # todo
+                                prob_right = prob[right_idx[right_mask], 1] 
+                                seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])*prob_right
                                 # seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
 
