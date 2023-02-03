@@ -1030,7 +1030,7 @@ class PtTransformer0(nn.Module):
                 # seg_areas = seg_right - seg_left
                 # keep_idxs20 = seg_areas > self.test_duration_thresh
 
-                pred_prob_len = torch.max(pred_prob.max()-pred_prob.min(), 0.5)
+                pred_prob_len = max(pred_prob.max()-pred_prob.min(), 0.5)
 
                 use_round = True
                 # if i!=0 and i!=1 :
