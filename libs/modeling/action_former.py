@@ -236,7 +236,7 @@ class PtTransformer0(nn.Module):
         super().__init__()
          # re-distribute params to backbone / neck / head
         self.fpn_strides = [scale_factor**i for i in range(
-            fpn_start_level, backbone_arch[-1]+1
+            fpn_start_level, 6
         )]
         self.reg_range = regression_range
         assert len(self.fpn_strides) == len(self.reg_range)
@@ -248,10 +248,9 @@ class PtTransformer0(nn.Module):
         # check the feature pyramid and local attention window size
         self.max_seq_len = max_seq_len
         if isinstance(n_mha_win_size, int):
-            self.mha_win_size = [n_mha_win_size]*(1 + backbone_arch[-1])
-            # self.mha_win_size0 = [9]*(1 + backbone_arch[-1])
+            self.mha_win_size = [n_mha_win_size]*6
         else:
-            assert len(n_mha_win_size) == (1 + backbone_arch[-1])
+            assert len(n_mha_win_size) == 6
             self.mha_win_size = n_mha_win_size
         max_div_factor = 1
         for l, (s, w) in enumerate(zip(self.fpn_strides, self.mha_win_size)):
@@ -327,7 +326,7 @@ class PtTransformer0(nn.Module):
         self.neck = make_neck(
             'identity',
             **{
-                'in_channels' : [embd_dim] * (backbone_arch[-1] + 1),
+                'in_channels' : [embd_dim] * 6,
                 'out_channel' : fpn_dim,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
