@@ -306,8 +306,8 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 0.3  # 0 ~ 1
-        high_p = 0.3
+        low_p = 0.4  # 0 ~ 1
+        high_p = 0.4
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
