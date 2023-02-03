@@ -1030,7 +1030,7 @@ class PtTransformer0(nn.Module):
                 # seg_areas = seg_right - seg_left
                 # keep_idxs20 = seg_areas > self.test_duration_thresh
 
-                use_round = True
+                use_round = False
                 # if i!=0 and i!=1 :
                 # if i!=0 :
                 if True:
