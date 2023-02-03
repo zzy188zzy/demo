@@ -306,8 +306,8 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 0.4  # 0 ~ 1
-        high_p = 0.4
+        low_p = 0.1  # 0 ~ 1
+        high_p = 0.1
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
@@ -424,7 +424,9 @@ class Refinement_module(nn.Module):
         mask_in = (a * b) < 0
 
         c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
-        dis = torch.mean(c, dim=-1)
+        # dis = torch.mean(c, dim=-1)
+
+        dis = torch.min(c, dim=-1)
 
         # dis[mask_in] = 0
         # ref_loss = dis.mean()
