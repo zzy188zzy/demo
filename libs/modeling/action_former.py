@@ -1051,8 +1051,8 @@ class PtTransformer0(nn.Module):
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
                         stride_j = a[min(i+b, L)-j]
 
-                        lr = prob[:,0].max()-prob[:,0].min()+1e-6
-                        rr = prob[:,1].max()-prob[:,1].min()+1e-6
+                        # lr = prob[:,0].max()-prob[:,0].min()+1e-6
+                        # rr = prob[:,1].max()-prob[:,1].min()+1e-6
 
                         t = min(i+b+1, L+1)
 
@@ -1072,10 +1072,8 @@ class PtTransformer0(nn.Module):
                                 prob_left = prob[left_idx[left_mask], 0]
                                 # print(seg_left[left_mask])
                                 # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])*(prob_left)
-                                seg_left[left_mask] += (ref_left*stride_i/c)*(prob_left/lr)
-                                print(prob_left)
-                                print(prob_left/lr)
-                                exit()
+                                seg_left[left_mask] += (ref_left*stride_i/c)
+                                
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (1-pred_prob[left_mask]/pred_prob_len)
                                 
                                 # pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
@@ -1084,7 +1082,7 @@ class PtTransformer0(nn.Module):
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])*(prob_right)
-                                seg_right[right_mask] += (ref_right*stride_i/c)*(prob_right/rr)
+                                seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
 
                                 # pred_prob[right_mask] *= torch.max((1.05 - pred_prob[right_mask]), 
