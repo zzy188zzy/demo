@@ -370,6 +370,11 @@ class Refinement_module(nn.Module):
         gt_high = torch.stack(gt_ref_high)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]      
 
+        if step == 0:
+            self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
+                1 - self.loss_normalizer_momentum
+            )
+
         # t = 0
         # refs = []
         # masks = []
@@ -417,6 +422,9 @@ class Refinement_module(nn.Module):
 
         dis[mask_in] = 0
         ref_loss = dis.mean()
+
+        ref_loss /= self.loss_normalizer
+        inf_loss /= self.loss_normalizer
         
 
         return {
@@ -424,7 +432,6 @@ class Refinement_module(nn.Module):
                 'inf_loss': inf_loss,
                 # 'c_loss'  : c_loss
         }
-
 
     @torch.no_grad()
     def postprocessing(self, results):
