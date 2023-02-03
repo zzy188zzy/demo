@@ -1236,8 +1236,8 @@ class PtTransformer0(nn.Module):
             # 3: convert from feature grids to seconds
             if segs.shape[0] > 0:
                 # print(segs)
-                print(stride)
-                print(nframes)
+                # print(stride)
+                # print(nframes)
                 segs = (segs * stride + 0.5 * nframes) / fps
                 # print(segs*fps)
                 # exit()
