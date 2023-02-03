@@ -1138,9 +1138,15 @@ class PtTransformer0(nn.Module):
                     keep_idxs2 = seg_areas > self.test_duration_thresh
 
                     # *_all : N (filtered # of segments) x 2 / 1
-                    segs_all.append(torch.cat((pred_segs[keep_idxs2], pred_segs0[keep_idxs20]), dim=0))
-                    scores_all.append(torch.cat((pred_prob[keep_idxs2], pred_prob[keep_idxs20]), dim=0))
-                    cls_idxs_all.append(torch.cat((cls_idxs[keep_idxs2], cls_idxs[keep_idxs20]), dim=0))
+                    # segs_all.append(torch.cat((pred_segs[keep_idxs2], pred_segs0[keep_idxs20]), dim=0))
+                    # scores_all.append(torch.cat((pred_prob[keep_idxs2], pred_prob[keep_idxs20]), dim=0))
+                    # cls_idxs_all.append(torch.cat((cls_idxs[keep_idxs2], cls_idxs[keep_idxs20]), dim=0))
+                    segs_all.append(pred_segs[keep_idxs2])
+                    scores_all.append(pred_prob[keep_idxs2])
+                    cls_idxs_all.append(cls_idxs[keep_idxs2])
+                    segs_all.append(pred_segs0[keep_idxs20])
+                    scores_all.append(pred_prob[keep_idxs20])
+                    cls_idxs_all.append(cls_idxs[keep_idxs20])
             
         else:
             for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
