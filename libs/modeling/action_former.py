@@ -1030,7 +1030,7 @@ class PtTransformer0(nn.Module):
                 # seg_areas = seg_right - seg_left
                 # keep_idxs20 = seg_areas > self.test_duration_thresh
 
-                use_round = False
+                use_round = True
                 # if i!=0 and i!=1 :
                 # if i!=0 :
                 if True:
@@ -1066,18 +1066,18 @@ class PtTransformer0(nn.Module):
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
                                 prob_left = prob[left_idx[left_mask], 0]
                                 # print(seg_left[left_mask])
-                                # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])*(0.5+prob_left)
+                                seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])*(0.5+prob_left)
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
-                                seg_left[left_mask] += (ref_left*stride_i/c) * (1-pred_prob[left_mask])
+#                                 seg_left[left_mask] += (ref_left*stride_i/c) * (1-pred_prob[left_mask])
                                 
                                 # pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
                                 #         torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
 
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
-                                # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])*(0.5+prob_right)
+                                seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])*(0.5+prob_right)
                                 # seg_right[right_mask] += (ref_right*stride_i/c)
-                                seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
+#                                 seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
 
                                 # pred_prob[right_mask] *= torch.max((1.05 - pred_prob[right_mask]), 
                                 #         torch.ones(pred_prob[right_mask].shape, device=pred_prob[right_mask].device))
