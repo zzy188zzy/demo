@@ -1027,14 +1027,14 @@ class PtTransformer0(nn.Module):
                 seg_areas = seg_right - seg_left
                 keep_idxs20 = seg_areas > self.test_duration_thresh
 
-                use_round = True
+                use_round = False
                 # if i!=0 and i!=1 :
                 # if i!=0 :
                 if True:
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 2
-                    c = 4
+                    c = 8
                     e = 1
                     L = 7
                     stride_i = a[min(i+b, L)]
