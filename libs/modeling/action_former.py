@@ -982,6 +982,10 @@ class PtTransformer0(nn.Module):
                 # exit()
                 # sigmoid normalization for output logits
                 pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
+                # print(cls_i.sigmoid().shape)
+                # print(mask_i.unsqueeze(-1).shape)
+                # print(pred_prob.shape)
+                # print(pred_prob)
                 
                 # Apply filtering to make NMS faster following detectron2
                 # 1. Keep seg with confidence score > a threshold
@@ -1008,7 +1012,6 @@ class PtTransformer0(nn.Module):
 
                 # 3. gather predicted offsets
   
-                # print(offsets_i.shape)
                 offsets = offsets_i[pt_idxs]
                 # print(offsets.shape)
                 pts = pts_i[pt_idxs]
@@ -1019,6 +1022,11 @@ class PtTransformer0(nn.Module):
                 # 4. compute predicted segments (denorm by stride for output offsets)
                 seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
                 seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
+
+                pred_segs0 = torch.stack((seg_left, seg_right), -1)
+                # 5. Keep seg with duration > a threshold (relative to feature grids)
+                seg_areas = seg_right - seg_left
+                keep_idxs20 = seg_areas > self.test_duration_thresh
 
                 use_round = True
                 # if i!=0 and i!=1 :
@@ -1057,8 +1065,8 @@ class PtTransformer0(nn.Module):
                                 # seg_left[left_mask] += (ref_left*stride_i/c)
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (pred_prob[left_mask])
                                 
-                                # pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
-                                #         torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
+                                pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
+                                        torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
 
                                 ref_right = ref[right_idx[right_mask], 1]  # todo 
                                 seg_right[right_mask] += (ref_right*stride_j/c) * (1 - pred_prob[right_mask])
@@ -1111,29 +1119,29 @@ class PtTransformer0(nn.Module):
                         stride_i //= 2
                         
 
-                        # print(prob_left)
-                        # print(prob_right)
-                        # exit()
-                    # exit()
-                # print(ref_left)
-                # print(seg_left.shape)
-                # print(seg_left[left_mask])
-                # print('----')
-                pred_segs = torch.stack((seg_left, seg_right), -1)
-                # print(pred_segs.shape)
-                # print(pred_prob.shape)
-                # print(cls_idxs.shape)
-                # print(pred_prob)
-                # print(cls_idxs)
-                
-                # 5. Keep seg with duration > a threshold (relative to feature grids)
-                seg_areas = seg_right - seg_left
-                keep_idxs2 = seg_areas > self.test_duration_thresh
+                if False:
+                    pred_segs = torch.stack((seg_left, seg_right), -1)
 
-                # *_all : N (filtered # of segments) x 2 / 1
-                segs_all.append(pred_segs[keep_idxs2])
-                scores_all.append(pred_prob[keep_idxs2])
-                cls_idxs_all.append(cls_idxs[keep_idxs2])
+                    
+                    # 5. Keep seg with duration > a threshold (relative to feature grids)
+                    seg_areas = seg_right - seg_left
+                    keep_idxs2 = seg_areas > self.test_duration_thresh
+
+                    # *_all : N (filtered # of segments) x 2 / 1
+                    segs_all.append(pred_segs[keep_idxs2])
+                    scores_all.append(pred_prob[keep_idxs2])
+                    cls_idxs_all.append(cls_idxs[keep_idxs2])
+                else:
+                    pred_segs = torch.stack((seg_left, seg_right), -1)
+                    # 5. Keep seg with duration > a threshold (relative to feature grids)
+                    seg_areas = seg_right - seg_left
+                    keep_idxs2 = seg_areas > self.test_duration_thresh
+
+                    # *_all : N (filtered # of segments) x 2 / 1
+                    segs_all.append(torch.cat((pred_segs[keep_idxs2], pred_segs0[keep_idxs20]), dim=0))
+                    scores_all.append(torch.cat((pred_prob[keep_idxs2], pred_prob[keep_idxs20]), dim=0))
+                    cls_idxs_all.append(torch.cat((cls_idxs[keep_idxs2], cls_idxs[keep_idxs20]), dim=0))
+            
         else:
             for i, (cls_i, offsets_i, pts_i, mask_i) in enumerate(zip(
                     out_cls_logits, out_offsets, points, fpn_masks
