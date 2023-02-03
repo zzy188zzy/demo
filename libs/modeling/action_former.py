@@ -1119,10 +1119,8 @@ class PtTransformer0(nn.Module):
                         stride_i //= 2
                         
 
-                if False:
+                if True:
                     pred_segs = torch.stack((seg_left, seg_right), -1)
-
-                    
                     # 5. Keep seg with duration > a threshold (relative to feature grids)
                     seg_areas = seg_right - seg_left
                     keep_idxs2 = seg_areas > self.test_duration_thresh
