@@ -1040,7 +1040,7 @@ class PtTransformer0(nn.Module):
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = -1
-                    c = 1
+                    c = 0.5
                     e = 1
                     L = 5
                     stride_i = a[min(i+b, L)]
