@@ -1043,8 +1043,8 @@ class PtTransformer0(nn.Module):
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
                     for j in range(min(i+b+f, L+f)):  # 1 2 3 4 5 6
-                        if j != 0 and j != min(i+b+f, L+f)-1:
-                            continue
+                        if j != 0 and j!=1:
+                            break
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
