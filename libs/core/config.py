@@ -80,7 +80,7 @@ DEFAULTS = {
         # number of layers in the head (including the final one)
         "head_num_layers": 3,
         # if attach group norm to heads
-        "head_with_ln": False,
+        "head_with_ln": True,
         # defines the max length of the buffered points
         "max_buffer_len_factor": 6.0,
         # disable abs position encoding (added to input embedding)
