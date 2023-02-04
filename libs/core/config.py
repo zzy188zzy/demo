@@ -74,13 +74,13 @@ DEFAULTS = {
         # starting level for fpn
         "fpn_start_level": 0,
         # feat dim for head
-        "head_dim": 1024,  # 512
+        "head_dim": 512,  # 512
         # kernel size for reg/cls/center heads
         "head_kernel_size": 3,
         # number of layers in the head (including the final one)
         "head_num_layers": 3,
         # if attach group norm to heads
-        "head_with_ln": True,
+        "head_with_ln": False,
         # defines the max length of the buffered points
         "max_buffer_len_factor": 6.0,
         # disable abs position encoding (added to input embedding)
