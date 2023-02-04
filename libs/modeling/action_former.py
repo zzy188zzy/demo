@@ -1034,15 +1034,15 @@ class PtTransformer0(nn.Module):
 
                 use_round = True  # -0.02 +0.04 -0.2 -0.56 -0.05 -0.02
                 # if i!=0 and i!=1 and i!=2 and i!=3 and i!=4 and i!=5:
-                # if i==3:
-                if True:  
+                if i!=4 and i!=5:
+                # if True:  
                 # if False:
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 0  # 0
                     c = 1
                     e = 1
-                    L = 3  # 5
+                    L = 5  # 5
                     f = 1  # 1
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
