@@ -74,7 +74,7 @@ DEFAULTS = {
         # starting level for fpn
         "fpn_start_level": 0,
         # feat dim for head
-        "head_dim": 256,  # 512
+        "head_dim": 1024,  # 512
         # kernel size for reg/cls/center heads
         "head_kernel_size": 3,
         # number of layers in the head (including the final one)
