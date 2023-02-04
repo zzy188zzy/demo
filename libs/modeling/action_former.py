@@ -1036,7 +1036,7 @@ class PtTransformer0(nn.Module):
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 0  # 0
-                    c = 0.9
+                    c = 1
                     e = 1
                     L = 5  # 5
                     f = 1  # 1
@@ -1071,7 +1071,7 @@ class PtTransformer0(nn.Module):
                                 prob_left = prob[left_idx[left_mask], 0]
                                 # print(seg_left[left_mask])
                                 if i!=2 and i!=3:
-                                    seg_left[left_mask] += (ref_left*stride_j/1.3) * (1-pred_prob[left_mask])
+                                    seg_left[left_mask] += (ref_left*stride_j/1.4) * (1-pred_prob[left_mask])
                                 else:
                                     seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
                                 # seg_left[left_mask] += (ref_left*stride_j/c)
@@ -1084,7 +1084,7 @@ class PtTransformer0(nn.Module):
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
                                 if i!=2 and i!=3:
-                                    seg_right[right_mask] += (ref_right*stride_j/1.3) * (1-pred_prob[right_mask])
+                                    seg_right[right_mask] += (ref_right*stride_j/1.4) * (1-pred_prob[right_mask])
                                 else:
                                     seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
                                 # seg_right[right_mask] += (ref_right*stride_j/c)
