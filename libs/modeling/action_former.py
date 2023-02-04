@@ -1043,8 +1043,8 @@ class PtTransformer0(nn.Module):
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
                     for j in range(min(i+b+f, L+f)):  # 1 2 3 4 5 6
-                        if j>=5:
-                            break
+                        # if j>=5:
+                        #     break
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
@@ -1055,7 +1055,7 @@ class PtTransformer0(nn.Module):
 
                         t = min(i+b+1, L+1)
 
-                        # assert stride_i == stride_j
+                        assert stride_i == stride_j
 
                         # c = max(s_i, stride_i)/s_i
                     
@@ -1070,18 +1070,24 @@ class PtTransformer0(nn.Module):
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
                                 prob_left = prob[left_idx[left_mask], 0]
                                 # print(seg_left[left_mask])
-                                seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
-                                # seg_left[left_mask] += (ref_left*stride_i/c)
+                                if i!=2 and i!=3:
+                                    seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
+                                else:
+                                    seg_left[left_mask] += (ref_left*stride_j/c)
+                                # seg_left[left_mask] += (ref_left*stride_j/c)
                                 
-                                # seg_left[left_mask] += (ref_left*stride_i/c) * (1-pred_prob[left_mask]/pred_prob_len)
+                                # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask]/pred_prob_len)
                                 
                                 # pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
                                 #         torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
 
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
-                                seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
-                                # seg_right[right_mask] += (ref_right*stride_i/c)
+                                if i!=2 and i!=3:
+                                    seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
+                                else:
+                                    seg_right[right_mask] += (ref_right*stride_j/c)
+                                # seg_right[right_mask] += (ref_right*stride_j/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
 
                                 # pred_prob[right_mask] *= torch.max((1.05 - pred_prob[right_mask]), 
