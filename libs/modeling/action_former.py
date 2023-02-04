@@ -1043,7 +1043,7 @@ class PtTransformer0(nn.Module):
                     if i==2 or i==3 :
                         c = 1
                     else:
-                        c = 2
+                        c = 0.5
                     e = 1
                     L = 5
                     stride_i = a[min(i+b, L)]
