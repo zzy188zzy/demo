@@ -972,7 +972,6 @@ class PtTransformer0(nn.Module):
         segs_all = []
         scores_all = []
         cls_idxs_all = []
-        print('----')
 
         # loop over fpn levels
         if out_refines != None:
@@ -1025,7 +1024,6 @@ class PtTransformer0(nn.Module):
                 # 4. compute predicted segments (denorm by stride for output offsets)
                 seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
                 seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
-                print(seg_left.shape[0])
 
                 # pred_segs0 = torch.stack((seg_left, seg_right), -1)
                 # # 5. Keep seg with duration > a threshold (relative to feature grids)
@@ -1047,7 +1045,7 @@ class PtTransformer0(nn.Module):
                     else:
                         c = 1
                     e = 1
-                    L = 5
+                    L = 3
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
                     for j in range(min(i+b+1, L+1)):  # 1 2 3 4 5 6
