@@ -298,7 +298,7 @@ class PtTransformer0(nn.Module):
                     'arch' : (2, 2, 5),
                     'mha_win_size': self.mha_win_size,
                     'scale_factor' : scale_factor,
-                    'with_ln' : embd_with_ln,
+                    'with_ln' : True,
                     'attn_pdrop' : 0.0,
                     'proj_pdrop' : self.train_dropout,
                     'path_pdrop' : self.train_droppath,
@@ -315,7 +315,7 @@ class PtTransformer0(nn.Module):
                     'n_embd_ks': embd_kernel_size,
                     'arch': (2, 2, 5),
                     'scale_factor': scale_factor,
-                    'with_ln' : embd_with_ln
+                    'with_ln' : True
                 }
             )
         if isinstance(embd_dim, (list, tuple)):
@@ -330,7 +330,7 @@ class PtTransformer0(nn.Module):
                 'out_channel' : 512,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
-                'with_ln' : fpn_with_ln
+                'with_ln' : True
             }
         )
 
@@ -349,7 +349,7 @@ class PtTransformer0(nn.Module):
             512, 512, self.num_classes,
             kernel_size=head_kernel_size,
             prior_prob=self.train_cls_prior_prob,
-            with_ln=head_with_ln,
+            with_ln=True,
             num_layers=head_num_layers,
             empty_cls=train_cfg['head_empty_cls']
         )
@@ -357,7 +357,7 @@ class PtTransformer0(nn.Module):
             512, 512, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
-            with_ln=head_with_ln
+            with_ln=True
         )
 
         # maintain an EMA of #foreground to stabilize the loss normalizer
