@@ -1055,7 +1055,7 @@ class PtTransformer0(nn.Module):
 
                         t = min(i+b+1, L+1)
 
-                        assert stride_i == stride_j
+                        # assert stride_i == stride_j
 
                         # c = max(s_i, stride_i)/s_i
                     
