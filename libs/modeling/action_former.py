@@ -1039,13 +1039,14 @@ class PtTransformer0(nn.Module):
                 # if False:
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
-                    b = 0
+                    b = 0  # 0
                     c = 1
                     e = 1
-                    L = 5
+                    L = 5  # 5
+                    f = 0  # 1
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
-                    for j in range(min(i+b+1, L+1)):  # 1 2 3 4 5 6
+                    for j in range(min(i+b+f, L+f)):  # 1 2 3 4 5 6
                         
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
