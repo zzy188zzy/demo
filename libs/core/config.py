@@ -41,9 +41,9 @@ DEFAULTS = {
     # network architecture
     "model": {
         # type of backbone (convTransformer | conv)
-        "backbone_type": 'convTransformer',
+        "backbone_type": 'conv',
         # type of FPN (fpn | identity)
-        "fpn_type": "identity",
+        "fpn_type": "fpn",
         "backbone_arch": (2, 2, 5),  # (2, 2, 5)
         # scale factor between pyramid levels
         "scale_factor": 2,
