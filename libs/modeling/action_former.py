@@ -1073,7 +1073,7 @@ class PtTransformer0(nn.Module):
                                 if i!=2 and i!=3:
                                     seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
                                 else:
-                                    seg_left[left_mask] += (ref_left*stride_j/c)
+                                    seg_left[left_mask] += (ref_left*stride_j/4)
                                 # seg_left[left_mask] += (ref_left*stride_j/c)
                                 
                                 # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask]/pred_prob_len)
@@ -1086,7 +1086,7 @@ class PtTransformer0(nn.Module):
                                 if i!=2 and i!=3:
                                     seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
                                 else:
-                                    seg_right[right_mask] += (ref_right*stride_j/c)
+                                    seg_right[right_mask] += (ref_right*stride_j/4)
                                 # seg_right[right_mask] += (ref_right*stride_j/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
 
