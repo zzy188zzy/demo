@@ -1043,7 +1043,7 @@ class PtTransformer0(nn.Module):
                     c = 1
                     e = 1
                     L = 5  # 5
-                    f = 0  # 1
+                    f = -1  # 1
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
                     for j in range(min(i+b+f, L+f)):  # 1 2 3 4 5 6
