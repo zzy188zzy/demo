@@ -209,7 +209,7 @@ class Refinement_module(nn.Module):
 
             ref_loss = torch.stack(ref_loss).min()*2
             inf_loss = torch.stack(inf_loss).min()*0
-            prob_loss = torch.stack(prob_loss).min()*0.5
+            prob_loss = torch.stack(prob_loss).min()*0.6
             final_loss = ref_loss  + prob_loss
 
             return {
@@ -306,8 +306,8 @@ class Refinement_module(nn.Module):
         gt_ref_low = dis0.clone()
         gt_ref_high = dis0.clone()
 
-        low_p = 1  # 0 ~ 1
-        high_p = 1
+        low_p = 0.2  # 0 ~ 1
+        high_p = 0.2
 
         ra = concat_points[:, 1]
         rb = concat_points[:, 2]
