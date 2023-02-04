@@ -1032,9 +1032,9 @@ class PtTransformer0(nn.Module):
 
                 pred_prob_len = max(pred_prob.max()-pred_prob.min(), 0.5)
 
-                use_round = True  # -0.02 +0.04 -0.2 -0.56
-                if i!=0 and i!=1 and i!=2 and i!=3 and i!=4:
-                # if i!=0 :
+                use_round = True  # -0.02 +0.04 -0.2 -0.56 -0.05 -0.02
+                # if i!=0 and i!=1 and i!=2 and i!=3 and i!=4 and i!=5:
+                if i==2 or i==3 :
                 # if True:  
                 # if False:
                     # 0 1 2 3 4 5
