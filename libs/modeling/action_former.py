@@ -1036,7 +1036,7 @@ class PtTransformer0(nn.Module):
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 0  # 0
-                    c = 1.5
+                    c = 2
                     e = 1
                     L = 5  # 5
                     f = 1  # 1
