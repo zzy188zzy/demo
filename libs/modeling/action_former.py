@@ -1034,7 +1034,7 @@ class PtTransformer0(nn.Module):
 
                 use_round = True  # -0.02 +0.04 -0.2 -0.56 -0.05 -0.02
                 # if i!=0 and i!=1 and i!=2 and i!=3 and i!=4 and i!=5:
-                if i==2:
+                if i==3:
                 # if True:  
                 # if False:
                     # 0 1 2 3 4 5
@@ -1046,8 +1046,7 @@ class PtTransformer0(nn.Module):
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
                     for j in range(min(i+b+1, L+1)):  # 1 2 3 4 5 6
-                        if j>=1:
-                            break
+                        
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
