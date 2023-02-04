@@ -43,7 +43,7 @@ DEFAULTS = {
         # type of backbone (convTransformer | conv)
         "backbone_type": 'conv',
         # type of FPN (fpn | identity)
-        "fpn_type": "fpn",
+        "fpn_type": "identity",
         "backbone_arch": (2, 2, 5),  # (2, 2, 5)
         # scale factor between pyramid levels
         "scale_factor": 2,
@@ -64,17 +64,17 @@ DEFAULTS = {
         # kernel size for embedding network
         "embd_kernel_size": 3,
         # (output) feature dim for embedding network
-        "embd_dim": 512,
+        "embd_dim": 1024,  # 512
         # if attach group norm to embedding network
         "embd_with_ln": True,
         # feat dim for FPN
-        "fpn_dim": 512,
+        "fpn_dim": 1024,  # 512
         # if add ln at the end of fpn outputs
         "fpn_with_ln": True,
         # starting level for fpn
         "fpn_start_level": 0,
         # feat dim for head
-        "head_dim": 512,
+        "head_dim": 1024,  # 512
         # kernel size for reg/cls/center heads
         "head_kernel_size": 3,
         # number of layers in the head (including the final one)
