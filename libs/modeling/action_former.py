@@ -1036,14 +1036,15 @@ class PtTransformer0(nn.Module):
                     # 0 1 2 3 4 5
                     a = [1,2,4,8,16,32,64,128]
                     b = 0  # 0
-                    c = 1.5
+                    c = 1
                     e = 1
                     L = 5  # 5
                     f = 1  # 1
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
                     for j in range(min(i+b+f, L+f)):  # 1 2 3 4 5 6
-                        
+                        if j != 0 and j != min(i+b+f, L+f)-1:
+                            continue
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
@@ -1069,8 +1070,8 @@ class PtTransformer0(nn.Module):
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
                                 prob_left = prob[left_idx[left_mask], 0]
                                 # print(seg_left[left_mask])
-                                # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
-                                seg_left[left_mask] += (ref_left*stride_i/c)
+                                seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
+                                # seg_left[left_mask] += (ref_left*stride_i/c)
                                 
                                 # seg_left[left_mask] += (ref_left*stride_i/c) * (1-pred_prob[left_mask]/pred_prob_len)
                                 
@@ -1079,8 +1080,8 @@ class PtTransformer0(nn.Module):
 
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
-                                # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
-                                seg_right[right_mask] += (ref_right*stride_i/c)
+                                seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
+                                # seg_right[right_mask] += (ref_right*stride_i/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
 
                                 # pred_prob[right_mask] *= torch.max((1.05 - pred_prob[right_mask]), 
