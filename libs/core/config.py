@@ -68,7 +68,7 @@ DEFAULTS = {
         # if attach group norm to embedding network
         "embd_with_ln": True,
         # feat dim for FPN
-        "fpn_dim": 512,  # 512
+        "fpn_dim": 1024,  # 512
         # if add ln at the end of fpn outputs
         "fpn_with_ln": True,
         # starting level for fpn
