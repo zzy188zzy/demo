@@ -291,7 +291,7 @@ class PtTransformer0(nn.Module):
                 'convTransformer',
                 **{
                     'n_in' : input_dim,
-                    'n_embd' : embd_dim,
+                    'n_embd' : 512,
                     'n_head': 4,
                     'n_embd_ks': embd_kernel_size,
                     'max_len': max_seq_len,
@@ -311,7 +311,7 @@ class PtTransformer0(nn.Module):
                 'conv',
                 **{
                     'n_in': input_dim,
-                    'n_embd': embd_dim,
+                    'n_embd': 512,
                     'n_embd_ks': embd_kernel_size,
                     'arch': (2, 2, 5),
                     'scale_factor': scale_factor,
@@ -326,8 +326,8 @@ class PtTransformer0(nn.Module):
         self.neck = make_neck(
             'identity',
             **{
-                'in_channels' : [embd_dim] * 6,
-                'out_channel' : fpn_dim,
+                'in_channels' : [512] * 6,
+                'out_channel' : 512,
                 'scale_factor' : scale_factor,
                 'start_level' : fpn_start_level,
                 'with_ln' : fpn_with_ln
@@ -346,7 +346,7 @@ class PtTransformer0(nn.Module):
 
         # classfication and regerssion heads
         self.cls_head = PtTransformerClsHead(
-            fpn_dim, head_dim, self.num_classes,
+            512, 512, self.num_classes,
             kernel_size=head_kernel_size,
             prior_prob=self.train_cls_prior_prob,
             with_ln=head_with_ln,
@@ -354,7 +354,7 @@ class PtTransformer0(nn.Module):
             empty_cls=train_cfg['head_empty_cls']
         )
         self.reg_head = PtTransformerRegHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
+            512, 512, len(self.fpn_strides),
             kernel_size=head_kernel_size,
             num_layers=head_num_layers,
             with_ln=head_with_ln
