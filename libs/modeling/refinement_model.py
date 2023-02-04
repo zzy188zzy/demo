@@ -208,13 +208,13 @@ class Refinement_module(nn.Module):
                 prob_loss.append(loss['prob_loss'])
 
             ref_loss = torch.stack(ref_loss).min()*2
-            inf_loss = torch.stack(inf_loss).min()*1
+            inf_loss = torch.stack(inf_loss).min()*0
             prob_loss = torch.stack(prob_loss).min()*0.5
-            final_loss = ref_loss + inf_loss + prob_loss
+            final_loss = ref_loss  + prob_loss
 
             return {
                     'ref_loss': ref_loss,
-                    'inf_loss': inf_loss,
+                    # 'inf_loss': inf_loss,
                     'prob_loss': prob_loss,
                     'final_loss': final_loss
             }
@@ -424,9 +424,9 @@ class Refinement_module(nn.Module):
         mask_in = (a * b) < 0
 
         c = torch.cat((torch.abs(a)[:, None], torch.abs(b)[:, None]), dim=-1)
-        # dis = torch.mean(c, dim=-1)
+        dis = torch.mean(c, dim=-1)
 
-        dis, _ = torch.min(c, dim=-1)
+        # dis, _ = torch.min(c, dim=-1)
 
         # dis[mask_in] = 0  # dont!
         # ref_loss = dis.mean()
