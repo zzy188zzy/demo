@@ -89,7 +89,6 @@ class PtTransformerClsHead(nn.Module):
         # fpn_masks remains the same
         return out_logits
 
-
 class PtTransformerRegHead(nn.Module):
     """
     Shared 1D Conv heads for regression
@@ -158,7 +157,6 @@ class PtTransformerRegHead(nn.Module):
 
         # fpn_masks remains the same
         return out_offsets
-
 
 class DecoupleNet(nn.Module):
     def __init__(
@@ -980,6 +978,7 @@ class PtTransformer0(nn.Module):
                 )):
                 # sigmoid normalization for output logits
                 pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
+                pred_prob_max = (cls_i.softmax(1) * mask_i.unsqueeze(-1)).flatten()
                 # print(cls_i.sigmoid().shape)
                 # print(mask_i.unsqueeze(-1).shape)
                 # print(pred_prob.shape)
@@ -989,6 +988,7 @@ class PtTransformer0(nn.Module):
                 # 1. Keep seg with confidence score > a threshold
                 keep_idxs1 = (pred_prob > self.test_pre_nms_thresh)
                 pred_prob = pred_prob[keep_idxs1]
+                pred_prob_max = pred_prob_max[keep_idxs1]
                 # print(pred_prob.shape)
                 # print(pred_prob)
                 topk_idxs = keep_idxs1.nonzero(as_tuple=True)[0]
@@ -1001,6 +1001,7 @@ class PtTransformer0(nn.Module):
                 # print(pred_prob)
                 # exit()
                 topk_idxs = topk_idxs[idxs[:num_topk]].clone()
+                pred_prob_max = pred_prob_max[idxs[:num_topk]].clone()
 
                 # fix a warning in pytorch 1.9
                 pt_idxs =  torch.div(
@@ -1073,7 +1074,8 @@ class PtTransformer0(nn.Module):
                                 if i!=2 and i!=3:
                                     seg_left[left_mask] += (ref_left*stride_j/1.25) * (1-pred_prob[left_mask])
                                 else:
-                                    seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
+                                    # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
+                                    seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob_max[left_mask])
                                 # seg_left[left_mask] += (ref_left*stride_j/c)
                                 
                                 # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask]/pred_prob_len)
@@ -1087,6 +1089,7 @@ class PtTransformer0(nn.Module):
                                     seg_right[right_mask] += (ref_right*stride_j/1.25) * (1-pred_prob[right_mask])
                                 else:
                                     seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
+                                    seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob_max[right_mask])
                                 # seg_right[right_mask] += (ref_right*stride_j/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
 
