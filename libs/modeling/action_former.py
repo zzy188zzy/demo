@@ -1075,7 +1075,7 @@ class PtTransformer0(nn.Module):
                                     seg_left[left_mask] += (ref_left*stride_j/1.25) * (1-pred_prob[left_mask])
                                 else:
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
-                                    seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob_max[left_mask])
+                                    seg_left[left_mask] += (ref_left*stride_j/c) * ((1-pred_prob_max[left_mask])+(1-pred_prob[left_mask]))/2
                                 # seg_left[left_mask] += (ref_left*stride_j/c)
                                 
                                 # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask]/pred_prob_len)
@@ -1089,7 +1089,7 @@ class PtTransformer0(nn.Module):
                                     seg_right[right_mask] += (ref_right*stride_j/1.25) * (1-pred_prob[right_mask])
                                 else:
                                     seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask])
-                                    seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob_max[right_mask])
+                                    seg_right[right_mask] += (ref_right*stride_j/c) * ((1-pred_prob_max[right_mask])+(1-pred_prob[right_mask]))/2
                                 # seg_right[right_mask] += (ref_right*stride_j/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
 
