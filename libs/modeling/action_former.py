@@ -1008,6 +1008,9 @@ class PtTransformer0(nn.Module):
                     topk_idxs, self.num_classes, rounding_mode='floor'
                 )
                 cls_idxs = torch.fmod(topk_idxs, self.num_classes)
+                print(cls_idxs)
+                print(cls_idxs.shape)
+                exit()
 
                 # 3. gather predicted offsets
   
