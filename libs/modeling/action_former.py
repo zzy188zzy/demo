@@ -1082,12 +1082,14 @@ class PtTransformer0(nn.Module):
                                     seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob_max[left_mask])
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * ((1-pred_prob_max[left_mask])+(1-pred_prob[left_mask]))/2
-                                print(pred_prob[left_mask]) 
+                                print(pred_prob) 
                                 print(cls_i.sigmoid()[pt_idxs, cls_idxs])
-                                print(pred_prob[left_mask].shape) 
+                                print(cls_ref.sigmoid())
+                                print(pred_prob.shape) 
+                                print(cls_i.sigmoid().shape)
                                 print(cls_i.sigmoid()[pt_idxs, cls_idxs].shape)
-                                print(cls_ref.sigmoid()[pt_idxs, cls_idxs])
-                                print(cls_ref.sigmoid()[pt_idxs, cls_idxs].shape)
+                                # print(cls_ref.sigmoid()[pt_idxs, cls_idxs])
+                                print(cls_ref.sigmoid().shape)
                                 exit()
 
 
