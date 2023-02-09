@@ -709,7 +709,7 @@ class RefineHead(nn.Module):
             stride=1, padding=kernel_size // 2
         )
         self.cls_head = MaskedConv1D(
-            feat_dim, 2, kernel_size,
+            feat_dim, 40, kernel_size,
             stride=1, padding=kernel_size // 2
         )
 
