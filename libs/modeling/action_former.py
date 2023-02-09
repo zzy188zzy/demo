@@ -460,7 +460,7 @@ class PtTransformer0(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines, out_probs, torch.sigmoid(out_logits)
+                out_cls_logits, out_offsets, out_refines, out_probs, out_logits
             )
             return results
 
@@ -1052,7 +1052,7 @@ class PtTransformer0(nn.Module):
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
-                        cls_ref = out_logits[min(i+b, L)-j].squeeze(1).reshape(prob.shape[0], 2, -1)
+                        cls_ref = torch.sigmoid(out_logits[min(i+b, L)-j].squeeze(1).reshape(prob.shape[0], 2, -1))
                         
                         stride_j = a[min(i+b, L)-j]
 
