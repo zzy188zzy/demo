@@ -331,9 +331,9 @@ class Refinement_module(nn.Module):
         label = gt_label[None, :, None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
         label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]  # [4536, 2]
         hot = torch.zeros((num_pts, 2, 20), device=label.device)
-        hot[label[:, :, None]] += 1
+        hot[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), label] += 1
         torch.set_printoptions(threshold=np.inf)
-        print(hot)
+        print(hot[0,0,:])
         print(hot.shape)
         exit()
         
