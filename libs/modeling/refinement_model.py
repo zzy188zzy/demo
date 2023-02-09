@@ -329,11 +329,17 @@ class Refinement_module(nn.Module):
         r = concat_points[0, 2]
 
         label = gt_label[None, :, None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
-        label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]
-        # torch.set_printoptions(threshold=np.inf)
+        label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]  # [4536, 2]
+        hot = torch.zeros((num_pts, 2, 20), device=label.device)
+        hot[label[:, :, None]] += 1
+        torch.set_printoptions(threshold=np.inf)
+        print(hot)
+        print(hot.shape)
+        exit()
+        
         # print(gt_label)
         # print(label[:100])
-        # exit()
+        exit()
 
         for i in range(2):
             dis_l = gt_ref_low[:, i]
