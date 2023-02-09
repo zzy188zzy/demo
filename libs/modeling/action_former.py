@@ -1052,7 +1052,7 @@ class PtTransformer0(nn.Module):
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
-                        cls_ref = torch.sigmoid(out_logits[min(i+b, L)-j].squeeze(1).reshape(prob.shape[0], 2, -1))
+                        cls_ref = torch.softmax(out_logits[min(i+b, L)-j].squeeze(1).reshape(prob.shape[0], 2, -1), dim=2)
                         
                         stride_j = a[min(i+b, L)-j]
 
