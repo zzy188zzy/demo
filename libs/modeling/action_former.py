@@ -1052,9 +1052,8 @@ class PtTransformer0(nn.Module):
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
-                        cls_ref = out_logits[min(i+b, L)-j].squeeze(1)
-                        print(cls_ref.shape)
-                        exit()
+                        cls_ref = out_logits[min(i+b, L)-j].squeeze(1).reshape(cls_ref.shape[0], 2, -1)
+                        
                         stride_j = a[min(i+b, L)-j]
 
                         lr = prob[:,0].max()-prob[:,0].min()+1e-6
@@ -1083,12 +1082,14 @@ class PtTransformer0(nn.Module):
                                     seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob_max[left_mask])
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * ((1-pred_prob_max[left_mask])+(1-pred_prob[left_mask]))/2
-                                # seg_left[left_mask] += (ref_left*stride_j/c)
-                                
-                                # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask]/pred_prob_len)
-                                
-                                # pred_prob[left_mask] *= torch.max((1.05 - pred_prob[left_mask]), 
-                                #         torch.ones(pred_prob[left_mask].shape, device=pred_prob[left_mask].device))
+                                print(pred_prob[left_mask]) 
+                                print(cls_i.sigmoid()[pt_idxs, cls_idxs])
+                                print(pred_prob[left_mask].shape) 
+                                print(cls_i.sigmoid()[pt_idxs, cls_idxs].shape)
+                                print(cls_ref.sigmoid()[pt_idxs, cls_idxs])
+                                print(cls_ref.sigmoid()[pt_idxs, cls_idxs].shape)
+                                exit()
+
 
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
