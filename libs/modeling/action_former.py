@@ -1100,10 +1100,11 @@ class PtTransformer0(nn.Module):
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
                                 # cls_left[cls_left>1]=1
                                 # cls_right[cls_right>1]=1
-                                a = (1 - pred_prob[left_mask]) * cls_left
-                                b = (1 - pred_prob[right_mask]) * cls_right
-                                pred_prob[left_mask] += a
-                                pred_prob[right_mask] += b
+
+                                # a = (1 - pred_prob[left_mask]) * cls_left
+                                # b = (1 - pred_prob[right_mask]) * cls_right
+                                # pred_prob[left_mask] += a
+                                # pred_prob[right_mask] += b
                                 
                         else:
                             left_idx0 = (seg_left/stride_j).floor().long()
