@@ -1015,11 +1015,11 @@ class PtTransformer0(nn.Module):
                 # print(offsets.shape)
                 pts = pts_i[pt_idxs]
 
-                print(pred_prob.shape)
-                print(cls_i.sigmoid().shape)
-                print(pt_idxs.shape)
-                print(cls_idxs.shape)
-                print(cls_i.sigmoid()[pt_idxs, cls_idxs].shape)
+                print(pred_prob)
+                # print(cls_i.sigmoid().shape)
+                # print(pt_idxs.shape)
+                # print(cls_idxs.shape)
+                print(cls_i.sigmoid()[pt_idxs, cls_idxs])
 
                 exit()
                 # 4. compute predicted segments (denorm by stride for output offsets)
