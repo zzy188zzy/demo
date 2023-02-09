@@ -1102,10 +1102,10 @@ class PtTransformer0(nn.Module):
                                 # cls_left[cls_left>1]=1
                                 # cls_right[cls_right>1]=1
 
-                                aa = cls_left/step
-                                bb = cls_right/step
-                                pred_prob[left_mask] += aa
-                                pred_prob[right_mask] += bb
+                                aa = cls_left/stride_j +1
+                                bb = cls_right/stride_j +1
+                                pred_prob[left_mask] *= aa
+                                pred_prob[right_mask] *= bb
                                 # print(pred_prob[left_mask].shape)
                                 # print(a.shape)
                                 # exit()
