@@ -331,12 +331,12 @@ class Refinement_module(nn.Module):
         label = gt_label[None, :, None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
         label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]  # [4536, 2]
         hot = torch.zeros((num_pts, 2, 20), device=label.device)
-        hot[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), label] += 1
-        torch.set_printoptions(threshold=np.inf)
-        print(label[0,0])
-        print(hot[0,0,:])
-        print(hot.shape)
-        exit()
+        hot[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), label] = 1
+        # torch.set_printoptions(threshold=np.inf)
+        # print(label[0,0])
+        # print(hot[0,0,:])
+        # print(hot.shape)
+        # exit()
         
         # print(gt_label)
         # print(label[:100])
@@ -469,6 +469,8 @@ class Refinement_module(nn.Module):
         # 2. cls_loss
         print(out_logit.shape)
         print(gt_cls.shape)
+        print(out_logit[0,0])
+        print(gt_cls[0,0])
         exit() 
         
 
