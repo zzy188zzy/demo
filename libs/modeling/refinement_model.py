@@ -391,6 +391,7 @@ class Refinement_module(nn.Module):
         # 1 ref_loss
         gt_low = torch.stack(gt_ref_low)
         gt_high = torch.stack(gt_ref_high)
+        gt_cls = torch.stack(gt_cls)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]   
         out_prob = torch.cat(out_probs, dim=1).squeeze(2)   
         out_logit = torch.cat(out_logits, dim=1).squeeze(2)
