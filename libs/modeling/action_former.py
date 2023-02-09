@@ -1099,8 +1099,8 @@ class PtTransformer0(nn.Module):
                                     # seg_right[right_mask] += (ref_right*stride_j/c) * ((1-pred_prob_max[right_mask])+(1-pred_prob[right_mask]))/2
                                 # seg_right[right_mask] += (ref_right*stride_j/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
-                                cls_left[cls_left<0]=0
-                                cls_right[cls_right<0]=0
+                                cls_left[cls_left>0]=0
+                                cls_right[cls_right>0]=0
 
                                 aa = cls_left/stride_j +1
                                 bb = cls_right/stride_j +1
