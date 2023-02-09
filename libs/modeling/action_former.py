@@ -1105,9 +1105,9 @@ class PtTransformer0(nn.Module):
                                 b = (1 - pred_prob[right_mask]) * cls_right
                                 pred_prob[left_mask] += a
                                 pred_prob[right_mask] += b
-                                print(pred_prob[left_mask].shape)
-                                print(a.shape)
-                                exit()
+                                # print(pred_prob[left_mask].shape)
+                                # print(a.shape)
+                                # exit()
                         else:
                             left_idx0 = (seg_left/stride_j).floor().long()
                             left_idx1 = (seg_left/stride_j).ceil().long()
