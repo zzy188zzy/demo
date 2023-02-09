@@ -163,6 +163,12 @@ class Refinement_module(nn.Module):
             num_layers=head_num_layers,
             with_ln=head_with_ln
         )
+        self.clsHead = ClsHead(
+            fpn_dim, head_dim, len(self.fpn_strides),
+            kernel_size=head_kernel_size,
+            num_layers=head_num_layers,
+            with_ln=head_with_ln
+        )
 
     @property
     def device(self):
@@ -178,8 +184,11 @@ class Refinement_module(nn.Module):
         points = self.point_generator(fpn_feats)
 
         out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
+        out_logits = self.clsHead(fpn_feats, fpn_masks)
+        
         out_refines = [x.permute(0, 2, 1) for x in out_refines]
         out_probs = [x.permute(0, 2, 1) for x in out_probs]
+        out_logits = [x.permute(0, 2, 1) for x in out_logits]
         fpn_masks = [x.squeeze(1) for x in fpn_masks]
 
         if self.training:
@@ -187,7 +196,7 @@ class Refinement_module(nn.Module):
             gt_labels = [x['labels'].to(self.device) for x in video_list]
 
             time_ = 1
-            gt_ref_low, gt_ref_high = self.label_points(
+            gt_ref_low, gt_ref_high, gt_cls = self.label_points(
                 points, gt_segments, gt_labels, time_
             )
             ref_loss = []
@@ -196,13 +205,15 @@ class Refinement_module(nn.Module):
             for idx in range(time_):
                 a = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
                 b = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
+                c = [gt_cls[i][idx] for i in range(len(gt_cls))]
 
                 # compute the loss and return
                 loss = self.losses(
                     fpn_masks,
                     out_refines,
                     out_probs,
-                    a, b, idx
+                    out_logits,
+                    a, b, c, idx
                 )
                 ref_loss.append(loss['ref_loss'])
                 inf_loss.append(loss['inf_loss'])
@@ -265,26 +276,29 @@ class Refinement_module(nn.Module):
     @torch.no_grad()
     def label_points(self, points, gt_segments, gt_labels, time_):
         concat_points = torch.cat(points, dim=0)
-        gt_ref_low, gt_ref_high = [], []
+        gt_ref_low, gt_ref_high, gt_cls = [], [], []
         for gt_segment, gt_label in zip(gt_segments, gt_labels):
             coarse_segments, coarse_labels = self.coarse_gt_single_video(
                 gt_segment, gt_label, time=time_ - 1, mode='list'
             )
             gt_ref_low_single = []
             gt_ref_high_single = []
+            gt_cls_single = []
             for i, (coarse_segment, coarse_label) in enumerate(zip(coarse_segments, coarse_labels)):
                 
-                low_targets, high_targets = \
+                low_targets, high_targets, cls_targets = \
                     self.label_points_single_video(
                         concat_points, coarse_segment, coarse_label
                     )
                 # append to list (len = # images, each of size FT x C)
                 gt_ref_low_single.append(low_targets)
                 gt_ref_high_single.append(high_targets)
+                gt_cls_single.append(cls_targets)
             gt_ref_low.append(gt_ref_low_single)
             gt_ref_high.append(gt_ref_high_single)
+            gt_cls.append(gt_cls_single)
 
-        return gt_ref_low, gt_ref_high
+        return gt_ref_low, gt_ref_high, gt_cls
 
     @torch.no_grad()
     def label_points_single_video(self, concat_points, gt_segment, gt_label):
@@ -316,10 +330,10 @@ class Refinement_module(nn.Module):
 
         label = gt_label[None, :, None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
         label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]
-        torch.set_printoptions(threshold=np.inf)
-        print(gt_label)
-        print(label[:100])
-        exit()
+        # torch.set_printoptions(threshold=np.inf)
+        # print(gt_label)
+        # print(label[:100])
+        # exit()
 
         for i in range(2):
             dis_l = gt_ref_low[:, i]
@@ -362,12 +376,12 @@ class Refinement_module(nn.Module):
 
         # exit()
 
-        return gt_ref_low, gt_ref_high
+        return gt_ref_low, gt_ref_high, label
 
     def losses(
             self, fpn_masks,
-            out_refines, out_probs,
-            gt_ref_low, gt_ref_high, step
+            out_refines, out_probs, out_logits,
+            gt_ref_low, gt_ref_high, gt_cls, step
     ):
         # fpn_masks, out_*: F (List) [B, T_i, C]
         # gt_* : B (list) [F T, C]
@@ -441,6 +455,11 @@ class Refinement_module(nn.Module):
 
         # ref_loss /= self.loss_normalizer
         # inf_loss /= self.loss_normalizer
+
+        # 2. cls_loss
+        print(out_logits.shape)
+        print(gt_cls.shape)
+        exit() 
         
 
         return {
@@ -536,6 +555,69 @@ class Refinement_module(nn.Module):
         return segment, label
 
 
+class ClsHead(nn.Module):
+    def __init__(
+            self,
+            input_dim,
+            feat_dim,
+            fpn_levels,
+            num_layers=3,
+            kernel_size=3,
+            act_layer=nn.ReLU,
+            with_ln=False
+    ):
+        super().__init__()
+        self.fpn_levels = fpn_levels
+        self.act = act_layer()
+        self.head = nn.ModuleList()
+        self.norm = nn.ModuleList()
+        for idx in range(num_layers - 1):
+            if idx == 0:
+                in_dim = input_dim
+                out_dim = feat_dim
+            else:
+                in_dim = feat_dim
+                out_dim = feat_dim
+            self.head.append(
+                MaskedConv1D(
+                    in_dim, out_dim, kernel_size,
+                    stride=1,
+                    padding=kernel_size // 2,
+                    bias=(not with_ln)
+                )
+            )
+            if with_ln:
+                self.norm.append(LayerNorm(out_dim))
+            else:
+                self.norm.append(nn.Identity())
+
+        self.scale = nn.ModuleList()
+        for idx in range(fpn_levels):
+            self.scale.append(Scale())
+
+        # segment regression
+        self.cls_head = MaskedConv1D(
+            feat_dim, 20, kernel_size,
+            stride=1, padding=kernel_size // 2
+        )
+
+    def forward(self, fpn_feats, fpn_masks):
+        assert len(fpn_feats) == len(fpn_masks)
+
+        # apply the classifier for each pyramid level
+        out_logits = tuple()
+        for _, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
+            cur_out = cur_feat
+            for idx in range(len(self.head)):
+                cur_out, _ = self.head[idx](cur_out, cur_mask)
+                cur_out = self.act(self.norm[idx](cur_out))
+            cur_logits, _ = self.cls_head(cur_out, cur_mask)
+            out_logits += (cur_logits, )
+
+        # fpn_masks remains the same
+        return out_logits
+
+
 class RefineHead(nn.Module):
     def __init__(
             self,
@@ -605,3 +687,4 @@ class RefineHead(nn.Module):
 
         # fpn_masks remains the same
         return out_offsets, out_probs
+
