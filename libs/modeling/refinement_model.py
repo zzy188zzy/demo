@@ -471,6 +471,9 @@ class Refinement_module(nn.Module):
         print(gt_cls.shape)
         print(out_logit[0,0,0])
         print(gt_cls[0,0,0])
+
+        print(out_logit[:, :, :, mask].shape)
+        print(gt_cls[:, :, :, mask].shape)
         exit() 
         
 
