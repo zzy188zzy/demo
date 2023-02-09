@@ -979,9 +979,9 @@ class PtTransformer0(nn.Module):
                 # sigmoid normalization for output logits
                 pred_prob = (cls_i.sigmoid() * mask_i.unsqueeze(-1)).flatten()
                 pred_prob_max = (cls_i.softmax(1) * mask_i.unsqueeze(-1)).flatten()
-                # print(cls_i.sigmoid().shape)
-                # print(mask_i.unsqueeze(-1).shape)
-                # print(pred_prob.shape)
+                print(cls_i.sigmoid().shape)
+                print(mask_i.unsqueeze(-1).shape)
+                print(pred_prob.shape)
                 # print(pred_prob)
                 
                 # Apply filtering to make NMS faster following detectron2
@@ -1008,9 +1008,6 @@ class PtTransformer0(nn.Module):
                     topk_idxs, self.num_classes, rounding_mode='floor'
                 )
                 cls_idxs = torch.fmod(topk_idxs, self.num_classes)
-                print(cls_idxs)
-                print(cls_idxs.shape)
-                exit()
 
                 # 3. gather predicted offsets
   
@@ -1018,9 +1015,10 @@ class PtTransformer0(nn.Module):
                 # print(offsets.shape)
                 pts = pts_i[pt_idxs]
 
-                # print(pts[:, 0])
-                # print(offsets[:, 0])
+                print(pts.shape)
+                print(offsets.shape)
                 # print(pts[:, 3])
+                exit()
                 # 4. compute predicted segments (denorm by stride for output offsets)
                 seg_left = pts[:, 0] - offsets[:, 0] * pts[:, 3]
                 seg_right = pts[:, 0] + offsets[:, 1] * pts[:, 3]
