@@ -225,7 +225,7 @@ class Refinement_module(nn.Module):
             inf_loss = torch.stack(inf_loss).min()*0
             prob_loss = torch.stack(prob_loss).min()*0.5  # 0.5
 
-            cls_loss = torch.stack(cls_loss).min()*10
+            cls_loss = torch.stack(cls_loss).min()*1
             final_loss = ref_loss  + prob_loss + cls_loss
 
             return {
@@ -479,12 +479,13 @@ class Refinement_module(nn.Module):
 
         # print(out_logit[mask].shape)
         # print(gt_cls[mask].shape)
-        gt_target = gt_cls[mask]
+        gt_cls[out_mask] *= 0
+        gt_target = gt_cls[valid]
         gt_target *= 1 - self.train_label_smoothing
         gt_target += self.train_label_smoothing / (self.num_classes + 1)
 
         cls_loss = sigmoid_focal_loss(
-            out_logit[mask],
+            out_logit[valid],
             gt_target,                                          # [3011, 20]
             reduction='mean'
         )
