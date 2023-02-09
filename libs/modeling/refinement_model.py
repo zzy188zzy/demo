@@ -8,6 +8,7 @@ from .models import make_backbone, make_neck, make_generator
 from .blocks import MaskedConv1D, Scale, LayerNorm
 
 from ..utils import batched_nms
+import numpy as np
 
 
 class Refinement_module(nn.Module):
@@ -315,6 +316,8 @@ class Refinement_module(nn.Module):
 
         label = gt_label[None, :, None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
         label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]
+        torch.set_printoptions(threshold=np.inf)
+
         print(label)
         exit()
 
