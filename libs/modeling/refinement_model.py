@@ -163,12 +163,12 @@ class Refinement_module(nn.Module):
             num_layers=head_num_layers,
             with_ln=head_with_ln
         )
-        self.clsHead = ClsHead(
-            fpn_dim, head_dim, len(self.fpn_strides),
-            kernel_size=head_kernel_size,
-            num_layers=head_num_layers,
-            with_ln=head_with_ln
-        )
+        # self.clsHead = ClsHead(
+        #     fpn_dim, head_dim, len(self.fpn_strides),
+        #     kernel_size=head_kernel_size,
+        #     num_layers=head_num_layers,
+        #     with_ln=head_with_ln
+        # )
 
     @property
     def device(self):
@@ -183,8 +183,8 @@ class Refinement_module(nn.Module):
         fpn_feats, fpn_masks = self.neck(feats, masks)
         points = self.point_generator(fpn_feats)
 
-        out_refines, out_probs = self.refineHead(fpn_feats, fpn_masks)
-        out_logits = self.clsHead(fpn_feats, fpn_masks)
+        out_refines, out_probs, out_logits = self.refineHead(fpn_feats, fpn_masks)
+        # out_logits = self.clsHead(fpn_feats, fpn_masks)
         
         out_refines = [x.permute(0, 2, 1) for x in out_refines]
         out_probs = [x.permute(0, 2, 1) for x in out_probs]
@@ -499,8 +499,6 @@ class Refinement_module(nn.Module):
             reduction='mean'
         )
         # exit() 
-        
-
         return {
                 'ref_loss': ref_loss,
                 'inf_loss': inf_loss,
@@ -710,6 +708,10 @@ class RefineHead(nn.Module):
             feat_dim, 2, kernel_size,
             stride=1, padding=kernel_size // 2
         )
+        self.cls_head = MaskedConv1D(
+            feat_dim, 2, kernel_size,
+            stride=1, padding=kernel_size // 2
+        )
 
     def forward(self, fpn_feats, fpn_masks):
         assert len(fpn_feats) == len(fpn_masks)
@@ -718,6 +720,7 @@ class RefineHead(nn.Module):
         # apply the classifier for each pyramid level
         out_offsets = tuple()
         out_probs = tuple()
+        out_logits = tuple()
         for l, (cur_feat, cur_mask) in enumerate(zip(fpn_feats, fpn_masks)):
             cur_out = cur_feat
             for idx in range(len(self.head)):
@@ -725,9 +728,11 @@ class RefineHead(nn.Module):
                 cur_out = self.act(self.norm[idx](cur_out))
             cur_offsets, _ = self.offset_head(cur_out, cur_mask)
             cur_probs, _ = self.prob_head(cur_out, cur_mask)
+            cur_logits, _ = self.cls_head(cur_out, cur_mask)
             out_offsets += (self.scale[l](cur_offsets),)
             out_probs += (torch.sigmoid(cur_probs),)
+            out_logits += (cur_logits,)
 
         # fpn_masks remains the same
-        return out_offsets, out_probs
+        return out_offsets, out_probs, out_logits
 
