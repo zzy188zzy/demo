@@ -313,7 +313,9 @@ class Refinement_module(nn.Module):
         rb = concat_points[:, 2]
         r = concat_points[0, 2]
 
-        label = gt_label[None].expand(num_pts, num_gts, 1)  # [4536, N, 1]
+        label = gt_label[None, :, None].expand(num_pts, num_gts, 2)  # [4536, N, 2]
+        print(label.shape)
+        label = label.transpose(2, 1)[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), dis_idx0]
         print(label.shape)
         exit()
 
