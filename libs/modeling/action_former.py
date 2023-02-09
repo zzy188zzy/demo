@@ -1052,7 +1052,7 @@ class PtTransformer0(nn.Module):
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
-                        cls_ref = torch.softmax(out_logits[min(i+b, L)-j].squeeze(1).reshape(prob.shape[0], 2, -1), dim=2)
+                        cls_ref = 1+(torch.softmax(out_logits[min(i+b, L)-j].squeeze(1).reshape(prob.shape[0], 2, -1), dim=2)-0.05)
                         
                         stride_j = a[min(i+b, L)-j]
 
@@ -1076,31 +1076,20 @@ class PtTransformer0(nn.Module):
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
                                 prob_left = prob[left_idx[left_mask], 0]
                                 cls_left = cls_ref[:, 0, :][left_idx[left_mask], cls_idxs[left_mask]]
-                                print(cls_left.shape)
-                                print(pred_prob[left_mask].shape)
-                                print(cls_left)
-                                print(pred_prob[left_mask])
-                                exit()
-                                # print(seg_left[left_mask])
+                                # print(cls_left.shape)
+                                # print(pred_prob[left_mask].shape)
+                                # print(cls_left)
+                                # print(pred_prob[left_mask])
                                 if i!=2 and i!=3:
                                     seg_left[left_mask] += (ref_left*stride_j/1.25) * (1-pred_prob[left_mask])
                                 else:
                                     seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob[left_mask])
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * (1-pred_prob_max[left_mask])
                                     # seg_left[left_mask] += (ref_left*stride_j/c) * ((1-pred_prob_max[left_mask])+(1-pred_prob[left_mask]))/2
-                                print(pred_prob) 
-                                print(cls_i.sigmoid()[pt_idxs, cls_idxs])
-                                print(cls_ref.sigmoid())
-                                print(pred_prob.shape) 
-                                print(cls_i.sigmoid().shape)
-                                print(cls_i.sigmoid()[pt_idxs, cls_idxs].shape)
-                                # print(cls_ref.sigmoid()[pt_idxs, cls_idxs])
-                                print(cls_ref.sigmoid().shape)
-                                exit()
-
-
+                                
                                 ref_right = ref[right_idx[right_mask], 1]  # todo
                                 prob_right = prob[right_idx[right_mask], 1] 
+                                cls_right = cls_ref[:, 1, :][right_idx[right_mask], cls_idxs[right_mask]]
                                 if i!=2 and i!=3:
                                     seg_right[right_mask] += (ref_right*stride_j/1.25) * (1-pred_prob[right_mask])
                                 else:
@@ -1109,9 +1098,8 @@ class PtTransformer0(nn.Module):
                                     # seg_right[right_mask] += (ref_right*stride_j/c) * ((1-pred_prob_max[right_mask])+(1-pred_prob[right_mask]))/2
                                 # seg_right[right_mask] += (ref_right*stride_j/c)
                                 # seg_right[right_mask] += (ref_right*stride_j/c) * (1-pred_prob[right_mask]/pred_prob_len)
-
-                                # pred_prob[right_mask] *= torch.max((1.05 - pred_prob[right_mask]), 
-                                #         torch.ones(pred_prob[right_mask].shape, device=pred_prob[right_mask].device))
+                                pred_prob[left_mask] *= cls_left
+                                pred_prob[right_mask] *= cls_right
                                 
                         else:
                             left_idx0 = (seg_left/stride_j).floor().long()
