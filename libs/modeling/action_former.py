@@ -444,10 +444,10 @@ class PtTransformer0(nn.Module):
                     'final_loss' : final_loss}
         else:
             if ref_model != None:
-                out_refines, out_probs = ref_model(video_list)
+                out_refines, out_probs, out_logits = ref_model(video_list)
                 # print('eval_all')
             else:
-                out_refines, out_probs = None, None
+                out_refines, out_probs, out_logits = None, None, None
                 # print('eval_af')
             # permute the outputs
             # out_cls: F List[B, #cls, T_i] -> F List[B, T_i, #cls]
@@ -460,7 +460,7 @@ class PtTransformer0(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines, out_probs
+                out_cls_logits, out_offsets, out_refines, out_probs, out_logits
             )
             return results
 
@@ -905,7 +905,7 @@ class PtTransformer0(nn.Module):
         self,
         video_list,
         points, fpn_masks,
-        out_cls_logits, out_offsets, out_refines, out_probs
+        out_cls_logits, out_offsets, out_refines, out_probs, out_logits
     ):
         # video_list B (list) [dict]
         # points F (list) [T_i, 4]
@@ -927,10 +927,11 @@ class PtTransformer0(nn.Module):
             # gather per-video outputs
             cls_logits_per_vid = [x[idx] for x in out_cls_logits]
             if out_refines == None:
-                refines_per_vid, probs_per_vid = None, None
+                refines_per_vid, probs_per_vid, logits_per_vid = None, None, None
             else:
                 refines_per_vid = [x[idx] for x in out_refines]
                 probs_per_vid = [x[idx] for x in out_probs]
+                logits_per_vid = [x[idx] for x in out_logits]
             offsets_per_vid = [x[idx] for x in out_offsets]
             fpn_masks_per_vid = [x[idx] for x in fpn_masks]
 
@@ -941,7 +942,7 @@ class PtTransformer0(nn.Module):
             # inference on a single video (should always be the case)
             results_per_vid = self.inference_single_video(
                 points, fpn_masks_per_vid,
-                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid
+                cls_logits_per_vid, offsets_per_vid, refines_per_vid, probs_per_vid, logits_per_vid
             )
             # pass through video meta info
             results_per_vid['video_id'] = vidx
@@ -964,6 +965,7 @@ class PtTransformer0(nn.Module):
         out_offsets,
         out_refines,
         out_probs,
+        out_logits,
     ):
         # points F (list) [T_i, 4]
         # fpn_masks, out_*: F (List) [T_i, C]
@@ -1050,6 +1052,9 @@ class PtTransformer0(nn.Module):
                         # 1 2 4 8 16 32
                         ref = out_refines[min(i+b, L)-j].squeeze(1)
                         prob = out_probs[min(i+b, L)-j].squeeze(1)
+                        cls_ref = out_logits[min(i+b, L)-j].squeeze(1)
+                        print(cls_ref.shape)
+                        exit()
                         stride_j = a[min(i+b, L)-j]
 
                         lr = prob[:,0].max()-prob[:,0].min()+1e-6
