@@ -483,9 +483,9 @@ class Refinement_module(nn.Module):
         gt_target = gt_cls[mask]
         # gt_target *= 1 - self.train_label_smoothing
         # gt_target += self.train_label_smoothing / (self.num_classes + 1)
-        print(out_logit[mask][:10])
-        print(gt_target[:10])
-        exit()
+        # print(out_logit[mask][:10])
+        # print(gt_target[:10])
+        # exit()
 
         cls_loss = sigmoid_focal_loss(
             out_logit[mask],
@@ -634,6 +634,9 @@ class ClsHead(nn.Module):
             feat_dim, 40, kernel_size,
             stride=1, padding=kernel_size // 2
         )
+        prior_prob = 0.01
+        bias_value = -(math.log((1 - prior_prob) / prior_prob))
+        torch.nn.init.constant_(self.cls_head.conv.bias, bias_value)
 
     def forward(self, fpn_feats, fpn_masks):
         assert len(fpn_feats) == len(fpn_masks)
