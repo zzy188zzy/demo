@@ -383,7 +383,7 @@ class Refinement_module(nn.Module):
 
         # exit()
 
-        return gt_ref_low, gt_ref_high, label
+        return gt_ref_low, gt_ref_high, hot
 
     def losses(
             self, fpn_masks,
@@ -469,8 +469,8 @@ class Refinement_module(nn.Module):
         # 2. cls_loss
         print(out_logit.shape)
         print(gt_cls.shape)
-        print(out_logit[0,0])
-        print(gt_cls[0,0])
+        print(out_logit[0,0,0])
+        print(gt_cls[0,0,0])
         exit() 
         
 
