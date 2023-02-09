@@ -460,7 +460,7 @@ class PtTransformer0(nn.Module):
             # decode the actions (sigmoid / stride, etc)
             results = self.inference(
                 video_list, points, fpn_masks,
-                out_cls_logits, out_offsets, out_refines, out_probs, out_logits
+                out_cls_logits, out_offsets, out_refines, out_probs, torch.sigmoid(out_logits)
             )
             return results
 
