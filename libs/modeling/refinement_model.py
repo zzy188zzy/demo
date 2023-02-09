@@ -9,7 +9,7 @@ from .blocks import MaskedConv1D, Scale, LayerNorm
 
 from ..utils import batched_nms
 import numpy as np
-
+from .losses import sigmoid_focal_loss
 
 class Refinement_module(nn.Module):
 
@@ -202,6 +202,7 @@ class Refinement_module(nn.Module):
             ref_loss = []
             inf_loss = []
             prob_loss = []
+            cls_loss = []
             for idx in range(time_):
                 a = [gt_ref_low[i][idx] for i in range(len(gt_ref_low))]
                 b = [gt_ref_high[i][idx] for i in range(len(gt_ref_high))]
@@ -218,16 +219,20 @@ class Refinement_module(nn.Module):
                 ref_loss.append(loss['ref_loss'])
                 inf_loss.append(loss['inf_loss'])
                 prob_loss.append(loss['prob_loss'])
+                cls_loss.append(loss['cls_loss'])
 
             ref_loss = torch.stack(ref_loss).min()*2  # 2
             inf_loss = torch.stack(inf_loss).min()*0
             prob_loss = torch.stack(prob_loss).min()*0.5  # 0.5
-            final_loss = ref_loss  + prob_loss
+
+            cls_loss = torch.stack(cls_loss).min()*1
+            final_loss = ref_loss  + prob_loss + cls_loss
 
             return {
                     'ref_loss': ref_loss,
                     # 'inf_loss': inf_loss,
                     'prob_loss': prob_loss,
+                    'cls_loss': cls_loss,
                     'final_loss': final_loss
             }
         else:
@@ -467,20 +472,29 @@ class Refinement_module(nn.Module):
         # inf_loss /= self.loss_normalizer
 
         # 2. cls_loss
-        print(out_logit.shape)
-        print(gt_cls.shape)
-        print(out_logit[0,0,0])
-        print(gt_cls[0,0,0])
-        print(mask.shape)
+        # print(out_logit.shape)
+        # print(gt_cls.shape)
+        # print(out_logit[0,0,0])
+        # print(gt_cls[0,0,0])
 
-        print(out_logit[mask].shape)
-        print(gt_cls[mask].shape)
-        exit() 
+        # print(out_logit[mask].shape)
+        # print(gt_cls[mask].shape)
+        gt_target = gt_cls[mask]
+        gt_target *= 1 - self.train_label_smoothing
+        gt_target += self.train_label_smoothing / (self.num_classes + 1)
+
+        cls_loss = sigmoid_focal_loss(
+            out_logit[mask],
+            gt_target,                                          # [3011, 20]
+            reduction='mean'
+        )
+        # exit() 
         
 
         return {
                 'ref_loss': ref_loss,
                 'inf_loss': inf_loss,
+                'cls_loss': cls_loss,
                 'prob_loss'  : prob_loss,
         }
 
