@@ -340,7 +340,7 @@ class Refinement_module(nn.Module):
         
         # print(gt_label)
         # print(label[:100])
-        exit()
+        # exit()
 
         for i in range(2):
             dis_l = gt_ref_low[:, i]
