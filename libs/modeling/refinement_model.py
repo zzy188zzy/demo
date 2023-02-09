@@ -479,13 +479,16 @@ class Refinement_module(nn.Module):
 
         # print(out_logit[mask].shape)
         # print(gt_cls[mask].shape)
-        gt_cls[out_mask] *= 0
-        gt_target = gt_cls[valid]
-        gt_target *= 1 - self.train_label_smoothing
-        gt_target += self.train_label_smoothing / (self.num_classes + 1)
+        # gt_cls[out_mask] *= 0
+        gt_target = gt_cls[mask]
+        # gt_target *= 1 - self.train_label_smoothing
+        # gt_target += self.train_label_smoothing / (self.num_classes + 1)
+        print(out_logit[mask][:10])
+        print(gt_target[:10])
+        exit()
 
         cls_loss = sigmoid_focal_loss(
-            out_logit[valid],
+            out_logit[mask],
             gt_target,                                          # [3011, 20]
             reduction='mean'
         )
