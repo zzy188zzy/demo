@@ -393,6 +393,7 @@ class Refinement_module(nn.Module):
         gt_high = torch.stack(gt_ref_high)
         out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]   
         out_prob = torch.cat(out_probs, dim=1).squeeze(2)   
+        out_logit = torch.cat(out_logits, dim=1).squeeze(2)
 
         if step == 0:
             self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
@@ -457,7 +458,7 @@ class Refinement_module(nn.Module):
         # inf_loss /= self.loss_normalizer
 
         # 2. cls_loss
-        print(out_logits.shape)
+        print(out_logit.shape)
         print(gt_cls.shape)
         exit() 
         
