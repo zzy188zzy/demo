@@ -491,7 +491,7 @@ class Refinement_module(nn.Module):
             out_logit[mask],
             gt_target,                                          # [3011, 20]
             reduction='sum'
-        )
+        )/100
         # exit() 
         
 
