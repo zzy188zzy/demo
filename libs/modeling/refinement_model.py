@@ -333,6 +333,7 @@ class Refinement_module(nn.Module):
         hot = torch.zeros((num_pts, 2, 20), device=label.device)
         hot[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), label] += 1
         torch.set_printoptions(threshold=np.inf)
+        print(label[0,0])
         print(hot[0,0,:])
         print(hot.shape)
         exit()
