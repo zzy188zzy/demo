@@ -1075,6 +1075,9 @@ class PtTransformer0(nn.Module):
 
                                 ref_left = ref[left_idx[left_mask], 0]  # todo
                                 prob_left = prob[left_idx[left_mask], 0]
+                                cls_left = cls_ref[:, 0, :][left_idx[left_mask], :]
+                                print(cls_left.shape)
+                                exit()
                                 # print(seg_left[left_mask])
                                 if i!=2 and i!=3:
                                     seg_left[left_mask] += (ref_left*stride_j/1.25) * (1-pred_prob[left_mask])
