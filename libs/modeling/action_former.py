@@ -1046,6 +1046,7 @@ class PtTransformer0(nn.Module):
                     f = 1  # 1
                     stride_i = a[min(i+b, L)]
                     s_i = a[i]
+                    step = min(i+b+f, L+f)
                     for j in range(min(i+b+f, L+f)):  # 1 2 3 4 5 6
                         # if j>=5:
                         #     break
@@ -1101,8 +1102,8 @@ class PtTransformer0(nn.Module):
                                 # cls_left[cls_left>1]=1
                                 # cls_right[cls_right>1]=1
 
-                                aa = (1 - pred_prob[left_mask]) * cls_left
-                                bb = (1 - pred_prob[right_mask]) * cls_right
+                                aa = cls_left/step
+                                bb = cls_right/step
                                 pred_prob[left_mask] += aa
                                 pred_prob[right_mask] += bb
                                 # print(pred_prob[left_mask].shape)
