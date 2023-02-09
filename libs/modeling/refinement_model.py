@@ -392,9 +392,10 @@ class Refinement_module(nn.Module):
         gt_low = torch.stack(gt_ref_low)
         gt_high = torch.stack(gt_ref_high)
         gt_cls = torch.stack(gt_cls)
-        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [2, 4536, 2]   
-        out_prob = torch.cat(out_probs, dim=1).squeeze(2)   
-        out_logit = torch.cat(out_logits, dim=1).squeeze(2)
+        out_ref = torch.cat(out_refines, dim=1).squeeze(2)  # [B, 4536, 2]   
+        out_prob = torch.cat(out_probs, dim=1).squeeze(2)  
+        a, b, c = out_prob.shape 
+        out_logit = torch.cat(out_logits, dim=1).squeeze(2).reshape(a, b, c, -1)  # [B, 4536, 2, 20]
 
         if step == 0:
             self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
@@ -599,7 +600,7 @@ class ClsHead(nn.Module):
 
         # segment regression
         self.cls_head = MaskedConv1D(
-            feat_dim, 20, kernel_size,
+            feat_dim, 40, kernel_size,
             stride=1, padding=kernel_size // 2
         )
 
