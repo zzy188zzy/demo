@@ -487,17 +487,17 @@ class Refinement_module(nn.Module):
         # print(gt_target[:10])
         # exit()
 
-        # cls_loss = sigmoid_focal_loss(
-        #     out_logit[mask],
-        #     gt_target,                                          # [3011, 20]
-        #     reduction='sum'
-        # )/100
-
-        cls_loss = F.smooth_l1_loss(
+        cls_loss = sigmoid_focal_loss(
             out_logit[mask],
             gt_target,                                          # [3011, 20]
             reduction='mean'
         )
+
+        # cls_loss = F.smooth_l1_loss(
+        #     out_logit[mask],
+        #     gt_target,                                          # [3011, 20]
+        #     reduction='mean'
+        # )
         # exit() 
         return {
                 'ref_loss': ref_loss,
