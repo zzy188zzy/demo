@@ -490,7 +490,7 @@ class Refinement_module(nn.Module):
         cls_loss = sigmoid_focal_loss(
             out_logit[mask],
             gt_target,                                          # [3011, 20]
-            reduction='mean'
+            reduction='sum'
         )
         # exit() 
         
