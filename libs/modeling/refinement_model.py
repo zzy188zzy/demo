@@ -472,8 +472,10 @@ class Refinement_module(nn.Module):
         print(out_logit[0,0,0])
         print(gt_cls[0,0,0])
 
-        print(out_logit[:, :, :, mask].shape)
-        print(gt_cls[:, :, :, mask].shape)
+        lis = torch.arange(4536).long().to(gt_cls.device)
+
+        print(out_logit[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1), mask].shape)
+        print(gt_cls[lis[:, None].repeat(1, 2), lis[:2][None, :].repeat(num_pts, 1):, mask].shape)
         exit() 
         
 
