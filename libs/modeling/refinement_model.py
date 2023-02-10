@@ -343,8 +343,8 @@ class Refinement_module(nn.Module):
         # print(hot.shape)
         # exit()
         
-        print(gt_label[0])
-        print(label[:10])
+        # print(gt_label[0])
+        # print(label[:10])
         # exit()
 
         for i in range(2):
