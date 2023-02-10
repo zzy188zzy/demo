@@ -225,7 +225,7 @@ class Refinement_module(nn.Module):
             inf_loss = torch.stack(inf_loss).min()*0
             prob_loss = torch.stack(prob_loss).min()*0.5  # 0.5
 
-            cls_loss = torch.stack(cls_loss).min()*0
+            cls_loss = torch.stack(cls_loss).min()*1
             final_loss = ref_loss  + prob_loss + cls_loss
 
             return {
@@ -486,12 +486,17 @@ class Refinement_module(nn.Module):
         # print(out_logit[mask][:10])
         # print(gt_target[:10])
         # exit()
+        num_pos = mask.sum()
+        if step == 0:
+            self.loss_normalizer = self.loss_normalizer_momentum * self.loss_normalizer + (
+                1 - self.loss_normalizer_momentum
+            ) * max(num_pos, 1)
 
         cls_loss = sigmoid_focal_loss(
             out_logit[mask],
             gt_target,                                          # [3011, 20]
-            reduction='mean'
-        )
+            reduction='sum'
+        ) / self.loss_normalizer
 
         # cls_loss = F.smooth_l1_loss(
         #     out_logit[mask],
